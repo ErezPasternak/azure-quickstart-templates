@@ -1,4 +1,8 @@
+![Ericom::Access Done Right](http://www.ericom.com/imgs/home/EricomLogo2.jpg "Ericom Logo") 
+
 ### Deploy **Ericom Connect** on a Multiple Virtual Machines Environment
+
+[![Deploy to Azure](http://azuredeploy.net/deploybutton.png)](https://azuredeploy.net/)
 
 ##### This template deploys the following resources:
 
@@ -15,5 +19,4 @@
 
 * [Ericom Connect Online Guide](https://www.ericom.com/communities/guide/home/connect-7-3-0)
 
-``` ``` ``` ``` ``` ``` ``` ``` ``` ``` ``` ``` ``` ``` ``` ``` ``` ``` ``` ``` ``` ``` ``` ``` ``` ``` ``` ``` ``` ``` ``` ``` ``` ``` ``` ``` ``` ``` ``` ``` ``` ``` ``` ``` ``` ``` ``` ``` ``` ``` ``` ``` ``` ``` ``` ``` ``` ``` ``` ``` ``` ``` ``` ``` ``` ``` ``` ``` ``` ``` ``` ``` ``` ``` ``` ``` ``` ``` 
 [![Visualize](http://armviz.io/visualizebutton.png "Visualize")](http://armviz.io/#/?load=https://raw.githubusercontent.com/ErezPasternak/azure-quickstart-templates/EricomConnect/ec-deployment-new/azuredeploy.json)
