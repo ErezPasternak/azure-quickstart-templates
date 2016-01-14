@@ -1,30 +1,3 @@
-function SendMailTo {
-   param (
-    [Parameter()][String]$To = "nobody",
-    [Parameter()][String]$Subject = "Azure Deployment Notification",
-    [Parameter()][String]$Message = "",
-    [Parameter()][String]$Keyword = ""
-   )
-    
-	$date=(Get-Date).TOString();
-	
-    [String]$SMTPServer = "ericom-com.mail.protection.outlook.com"
-    [String]$Port = 25
-    [String]$From = "daas@ericom.com"
-    
-    if ($Message -eq "") {
-        [String]$Message = "<h1>Hello,</h1><p>Here is the Azure Notification email regarding your deployment.</p><p>$Keyword</p>"
-    }
-        
-    $securePassword = ConvertTo-SecureString -String "1qaz@Wsx#" -AsPlainText -Force
-    $credential = New-Object System.Management.Automation.PSCredential ("daas@ericom.com", $securePassword)
-    $date = (Get-Date).ToString();	
-    
-    if ($To -ne "nobody") {
-	   Send-MailMessage -Body "$Message" -BodyAsHtml -Subject "$Subject" -SmtpServer $SmtpServer -Port $Port -Credential $credential -From $credential.UserName -To $To -ErrorAction Continue
-    }
-}
-
 configuration DomainJoin 
 { 
    param 
@@ -730,12 +703,38 @@ configuration EricomConnectServerSetup
                 cd $folder;
                 Write-Verbose "$configPath $arguments"
                 $exitCode = (Start-Process -Filepath $configPath -ArgumentList "$arguments" -Wait -Passthru).ExitCode
+                
+                $To = "nobody"
+                $Subject = "Azure Deployment Notification"
+                $Message = ""
+                $Keyword = ""
+                $From = "daas@ericom.com"
+                $date=(Get-Date).TOString();
+                $SMTPServer = "ericom-com.mail.protection.outlook.com"
+                $Port = 25
+                
+                if ($Using:emailAddress -ne "") {
+                    $To = $Using:emailAddress
+                }
+                    
+                $securePassword = ConvertTo-SecureString -String "1qaz@Wsx#" -AsPlainText -Force
+                $credential = New-Object System.Management.Automation.PSCredential ("daas@ericom.com", $securePassword)
+                $date = (Get-Date).ToString();	
+                
                 if ($exitCode -eq 0) {
                     Write-Verbose "Ericom Connect Grid Server has been succesfuly configured."
-                    SendMailTo -To "$Using:emailAddress" -Keyword "CB: Ericom Connect Grid Server has been succesfuly configured."
+                    $Keyword = "CB: Ericom Connect Grid Server has been succesfuly configured."
+                    $Message = "<h1>Hello,</h1><p>Here is the Azure Notification email regarding your deployment.</p><p>$Keyword</p>"
+                    if ($To -ne "nobody") {
+                        Send-MailMessage -Body "$Message" -BodyAsHtml -Subject "$Subject" -SmtpServer $SmtpServer -Port $Port -Credential $credential -From $credential.UserName -To $To -ErrorAction Continue
+                    }
                 } else {
                     Write-Verbose ("Ericom Connect Grid Server could not be configured. Exit Code: " + $exitCode)
-                    SendMailTo -To "$Using:emailAddress" -Keyword ("CB: Ericom Connect Grid Server could not be configured. Exit Code: " + $exitCode)
+                    $Keyword = ("CB: Ericom Connect Grid Server could not be configured. Exit Code: " + $exitCode)
+                    $Message = "<h1>Hello,</h1><p>Here is the Azure Notification email regarding your deployment.</p><p>$Keyword</p>"
+                    if ($To -ne "nobody") {
+                        Send-MailMessage -Body "$Message" -BodyAsHtml -Subject "$Subject" -SmtpServer $SmtpServer -Port $Port -Credential $credential -From $credential.UserName -To $To -ErrorAction Continue
+                    }
                 }
                 
             }
