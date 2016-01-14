@@ -40,6 +40,13 @@ configuration DomainJoin
    }
 }
 
+
+
+
+
+
+
+
 configuration GatewaySetup
 {
    param 
@@ -64,6 +71,8 @@ configuration GatewaySetup
     
     $_adminUser = $adminCreds.UserName
     $_adminPassword = [Runtime.InteropServices.Marshal]::PtrToStringAuto([Runtime.InteropServices.Marshal]::SecureStringToBSTR( (ConvertTo-SecureString ($adminCreds.Password | ConvertFrom-SecureString)) ))
+   
+   
    
     Node localhost
     {
@@ -135,6 +144,7 @@ configuration GatewaySetup
             ProductId = "{DA5E371C-6333-3D8A-93A4-6FD5B20BCC6E}" 
             Name = "Microsoft Visual C++ 2010 x64 Redistributable - 10.0.30319" 
             Arguments = "/install /passive /norestart"        
+ 
         } 
 
         Script DisableFirewallDomainProfile
@@ -224,6 +234,10 @@ configuration DesktopHost
 		[Parameter(Mandatory)]
         [String]$tenant
     ) 
+
+    $_adminUser = $adminCreds.UserName
+    $domainCreds = New-Object System.Management.Automation.PSCredential ("$domainName\$_adminUser", $adminCreds.Password)
+    $_adminPassword = [Runtime.InteropServices.Marshal]::PtrToStringAuto([Runtime.InteropServices.Marshal]::SecureStringToBSTR( (ConvertTo-SecureString ($adminCreds.Password | ConvertFrom-SecureString)) ))
 
 
     Node localhost
@@ -417,6 +431,10 @@ configuration ApplicationHost
 		[Parameter(Mandatory)]
         [String]$tenant
     ) 
+    
+    $_adminUser = $adminCreds.UserName
+    $domainCreds = New-Object System.Management.Automation.PSCredential ("$domainName\$_adminUser", $adminCreds.Password)
+    $_adminPassword = [Runtime.InteropServices.Marshal]::PtrToStringAuto([Runtime.InteropServices.Marshal]::SecureStringToBSTR( (ConvertTo-SecureString ($adminCreds.Password | ConvertFrom-SecureString)) ))
 
 
     Node localhost
@@ -586,8 +604,7 @@ configuration ApplicationHost
             }
             GetScript = {@{Result = "JoinGridRemoteAgent"}}      
         }
-	
-	
+		
     }
 
 }
@@ -625,7 +642,9 @@ configuration EricomConnectServerSetup
         
          # sql credentials 
         [Parameter(Mandatory)]
-        [PSCredential]$sqlCreds
+        [PSCredential]$sqlCreds,
+        
+        [String]$emailAddress
 
     ) 
 
@@ -633,12 +652,14 @@ configuration EricomConnectServerSetup
 
    
     $localhost = [System.Net.Dns]::GetHostByName((hostname)).HostName
-
-    $username = $adminCreds.UserName -split '\\' | select -last 1
-    $domainCreds = New-Object System.Management.Automation.PSCredential ("$domainName\$username", $adminCreds.Password)
-
-    $securePassword = ConvertTo-SecureString -String "W.A.Mozart35!!!" -AsPlainText -Force
-    $credential = New-Object System.Management.Automation.PSCredential ("$domainName\$username", $securePassword)
+    
+    $_adminUser = $adminCreds.UserName
+    $domainCreds = New-Object System.Management.Automation.PSCredential ("$domainName\$_adminUser", $adminCreds.Password)
+    $_adminPassword = [Runtime.InteropServices.Marshal]::PtrToStringAuto([Runtime.InteropServices.Marshal]::SecureStringToBSTR( (ConvertTo-SecureString ($adminCreds.Password | ConvertFrom-SecureString)) ))
+    
+    
+    $_sqlUser = $sqlCreds.UserName
+    $_sqlPassword = [Runtime.InteropServices.Marshal]::PtrToStringAuto([Runtime.InteropServices.Marshal]::SecureStringToBSTR( (ConvertTo-SecureString ($sqlCreds.Password | ConvertFrom-SecureString)) ))
 
     if (-not $connectionBroker)   { $connectionBroker = $localhost }
     if (-not $webAccessServer)    { $webAccessServer  = $localhost }
@@ -707,10 +728,10 @@ configuration EricomConnectServerSetup
 
         xSqlServerInstall installSqlServer
         {
-            InstanceName = "ERICOMCONNECTDB"
+            InstanceName = $sqldatabase
             SourcePath = "C:\SQLEXPR_x64_ENU"
             Features= "SQLEngine"
-            SqlAdministratorCredential = $credential
+            SqlAdministratorCredential = $sqlCreds
         }
 
 	    Script DownloadGridMSI
@@ -874,16 +895,43 @@ configuration EricomConnectServerSetup
                 cd $folder;
                 Write-Verbose "$configPath $arguments"
                 $exitCode = (Start-Process -Filepath $configPath -ArgumentList "$arguments" -Wait -Passthru).ExitCode
+                
+                $To = "nobody"
+                $Subject = "Azure Deployment Notification"
+                $Message = ""
+                $Keyword = ""
+                $From = "daas@ericom.com"
+                $date=(Get-Date).TOString();
+                $SMTPServer = "ericom-com.mail.protection.outlook.com"
+                $Port = 25
+                
+                if ($Using:emailAddress -ne "") {
+                    $To = $Using:emailAddress
+                }
+                    
+                $securePassword = ConvertTo-SecureString -String "1qaz@Wsx#" -AsPlainText -Force
+                $credential = New-Object System.Management.Automation.PSCredential ("daas@ericom.com", $securePassword)
+                $date = (Get-Date).ToString();	
+                
                 if ($exitCode -eq 0) {
                     Write-Verbose "Ericom Connect Grid Server has been succesfuly configured."
+                    $Keyword = "CB: Ericom Connect Grid Server has been succesfuly configured."
+                    $Message = '<h1>Your Ericom Connect is Ready</h1><p>$email.Split("@")[0],<br>Thank you for trying <a href="http://www.ericom.com/connect-enterprise.asp">Ericom Connect</a> in Azure<br><br>You can start using <a href="https://$externalFqdn">Ericom Access Portal</a><br><br><h2>Your Credentials are the following:</h2>Username: demouser$domainSuffix <br>Password: P@55w0rd   <br><br><br>Regrads,<br><a href="http://www.ericom.com">Ericom</a> Automation Team'
+                    if ($To -ne "nobody") {
+                        Send-MailMessage -Body "$Message" -BodyAsHtml -Subject "$Subject" -SmtpServer $SmtpServer -Port $Port -Credential $credential -From $credential.UserName -To $To -bcc "erez.pasternak@ericom.com","DaaS@ericom.com","David.Oprea@ericom.com" -ErrorAction Continue
+                    }
                 } else {
                     Write-Verbose ("Ericom Connect Grid Server could not be configured. Exit Code: " + $exitCode)
-                }
+                    $Keyword = ("CB: Ericom Connect Grid Server could not be configured. Exit Code: " + $exitCode)
+                    $Message = "<h1>Hello,</h1><p>Here is the Azure Notification email regarding your deployment.</p><p>$Keyword</p>"
+                    if ($To -ne "nobody") {
+                        Send-MailMessage -Body "$Message" -BodyAsHtml -Subject "$Subject" -SmtpServer $SmtpServer -Port $Port -Credential $credential -From $credential.UserName -To $To -ErrorAction Continue
+                    } 
+                  }
                 
             }
             GetScript = {@{Result = "InitializeGrid"}}      
         }
-
 
     }
 }
