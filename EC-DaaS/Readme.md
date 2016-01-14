@@ -14,7 +14,7 @@
 * A number of Desktop Session hosts;
 * A number of Application Sesson hosts;
 
-**The template will deploy a domain controller, join all VMs to the new domain, configure each Windows VM and then setup and configure Ericom Connect.**
+**The template will deploy a DaaS enviroment based on Ericom Connect Technology.**
 
 * [Additional information on Ericom Connect](http://www.ericom.com/connect-enterprise.asp)
 
