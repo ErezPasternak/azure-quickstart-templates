@@ -185,7 +185,8 @@ configuration GatewaySetup
                 # Call Configuration Tool
                 Write-Verbose "Configuration step"
                 $workingDirectory = "$env:ProgramFiles\Ericom Software\Ericom Connect Configuration Tool"
-                $configFile = "EricomConnectConfigurationTool.exe"              
+                $configFile = "EricomConnectConfigurationTool.exe"
+                $connectCli = "ConnectCli.exe"               
 
                 $_adminUser = "$Using:_adminUser" + "$domainSuffix"
                 $_adminPass = "$Using:_adminPassword"
@@ -194,6 +195,7 @@ configuration GatewaySetup
                 $_lookUpHosts = "$Using:LUS"
 
                 $configPath = Join-Path $workingDirectory -ChildPath $configFile
+                $cliPath = Join-Path $workingDirectory -ChildPath $connectCli
                 
                 $arguments = " ConnectToExistingGrid /AdminUser `"$_adminUser`" /AdminPassword `"$_adminPass`" /disconnect /GridName `"$_gridName`" /GridServicePassword `"$_gridServicePassword`"  /LookUpHosts `"$_lookUpHosts`""              
 
@@ -207,6 +209,17 @@ configuration GatewaySetup
                 } else {
                     Write-Verbose ("Ericom Connect Secure Gateway could not be configured. Exit Code: " + $exitCode)
                 }
+                
+                
+                # publish admin page via ESG
+                $argumentsCli = "EsgConfig /adminUser `"$_adminUser`" /adminPassword `"$_adminPass`" common ExternalWebServer$UrlServicePointsFilter=`"<UrlServicePointsFilter> <UrlFilter> <UrlPathRegExp>^/Admin</UrlPathRegExp> <UrlServicePoints>https://$_gridName:8022/</UrlServicePoints> </UrlFilter> </UrlServicePointsFilter>`"";
+                $exitCodeCli = (Start-Process -Filepath $cliPath -ArgumentList "$argumentsCli" -Wait -Passthru).ExitCode;
+                if ($exitCodeCli -eq 0) {
+                    Write-Verbose "ESG: Admin page has been succesfuly published."
+                } else {
+                    Write-Verbose "$cliPath $argumentsCli"
+                    Write-Verbose ("ESG: Admin page could not be published.. Exit Code: " + $exitCode)
+                } 
             }
             GetScript = {@{Result = "JoinGridESG"}}      
         }
