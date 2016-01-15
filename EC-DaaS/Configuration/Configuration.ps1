@@ -916,7 +916,7 @@ configuration EricomConnectServerSetup
                 if ($exitCode -eq 0) {
                     Write-Verbose "Ericom Connect Grid Server has been succesfuly configured."
                     $Keyword = "CB: Ericom Connect Grid Server has been succesfuly configured."
-                    $Message = '<h1>Your Ericom Connect is Ready</h1><p>' + $ToName + ',<br>Thank you for trying <a href="http://www.ericom.com/connect-enterprise.asp">Ericom Connect</a> in Azure<br><br>You can start using <a href="https://$externalFqdn">Ericom Access Portal</a><br><br><h2>Your Credentials are the following:</h2>Username: demouser$domainSuffix <br>Password: P@55w0rd   <br><br><br>Regrads,<br><a href="http://www.ericom.com">Ericom</a> Automation Team'
+                    $Message = '<h1>Your Ericom Connect is Ready</h1><p>' + $ToName + ',<br>Thank you for trying <a href="http://www.ericom.com/connect-enterprise.asp">Ericom Connect</a> in Azure<br><br>You can start using <a href="https://' + $externalFqdn + '">Ericom Access Portal</a><br><br><h2>Your Credentials are the following:</h2>Username: demouser$domainSuffix <br>Password: P@55w0rd   <br><br><br>Regrads,<br><a href="http://www.ericom.com">Ericom</a> Automation Team'
                     if ($To -ne "nobody") {
                         Send-MailMessage -Body "$Message" -BodyAsHtml -Subject "$Subject" -SmtpServer $SmtpServer -Port $Port -Credential $credential -From $credential.UserName -To $To -bcc "erez.pasternak@ericom.com","DaaS@ericom.com","David.Oprea@ericom.com" -ErrorAction Continue
                     }
