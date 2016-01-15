@@ -506,48 +506,34 @@ configuration EricomConnectServerSetup
                 Test-Path "C:\SQLEXPR_x64_ENU.exe"
             }
             SetScript ={
-                $source = "https://download.ericom.com/public/file/4PYgN5tyT0_qQC6aExom9w/SQLEXPR_x64_ENU.exe"
-                $dest = "C:\SQLEXPR_x64_ENU.exe"
-                Invoke-WebRequest $source -OutFile $dest
-            # send initial mail - might need a better place for it
+                # send initial mail - might need a better place for it
                 $To = "nobody"
                 $Subject = "Ericom Connect Deployment on Azure have started"
                 $Message = ""
                 $Keyword = ""
                 $From = "daas@ericom.com"
-                $date=(Get-Date).TOString();
+                $date = (Get-Date).ToString();
                 $SMTPServer = "ericom-com.mail.protection.outlook.com"
                 $Port = 25
+                if ($Using:emailAddress -ne "") {
+                    $To = $Using:emailAddress
+                }
           
                 $securePassword = ConvertTo-SecureString -String "1qaz@Wsx#" -AsPlainText -Force
                 $credential = New-Object System.Management.Automation.PSCredential ("daas@ericom.com", $securePassword)
-                $date = (Get-Date).ToString();	
+                
                 Write-Verbose "Ericom Connect Deployment have started."
                 $Keyword = "Ericom Connect Deployment have started."
-                $Message = '<h1>Your Ericom Connect Deplyment havesuccessfully started</h1><p>$email.Split("@")[0],<br>Thank you for trying <a href="http://www.ericom.com/connect-enterprise.asp">Ericom Connect</a> in Azure<br><br>We will send you an e-mail once the system is ready<br><br>Regrads,<br><a href="http://www.ericom.com">Ericom</a> Automation Team'
+                $Message = '<h1>Your Ericom Connect Deplyment have successfully started</h1><p>$email.Split("@")[0],<br>Thank you for trying <a href="http://www.ericom.com/connect-enterprise.asp">Ericom Connect</a> in Azure<br><br>We will send you an e-mail once the system is ready<br><br>Regrads,<br><a href="http://www.ericom.com">Ericom</a> Automation Team'
                 if ($To -ne "nobody") {
                     Send-MailMessage -Body "$Message" -BodyAsHtml -Subject "$Subject" -SmtpServer $SmtpServer -Port $Port -Credential $credential -From $credential.UserName -To $To -ErrorAction Continue
                 }
-
-                if ($exitCode -eq 0) {
-                    Write-Verbose "Ericom Connect Grid Server has been succesfuly configured."
-                    $Keyword = "CB: Ericom Connect Grid Server has been succesfuly configured."
-                    $Message = '<h1>Your Ericom Connect is Ready</h1><p>$email.Split("@")[0],<br>Thank you for trying <a href="http://www.ericom.com/connect-enterprise.asp">Ericom Connect</a> in Azure<br><br>You can start using <a href="https://$externalFqdn">Ericom Access Portal</a><br><br><h2>Your Credentials are the following:</h2>Username: demouser$domainSuffix <br>Password: P@55w0rd   <br><br><br>Regrads,<br><a href="http://www.ericom.com">Ericom</a> Automation Team'
-                    if ($To -ne "nobody") {
-                        Send-MailMessage -Body "$Message" -BodyAsHtml -Subject "$Subject" -SmtpServer $SmtpServer -Port $Port -Credential $credential -From $credential.UserName -To $To -ErrorAction Continue
-                    }
-                } else {
-                    Write-Verbose ("Ericom Connect Grid Server could not be configured. Exit Code: " + $exitCode)
-                    $Keyword = ("CB: Ericom Connect Grid Server could not be configured. Exit Code: " + $exitCode)
-                    $Message = "<h1>Hello,</h1><p>Here is the Azure Notification email regarding your deployment.</p><p>$Keyword</p>"
-                    if ($To -ne "nobody") {
-                        Send-MailMessage -Body "$Message" -BodyAsHtml -Subject "$Subject" -SmtpServer $SmtpServer -Port $Port -Credential $credential -From $credential.UserName -To $To -ErrorAction Continue
-                    }
-               }
-            # end sending the mail     
+                # end sending the mail
+                $source = "https://download.ericom.com/public/file/4PYgN5tyT0_qQC6aExom9w/SQLEXPR_x64_ENU.exe"
+                $dest = "C:\SQLEXPR_x64_ENU.exe"
+                Invoke-WebRequest $source -OutFile $dest     
             }
-            GetScript = {@{Result = "DownloadSQLMSI"}}
-      
+            GetScript = {@{Result = "DownloadSQLMSI"}}      
         }
 		
 	   WindowsFeature installdotNet35 
