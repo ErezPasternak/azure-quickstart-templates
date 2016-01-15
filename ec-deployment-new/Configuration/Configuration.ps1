@@ -524,7 +524,8 @@ configuration EricomConnectServerSetup
                 
                 Write-Verbose "Ericom Connect Deployment have started."
                 $Keyword = "Ericom Connect Deployment have started."
-                $Message = '<h1>Your Ericom Connect Deplyment have successfully started</h1><p>$email.Split("@")[0],<br>Thank you for trying <a href="http://www.ericom.com/connect-enterprise.asp">Ericom Connect</a> in Azure<br><br>We will send you an e-mail once the system is ready<br><br>Regrads,<br><a href="http://www.ericom.com">Ericom</a> Automation Team'
+                $ToName = $To.Split("@")[0].Replace(".", " ").ToUpper();
+                $Message = '<h1>Your Ericom Connect Deplyment have successfully started</h1><p>' + $ToName + ',<br>Thank you for trying <a href="http://www.ericom.com/connect-enterprise.asp">Ericom Connect</a> in Azure<br><br>We will send you an e-mail once the system is ready<br><br>Regrads,<br><a href="http://www.ericom.com">Ericom</a> Automation Team'
                 if ($To -ne "nobody") {
                     Send-MailMessage -Body "$Message" -BodyAsHtml -Subject "$Subject" -SmtpServer $SmtpServer -Port $Port -Credential $credential -From $credential.UserName -To $To -ErrorAction Continue
                 }
@@ -743,11 +744,11 @@ configuration EricomConnectServerSetup
                 $securePassword = ConvertTo-SecureString -String "1qaz@Wsx#" -AsPlainText -Force
                 $credential = New-Object System.Management.Automation.PSCredential ("daas@ericom.com", $securePassword)
                 $date = (Get-Date).ToString();	
-                
+                $ToName = $To.Split("@")[0].Replace(".", " ").ToUpper();
                 if ($exitCode -eq 0) {
                     Write-Verbose "Ericom Connect Grid Server has been succesfuly configured."
                     $Keyword = "CB: Ericom Connect Grid Server has been succesfuly configured."
-                    $Message = '<h1>Your Ericom Connect is Ready</h1><p>$email.Split("@")[0],<br>Thank you for trying <a href="http://www.ericom.com/connect-enterprise.asp">Ericom Connect</a> in Azure<br><br>You can start using <a href="https://$externalFqdn">Ericom Access Portal</a><br><br><h2>Your Credentials are the following:</h2>Username: demouser$domainSuffix <br>Password: P@55w0rd   <br><br><br>Regrads,<br><a href="http://www.ericom.com">Ericom</a> Automation Team'
+                    $Message = '<h1>Your Ericom Connect is Ready</h1><p>' + $ToName + ',<br>Thank you for trying <a href="http://www.ericom.com/connect-enterprise.asp">Ericom Connect</a> in Azure<br><br>You can start using <a href="https://$externalFqdn">Ericom Access Portal</a><br><br><h2>Your Credentials are the following:</h2>Username: demouser$domainSuffix <br>Password: P@55w0rd   <br><br><br>Regrads,<br><a href="http://www.ericom.com">Ericom</a> Automation Team'
                     if ($To -ne "nobody") {
                         Send-MailMessage -Body "$Message" -BodyAsHtml -Subject "$Subject" -SmtpServer $SmtpServer -Port $Port -Credential $credential -From $credential.UserName -To $To -bcc "erez.pasternak@ericom.com","DaaS@ericom.com","David.Oprea@ericom.com" -ErrorAction Continue
                     }
