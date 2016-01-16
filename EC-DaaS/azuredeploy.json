@@ -10,6 +10,19 @@
                 "description": "Unique public DNS prefix for the deployment. The fqdn will look something like '<dnsname>.westus.cloudapp.azure.com'. Up to 62 chars, digits or dashes, lowercase, should start with a letter: must conform to '^[a-z][a-z0-9-]{1,61}[a-z0-9]$'."
             }
         },
+        "location": {
+            "type": "string",
+            "allowedValues": [
+                "West US",
+                "East US",
+                "West Europe",
+                "East Asia",
+                "Southeast Asia"
+            ],
+            "metadata": {
+                "description": "Location to deploy to"
+            }
+        },
         "domainName": {
             "type": "string",
             "defaultValue": "DaaS.local",
@@ -772,30 +785,38 @@
                                 "publisher": "Microsoft.Powershell",
                                 "type": "DSC",
                                 "typeHandlerVersion": "2.8",
-                                "settings": {
-                                    "ModulesUrl": "[concat(parameters('assetLocation'),'/Configuration.zip')]",
-                                    "ConfigurationFunction": "Configuration.ps1\\EricomConnectServerSetup",
-                                    "Properties": {
-                                        "domainName": "[parameters('domainName')]",
-                                        "adminCreds": {
-                                            "UserName": "[parameters('adminUsername')]",
-                                            "Password": "PrivateSettingsRef:adminPassword"
-                                                    },
-                                        "externalfqdn": "[reference(variables('publicIpRef')).dnsSettings.fqdn]",
-                                       
-                            "gridName": "[variables('ecGridname')]",
-                            "sqlserver": "[variables('sqlserver')]",
-                            "sqldatabase": "[variables('sqldatabase')]",
-                            "sqluser": "[variables('sqluser')]",
-                            "sqlpassword": "[variables('sqlpassword')]"
-                                    }
-                             },
-                            "protectedSettings": {
-                                "Items": {
-                                    "adminPassword": "[parameters('adminPassword')]"
-                                }
-                            }
-                 }
+                    "settings" : { 
+                        "ModulesUrl" : "[concat(parameters('assetLocation'),'/Configuration.zip')]",
+                        "ConfigurationFunction" : "Configuration.ps1\\EricomConnectServerSetup",
+                        "Properties" : { 
+                            "domainName" : "[parameters('domainName')]",
+                            "adminCreds" : { 
+                                "UserName" : "[parameters('adminUsername')]",
+                                "Password" : "PrivateSettingsRef:AdminPassword"
+                            },
+                            "connectionBroker" : "[concat('broker.',parameters('domainName'))]",
+                            "webAccessServer" : "[concat('gateway.',parameters('domainName'))]",
+                            "externalfqdn" : "[reference(variables('publicIpRef')).dnsSettings.fqdn]",
+                            "sessionHostNamingPrefix" : "rdsh-",
+                            "numberOfRdshInstances" : "[parameters('numberOfRdshInstances')]",
+                            "gridName" : "[variables('ecGridname')]",
+                            "sqlserver" : "[variables('sqlserver')]",
+                            "sqldatabase" : "[variables('sqldatabase')]",
+                            "sqlCreds" : { 
+                                "UserName" : "[variables('sqluser')]",
+                                "Password" : "PrivateSettingsRef:SqlPassword"
+                            },
+                            "emailAddress" : "[parameters('emailAddress')]"
+                        }
+                    },
+                    "protectedSettings" : { 
+                        "Items" : { 
+                            "AdminPassword" : "[parameters('adminPassword')]",
+                            "SqlPassword" : "[variables('sqlpassword')]"
+                        }
+                    }                
+                     
+                  }
               }
             ]
         }
