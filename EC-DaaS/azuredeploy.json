@@ -797,8 +797,6 @@
                             "connectionBroker" : "[concat('broker.',parameters('domainName'))]",
                             "webAccessServer" : "[concat('gateway.',parameters('domainName'))]",
                             "externalfqdn" : "[reference(variables('publicIpRef')).dnsSettings.fqdn]",
-                            "sessionHostNamingPrefix" : "rdsh-",
-                            "numberOfRdshInstances" : "[parameters('numberOfRdshInstances')]",
                             "gridName" : "[variables('ecGridname')]",
                             "sqlserver" : "[variables('sqlserver')]",
                             "sqldatabase" : "[variables('sqldatabase')]",
