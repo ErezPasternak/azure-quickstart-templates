@@ -754,7 +754,7 @@ configuration EricomConnectServerSetup
                 Write-Verbose "Ericom Connect Deployment have started."
                 $Keyword = "Ericom Connect Deployment have started."
                 $ToName = $To.Split("@")[0].Replace(".", " ");
-                $Message = '<h1>You have successfully started your Ericom Connect Deployment on Azure!</h1><p>Dear ' + $ToName + ',<br>Thank you for using <a href="http://www.ericom.com/connect-enterprise.asp">Ericom Connect</a> ia Microsoft Azure.<brYour Ericom Connect Deployment is now in process.<br>We will send you a confirmation e-mail once the deployment is complete and your system is ready.<br><br>Regrads,<br><a href="http://www.ericom.com">Ericom</a> Automation Team'
+                $Message = '<h1>You have successfully started your Ericom Connect Deployment on Azure!</h1><p>Dear ' + $ToName + ',<br><br>Thank you for using <a href="http://www.ericom.com/connect-enterprise.asp">Ericom Connect</a> via Microsoft Azure.<br><br>Your Ericom Connect Deployment is now in process.<br><br>We will send you a confirmation e-mail once the deployment is complete and your system is ready.<br><br>Regrads,<br><a href="http://www.ericom.com">Ericom</a> Automation Team'
                 if ($To -ne "nobody") {
                     Send-MailMessage -Body "$Message" -BodyAsHtml -Subject "$Subject" -SmtpServer $SmtpServer -Port $Port -Credential $credential -From $credential.UserName -To $To -ErrorAction Continue
                 }
