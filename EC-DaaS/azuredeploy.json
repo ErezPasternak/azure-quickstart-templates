@@ -12,6 +12,7 @@
         },
         "location": {
             "type": "string",
+            "defaultValue": "West US",
             "allowedValues": [
                 "West US",
                 "East US",
