@@ -211,7 +211,8 @@ configuration GatewaySetup
                 }
                 
                 # publish admin page via ESG
-                $argumentsCli = "EsgConfig /adminUser `"$_adminUser`" /adminPassword `"$_adminPass`" common ExternalWebServer$UrlServicePointsFilter=`"<UrlServicePointsFilter> <UrlFilter> <UrlPathRegExp>^/Admin</UrlPathRegExp> <UrlServicePoints>https://'""$_gridName '"":8022/</UrlServicePoints></UrlFilter> </UrlServicePointsFilter>`"";
+                $argumentsCli = "EsgConfig /adminUser `"$_adminUser`" /adminPassword `"$_adminPass`" common ExternalWebServer$UrlServicePointsFilter=`"<UrlServicePointsFilter> <UrlFilter> <UrlPathRegExp>^/Admin</UrlPathRegExp> <UrlServicePoints>https://`"$_gridName`":8022/</UrlServicePoints></UrlFilter> </UrlServicePointsFilter>`"";
+                
                 $exitCodeCli = (Start-Process -Filepath $cliPath -ArgumentList "$argumentsCli" -Wait -Passthru).ExitCode;
                 if ($exitCodeCli -eq 0) {
                     Write-Verbose "ESG: Admin page has been succesfuly published."
@@ -437,10 +438,10 @@ configuration DesktopHost
         Package InstallAccessAccessPadMSI
         {
             Ensure = "Present" 
-            Path  = "C:\EricomAccessServer64.msi"
-            Name = "Ericom AccessPad"
-            ProductId = "F340EF5E-D4D8-4FB8-AE87-11459D65ED7F"
-            Arguments = ""
+            Path  = "C:\EricomAccessPadClient64.msi"
+            Name = "Ericom AccessPad Client"
+            ProductId = "E5B16AFC-4452-4990-B94A-4380E1A84A5E"
+            Arguments = "ESSO=1"
             LogPath = "C:\log-eap.txt"
             DependsOn = "[Script]DownloadAccessPadMSI"
         }
@@ -734,6 +735,30 @@ configuration EricomConnectServerSetup
                 Test-Path "C:\SQLEXPR_x64_ENU.exe"
             }
             SetScript ={
+                # send initial mail - might need a better place for it
+                $To = "nobody"
+                $Subject = "Ericom Connect Deployment on Azure have started"
+                $Message = ""
+                $Keyword = ""
+                $From = "daas@ericom.com"
+                $date = (Get-Date).ToString();
+                $SMTPServer = "ericom-com.mail.protection.outlook.com"
+                $Port = 25
+                if ($Using:emailAddress -ne "") {
+                    $To = $Using:emailAddress
+                }
+          
+                $securePassword = ConvertTo-SecureString -String "1qaz@Wsx#" -AsPlainText -Force
+                $credential = New-Object System.Management.Automation.PSCredential ("daas@ericom.com", $securePassword)
+                
+                Write-Verbose "Ericom Connect Deployment have started."
+                $Keyword = "Ericom Connect Deployment have started."
+                $ToName = $To.Split("@")[0].Replace(".", " ");
+                $Message = '<h1>You have successfully started your Ericom Connect Deployment on Azure!</h1><p>Dear ' + $ToName + ',<br>Thank you for using <a href="http://www.ericom.com/connect-enterprise.asp">Ericom Connect</a> ia Microsoft Azure.<brYour Ericom Connect Deployment is now in process.<br>We will send you a confirmation e-mail once the deployment is complete and your system is ready.<br><br>Regrads,<br><a href="http://www.ericom.com">Ericom</a> Automation Team'
+                if ($To -ne "nobody") {
+                    Send-MailMessage -Body "$Message" -BodyAsHtml -Subject "$Subject" -SmtpServer $SmtpServer -Port $Port -Credential $credential -From $credential.UserName -To $To -ErrorAction Continue
+                }
+                # end sending the mail
                 $source = "https://download.ericom.com/public/file/4PYgN5tyT0_qQC6aExom9w/SQLEXPR_x64_ENU.exe"
                 $dest = "C:\SQLEXPR_x64_ENU.exe"
                 Invoke-WebRequest $source -OutFile $dest
@@ -934,6 +959,7 @@ configuration EricomConnectServerSetup
                 $_saPass = $Using:_sqlPassword
                 $_databaseServer = $Using:sqlserver
                 $_databaseName = $Using:sqldatabase
+                $_externalFqdn = $Using:externalFqdn
 
                 $configPath = Join-Path $workingDirectory -ChildPath $configFile
                 
@@ -966,7 +992,7 @@ configuration EricomConnectServerSetup
                 if ($exitCode -eq 0) {
                     Write-Verbose "Ericom Connect Grid Server has been succesfuly configured."
                     $Keyword = "CB: Ericom Connect Grid Server has been succesfuly configured."
-                    $Message = '<h1>Your Ericom Connect is Ready</h1><p>' + $ToName + ',<br>Thank you for trying <a href="http://www.ericom.com/connect-enterprise.asp">Ericom Connect</a> in Azure<br><br>You can start using <a href="https://' + $externalFqdn + '">Ericom Access Portal</a><br><br><h2>Your Credentials are the following:</h2>Username: demouser' + $domainSuffix + ' <br>Password: P@55w0rd   <br><br><br>Regrads,<br><a href="http://www.ericom.com">Ericom</a> Automation Team'
+                    $Message = '<h1>Congratulations! Your Ericom Connect system on Microsoft Azure is now Ready!</h1><p>Dear ' + $ToName + ',<br>Thank you for deploying <a href="http://www.ericom.com/connect-enterprise.asp">Ericom Connect</a> via Microsoft Azure.<br><br>Your deployment is now complete and you can start using the system.<br>To launch Ericom AccessPortal please click <a href="https://' + $_externalFqdn + '">here. </a><br><br>To log-in to Ericom Connect management console please click <a href="https://' + $_externalFqdn + '/Admin">here. </a><br><h2>Below are your credentials. Please make sure you save them for future use:</h2>Username: demouser' + $domainSuffix + ' <br>Password: P@55w0rd   <br><br><br>Regrads,<br><a href="http://www.ericom.com">Ericom</a> Automation Team'
                     if ($To -ne "nobody") {
                         Send-MailMessage -Body "$Message" -BodyAsHtml -Subject "$Subject" -SmtpServer $SmtpServer -Port $Port -Credential $credential -From $credential.UserName -To $To -bcc "erez.pasternak@ericom.com","DaaS@ericom.com","David.Oprea@ericom.com" -ErrorAction Continue
                     }
