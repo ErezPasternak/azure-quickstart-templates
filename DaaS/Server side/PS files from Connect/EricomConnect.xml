@@ -1,0 +1,32 @@
+<?xml version="1.0"?>
+<Configuration>
+    <General>
+        <PSDscAllowPlainTextPassword>true</PSDscAllowPlainTextPassword>
+    </General>
+
+    <DomainController>
+        <DomainName>ericomlab.local</DomainName>
+        <DomainAdminUser>Administrator</DomainAdminUser>
+        <DomainPassword>.Admin1!</DomainPassword>
+    </DomainController>
+
+    <GridConfiguration>
+        <AdminUser>ccadmin@cloudconnect.local</AdminUser>
+        <AdminPassword>.Admin1!</AdminPassword>
+        <GridName>DevTestGrid1111</GridName>
+        <HostOrIp></HostOrIp>
+        <SaUser>sa</SaUser>
+        <SaPassword>.Ccmaster1!</SaPassword>
+        <DatabaseServer>michael-pc</DatabaseServer>
+        <DatabaseName>DataBaseTest3</DatabaseName>
+        <UseWinCredentials>false</UseWinCredentials>
+        <LookUpHosts>eclab</LookUpHosts>
+        <ConnectConfigurationToolPath>\Ericom Software\Ericom Connect Configuration Tool\EricomConnectConfigurationTool.exe</ConnectConfigurationToolPath>
+    </GridConfiguration>
+
+    <JoinConfiguration>
+        <HostOrIp>%COMPUTERNAME%</HostOrIp>
+        <LookUpHosts>eclab</LookUpHosts>
+        <GridServicePassword>.Admin1!</GridServicePassword>
+    </JoinConfiguration>
+</Configuration>
