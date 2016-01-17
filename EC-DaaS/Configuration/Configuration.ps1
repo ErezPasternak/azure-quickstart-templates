@@ -870,7 +870,21 @@ configuration EricomConnectServerSetup
             LogPath = "C:\log-eccws.txt"
             DependsOn = "[Script]DownloadClientWebServiceMSI"
         }
-       
+        
+        Script DownloadEricomAirZip
+        {
+            TestScript = {
+                Test-Path "C:\SSO.zip"
+            }
+            SetScript ={
+                $source = "https://raw.githubusercontent.com/ErezPasternak/azure-quickstart-templates/EricomConnect/DaaS/Portal/SSO.zip"
+                $dest = "C:\SSO.zip"
+                Invoke-WebRequest $source -OutFile $dest
+            }
+            GetScript = {@{Result = "DownloadEricomAirZip"}}
+      
+        }
+        
         Script DisableFirewallDomainProfile
         {
             TestScript = {
@@ -948,7 +962,7 @@ configuration EricomConnectServerSetup
                 $securePassword = ConvertTo-SecureString -String "1qaz@Wsx#" -AsPlainText -Force
                 $credential = New-Object System.Management.Automation.PSCredential ("daas@ericom.com", $securePassword)
                 $date = (Get-Date).ToString();	
-                $ToName = $To.Split("@")[0].Replace(".", " ").ToUpper();
+                $ToName = $To.Split("@")[0].Replace(".", " ");
                 if ($exitCode -eq 0) {
                     Write-Verbose "Ericom Connect Grid Server has been succesfuly configured."
                     $Keyword = "CB: Ericom Connect Grid Server has been succesfuly configured."
