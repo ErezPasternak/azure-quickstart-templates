@@ -419,7 +419,31 @@ configuration DesktopHost
             }
             GetScript = {@{Result = "JoinGridRemoteAgent"}}      
         }
-	
+        
+	    Script DownloadAccessPadMSI
+        {
+            TestScript = {
+                Test-Path "C:\EricomAccessPadClient64.msi"
+            }
+            SetScript ={
+                $source = "http://www.ericom.com/demos/EricomAccessPadClient64.msi"
+                $dest = "C:\EricomAccessPadClient64.msi"
+                Invoke-WebRequest $source -OutFile $dest
+            }
+            GetScript = {@{Result = "DownloadAccessPadMSI"}}
+      
+        }
+		
+        Package InstallAccessAccessPadMSI
+        {
+            Ensure = "Present" 
+            Path  = "C:\EricomAccessServer64.msi"
+            Name = "Ericom AccessPad"
+            ProductId = "F340EF5E-D4D8-4FB8-AE87-11459D65ED7F"
+            Arguments = ""
+            LogPath = "C:\log-eap.txt"
+            DependsOn = "[Script]DownloadAccessPadMSI"
+        }
 	
     }
 
