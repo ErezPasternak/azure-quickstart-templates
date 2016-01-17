@@ -600,7 +600,7 @@
             "resources": [
                  {
                     "type": "Microsoft.Compute/virtualMachines/extensions",
-                    "name": "cb-vm/ericomconnectserversetup",
+                    "name": "cb-vm/EricomConnectServerSetup",
                     "apiVersion": "[variables('apiVersion')]",
                     "location": "[resourceGroup().location]",
                     "dependsOn": [
