@@ -683,7 +683,7 @@
       ],
       "properties": {
         "hardwareProfile": {
-          "vmSize": "[parameters('rdshVmSize')]"
+          "vmSize": "[variables('rdshVmSize')]"
         },
         "osProfile": {
           "computerName": "lnx",
