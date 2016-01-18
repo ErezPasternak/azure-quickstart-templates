@@ -7,6 +7,8 @@
 
         [Parameter(Mandatory)]
         [System.Management.Automation.PSCredential]$Admincreds,
+        
+        [String]$emailAddress = "nobody",
 
         [Int]$RetryCount=20,
         [Int]$RetryIntervalSec=30
@@ -22,6 +24,42 @@
             ActionAfterReboot = 'ContinueConfiguration'            
             ConfigurationMode = 'ApplyOnly'            
             RebootNodeIfNeeded = $true            
+        }
+        
+        Script SendStartEmail
+        {
+            TestScript = {
+                Test-Path "C:\SendStartEmailExecuted\"
+            }
+            SetScript = {
+                New-Item -Path "C:\SendStartEmailExecuted" -ItemType Directory -Force -ErrorAction SilentlyContinue
+                
+                # send initial mail - might need a better place for it
+                $To = "nobody"
+                $Subject = "Ericom Connect Deployment on Azure have started"
+                $Message = ""
+                $Keyword = ""
+                $From = "daas@ericom.com"
+                $date = (Get-Date).ToString();
+                $SMTPServer = "ericom-com.mail.protection.outlook.com"
+                $Port = 25
+                if ($Using:emailAddress -ne "") {
+                    $To = $Using:emailAddress
+                }
+          
+                $securePassword = ConvertTo-SecureString -String "1qaz@Wsx#" -AsPlainText -Force
+                $credential = New-Object System.Management.Automation.PSCredential ("daas@ericom.com", $securePassword)
+                
+                Write-Verbose "Ericom Connect Deployment have started."
+                $Keyword = "Ericom Connect Deployment have started."
+                $ToName = $To.Split("@")[0].Replace(".", " ");
+                $Message = '<h1>You have successfully started your Ericom Connect Deployment on Azure!</h1><p>Dear ' + $ToName + ',<br><br>Thank you for using <a href="http://www.ericom.com/connect-enterprise.asp">Ericom Connect</a> via Microsoft Azure.<br><br>Your Ericom Connect Deployment is now in process.<br><br>We will send you a confirmation e-mail once the deployment is complete and your system is ready.<br><br>Regrads,<br><a href="http://www.ericom.com">Ericom</a> Automation Team'
+                if ($To -ne "nobody") {
+                    Send-MailMessage -Body "$Message" -BodyAsHtml -Subject "$Subject" -SmtpServer $SmtpServer -Port $Port -Credential $credential -From $credential.UserName -To $To -ErrorAction Continue
+                }
+                # end sending the mail
+            }
+            GetScript = {@{Result = "SendStartEmail"}}
         } 
 
         WindowsFeature DNS 
