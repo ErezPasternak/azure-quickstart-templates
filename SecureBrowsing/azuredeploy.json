@@ -371,6 +371,28 @@
     {
       "apiVersion": "[variables('apiVersion')]",
       "type": "Microsoft.Network/networkInterfaces",
+      "name": "lnx-nif",
+      "location": "[resourceGroup().location]",
+      "dependsOn": [
+        "Microsoft.Resources/deployments/updatevnetdns"
+      ],
+      "properties": {
+        "ipConfigurations": [
+          {
+            "name": "ipconfig",
+            "properties": {
+              "privateIPAllocationMethod": "Dynamic",
+              "subnet": {
+                "id": "[variables('subnet-id')]"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "apiVersion": "[variables('apiVersion')]",
+      "type": "Microsoft.Network/networkInterfaces",
       "name": "[concat('rdsh-', copyindex(), '-nif')]",
       "location": "[resourceGroup().location]",
       "copy": {
