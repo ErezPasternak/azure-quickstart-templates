@@ -694,7 +694,7 @@
           "imageReference": {
             "publisher": "[variables('imagePublisherLinux')]",
             "offer": "[variables('imageOfferLinux')]",
-            "sku": "[parameters('imageSKULinux')]",
+            "sku": "[variables('imageSKULinux')]",
             "version": "latest"
           },
           "osDisk": {
