@@ -654,7 +654,7 @@
       "apiVersion": "[variables('apiVersion')]",
       "type": "Microsoft.Compute/virtualMachines",
       "name": "lnx-vm",
-      "location": "[resourceGroup().location]]",
+      "location": "[resourceGroup().location]",
       "dependsOn": [
         "[concat('Microsoft.Storage/storageAccounts/', variables('StorageAccountName'))]",
         "Microsoft.Network/networkInterfaces/lnx-nif"
