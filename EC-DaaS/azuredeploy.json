@@ -539,11 +539,11 @@
                                  "DomainName": "[parameters('domainName')]",		
                                  "AdminCreds": {		
                                      "UserName": "[parameters('adminUsername')]",		
-                                     "Password": "PrivateSettingsRef:AdminPassword"						    		
+                                     "Password": "PrivateSettingsRef:AdminPassword"
                                  },		
    				      "gridName": "[variables('ecGridname')]",		
  				      "LUS": "broker.DaaS.local",		
- 				      "tenant": "root"		
+ 				      "tenant": "root"
                              }		
                          },		
                          "protectedSettings": {		
