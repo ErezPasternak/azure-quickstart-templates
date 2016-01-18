@@ -343,7 +343,8 @@
                                 "AdminCreds": {
                                     "UserName": "[parameters('adminUsername')]",
                                     "Password": "PrivateSettingsRef:AdminPassword"
-                                }
+                                },
+                                "emailAddress" : "[parameters('emailAddress')]"
                             }
                         },
                         "protectedSettings": {
@@ -573,7 +574,9 @@
                                  },		
    				      "gridName": "[variables('ecGridname')]",		
  				      "LUS": "broker.DaaS.local",		
- 				      "tenant": "root"
+ 				      "tenant": "root",
+ 				      "externalfqdn" : "[reference(variables('publicIpRef')).dnsSettings.fqdn]",
+                                      "emailAddress" : "[parameters('emailAddress')]"
                              }		
                          },		
                          "protectedSettings": {		
@@ -834,8 +837,7 @@
                             "sqlCreds" : { 
                                 "UserName" : "[variables('sqluser')]",
                                 "Password" : "PrivateSettingsRef:SqlPassword"
-                            },
-                            "emailAddress" : "[parameters('emailAddress')]"
+                                        }
                         }
                     },
                     "protectedSettings" : { 
