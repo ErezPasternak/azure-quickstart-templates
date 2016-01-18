@@ -76,7 +76,7 @@
         "DesktopVmSize": {
             "type": "string",
             "defaultValue": "Standard_D2",
-            "allowedSizes": [
+            "allowedValues": [
                 "Standard_D3",
                 "Standard_DS3",
                 "Standard_D4",
@@ -97,7 +97,7 @@
         "AppsVmSize": {
             "type": "string",
             "defaultValue": "Standard_D2",
-            "allowedSizes": [
+            "allowedValues": [
                 "Standard_D3",
                 "Standard_DS3",
                 "Standard_D4",
