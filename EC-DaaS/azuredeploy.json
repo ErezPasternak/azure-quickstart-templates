@@ -14,11 +14,19 @@
             "type": "string",
             "defaultValue": "West US",
             "allowedValues": [
-                "West US",
-                "East US",
-                "West Europe",
-                "East Asia",
-                "Southeast Asia"
+              "West US",
+              "East US",
+              "East US 2",
+              "Central US",
+              "South Central US",
+              "North Central US",
+              "North Europe",
+              "West Europe",
+              "East Asia",
+              "Southeast Asia",
+              "Japan East",
+              "Japan West",
+              "Southeast Asia"
             ],
             "metadata": {
                 "description": "Location to deploy to"
@@ -68,6 +76,20 @@
         "DesktopVmSize": {
             "type": "string",
             "defaultValue": "Standard_D2",
+            "allowedSizes": [
+                "Standard_D3",
+                "Standard_DS3",
+                "Standard_D4",
+                "Standard_DS4",
+                "Standard_D11",
+                "Standard_DS11",
+                "Standard_D12",
+                "Standard_DS12",
+                "Standard_D13",
+                "Standard_DS13",
+                "Standard_D14",
+                "Standard_DS14"
+                ],
             "metadata": {
                 "description": "The size of the Desktop VMs"
             }
@@ -75,16 +97,22 @@
         "AppsVmSize": {
             "type": "string",
             "defaultValue": "Standard_D2",
+            "allowedSizes": [
+                "Standard_D3",
+                "Standard_DS3",
+                "Standard_D4",
+                "Standard_DS4",
+                "Standard_D11",
+                "Standard_DS11",
+                "Standard_D12",
+                "Standard_DS12",
+                "Standard_D13",
+                "Standard_DS13",
+                "Standard_D14",
+                "Standard_DS14"
+                ],
             "metadata": {
                 "description": "The size of the Application VMs"
-            }
-        },
-
-        "assetLocation": {
-            "type": "string",
-            "defaultValue": "https://raw.githubusercontent.com/ErezPasternak/azure-quickstart-templates/EricomConnect/EC-DaaS",
-            "metadata": {
-                "description": "The location of resources such as templates and DSC modules that the script is dependent"
             }
         }
     },
@@ -250,7 +278,7 @@
             "properties": {
                 "hardwareProfile": {
                     "vmSize": "Standard_D2"
-		 },
+		        },
                 "osProfile": {
                     "computerName": "dc",
                     "adminUsername": "[parameters('adminUsername')]",
@@ -306,7 +334,7 @@
                         "type": "DSC",
                         "typeHandlerVersion": "2.8",
                         "settings": {
-                            "ModulesUrl": "[concat(parameters('assetLocation'),'/CreateADPDC.zip')]",
+                            "ModulesUrl": "[concat(variables('customScriptLocation'),'CreateADPDC.zip')]",
                             "ConfigurationFunction": "CreateADPDC.ps1\\CreateADPDC",
                             "Properties": {
                                 "DomainName": "[parameters('domainName')]",
@@ -533,7 +561,7 @@
                          "type": "DSC",		
                          "typeHandlerVersion": "2.8",		
                          "settings": {		
-                             "ModulesUrl": "[concat(parameters('assetLocation'),'/Configuration.zip')]",		
+                             "ModulesUrl": "[concat(variables('customScriptLocation'),'Configuration.zip')]",		
                              "ConfigurationFunction": "Configuration.ps1\\GatewaySetup",		
                              "Properties": {		
                                  "DomainName": "[parameters('domainName')]",		
@@ -619,7 +647,7 @@
                         "type": "DSC",
                         "typeHandlerVersion": "2.8",
                         "settings": {
-                            "ModulesUrl": "[concat(parameters('assetLocation'),'/Configuration.zip')]",
+                            "ModulesUrl": "[concat(variables('customScriptLocation'),'Configuration.zip')]",
                             "ConfigurationFunction": "Configuration.ps1\\DesktopHost",
                             "Properties": {
                                 "DomainName": "[parameters('domainName')]",
@@ -704,7 +732,7 @@
                         "type": "DSC",
                         "typeHandlerVersion": "2.8",
                         "settings": {
-                            "ModulesUrl": "[concat(parameters('assetLocation'),'/Configuration.zip')]",
+                            "ModulesUrl": "[concat(variables('customScriptLocation'),'Configuration.zip')]",
                             "ConfigurationFunction": "Configuration.ps1\\ApplicationHost",
                             "Properties": {
                                 "DomainName": "[parameters('domainName')]",
@@ -787,7 +815,7 @@
                                 "type": "DSC",
                                 "typeHandlerVersion": "2.8",
                     "settings" : { 
-                        "ModulesUrl" : "[concat(parameters('assetLocation'),'/Configuration.zip')]",
+                        "ModulesUrl" : "[concat(variables('customScriptLocation'),'Configuration.zip')]",
                         "ConfigurationFunction" : "Configuration.ps1\\EricomConnectServerSetup",
                         "Properties" : { 
                             "domainName" : "[parameters('domainName')]",
