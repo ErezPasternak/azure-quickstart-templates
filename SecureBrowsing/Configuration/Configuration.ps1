@@ -265,6 +265,8 @@ configuration GatewaySetup
 
 configuration ApplicationHost
 {
+    # need to install chrome (xChrome)
+    
    param 
     ( 
         [Parameter(Mandatory)]
@@ -462,6 +464,14 @@ configuration ApplicationHost
 
 configuration EricomConnectServerSetup
 {
+    
+    # need to publish the broswer - app name - BroswerApp, app group BroswerApp
+    # broweser parameter -Kiosk
+    # broswer will be chrome
+    # open the sso page into the correct place
+    # redriect the url to the sso page
+    # update AN javascript - add broswer related toolbar buttons (remote back/forward)
+    
    param 
     ( 
         [Parameter(Mandatory)]
@@ -469,12 +479,6 @@ configuration EricomConnectServerSetup
 
         [Parameter(Mandatory)]
         [PSCredential]$adminCreds,
-
-        # Connection Broker Node name
-        [String]$connectionBroker,
-        
-        # Web Access Node name
-        [String]$webAccessServer,
 
         # Gateway external FQDN
         [String]$externalFqdn,
@@ -506,22 +510,6 @@ configuration EricomConnectServerSetup
 
     $_sqlUser = $sqlCreds.UserName
     $_sqlPassword = [Runtime.InteropServices.Marshal]::PtrToStringAuto([Runtime.InteropServices.Marshal]::SecureStringToBSTR( (ConvertTo-SecureString ($sqlCreds.Password | ConvertFrom-SecureString)) ))
-
-    if (-not $connectionBroker)   { $connectionBroker = $localhost }
-    if (-not $webAccessServer)    { $webAccessServer  = $localhost }
-
-    if ($sessionHostNamingPrefix)
-    { 
-        $sessionHosts = @( 0..($numberOfRdshInstances-1) | % { "$sessionHostNamingPrefix$_.$domainname"} )
-    }
-    else
-    {
-        $sessionHosts = @( $localhost )
-    }
-
-    if (-not $collectionName)         { $collectionName = "Desktop Collection" }
-    if (-not $collectionDescription)  { $collectionDescription = "A sample RD Session collection up in cloud." }
-
 
     Node localhost
     {
@@ -589,8 +577,7 @@ configuration EricomConnectServerSetup
                 $dest = "C:\EricomConnectDataGrid_x64_WT.msi"
                 Invoke-WebRequest $source -OutFile $dest
             }
-            GetScript = {@{Result = "DownloadGridMSI"}}
-      
+            GetScript = {@{Result = "DownloadGridMSI"}}   
         }
 		
         Package InstallGridMSI
@@ -614,8 +601,7 @@ configuration EricomConnectServerSetup
                 $dest = "C:\EricomConnectProcessingUnitServer.msi"
                 Invoke-WebRequest $source -OutFile $dest
             }
-            GetScript = {@{Result = "DownloadProcessingUnitServerMSI"}}
-      
+            GetScript = {@{Result = "DownloadProcessingUnitServerMSI"}}     
         }
 		
         Package InstallProcessingUnitServerMSI
@@ -665,8 +651,7 @@ configuration EricomConnectServerSetup
                 $dest = "C:\EricomConnectClientWebService.msi"
                 Invoke-WebRequest $source -OutFile $dest
             }
-            GetScript = {@{Result = "DownloadClientWebServiceMSI"}}
-      
+            GetScript = {@{Result = "DownloadClientWebServiceMSI"}}   
         }
 		
         Package InstallClientWebServiceMSI
@@ -689,6 +674,19 @@ configuration EricomConnectServerSetup
                 Set-NetFirewallProfile -Profile Domain -Enabled False
             }
             GetScript = {@{Result = "DisableFirewallDomainProfile"}}
+        }
+        
+        Script DownloadEricomSSOZip
+        {
+            TestScript = {
+                Test-Path "C:\SSO.zip"
+            }
+            SetScript ={
+                $source = "https://raw.githubusercontent.com/ErezPasternak/azure-quickstart-templates/EricomConnect/SecureBrowsing/SSO.zip"
+                $dest = "C:\SSO.zip"
+                Invoke-WebRequest $source -OutFile $dest
+            }
+            GetScript = {@{Result = "DownloadEricomSSOZip"}}    
         }
 
         Script InitializeGrid
