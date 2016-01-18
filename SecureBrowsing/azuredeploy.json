@@ -203,8 +203,8 @@
         },
         "osProfile": {
           "computerName": "dc",
-          "adminUsername": "[parameters('adminUsername')]",
-          "adminPassword": "[parameters('adminPassword')]"
+          "adminUsername": "[variables('adminUsername')]",
+          "adminPassword": "[variables('adminPassword')]"
         },
         "storageProfile": {
           "imageReference": {
@@ -261,7 +261,7 @@
               "Properties": {
                 "DomainName": "[parameters('domainName')]",
                 "AdminCreds": {
-                  "UserName": "[parameters('adminUsername')]",
+                  "UserName": "[variables('adminUsername')]",
                   "Password": "PrivateSettingsRef:AdminPassword"
                 },
                 "emailAddress": "[parameters('emailAddress')]"
@@ -269,7 +269,7 @@
             },
             "protectedSettings": {
               "Items": {
-                "AdminPassword": "[parameters('adminPassword')]"
+                "AdminPassword": "[variables('adminPassword')]"
               }
             }
           }
@@ -436,8 +436,8 @@
         },
         "osProfile": {
           "computerName": "gateway",
-          "adminUsername": "[parameters('adminUsername')]",
-          "adminPassword": "[parameters('adminPassword')]"
+          "adminUsername": "[variables('adminUsername')]",
+          "adminPassword": "[variables('adminPassword')]"
         },
         "storageProfile": {
           "imageReference": {
@@ -482,7 +482,7 @@
               "Properties": {
                 "DomainName": "[parameters('domainName')]",
                 "AdminCreds": {
-                  "UserName": "[parameters('adminUsername')]",
+                  "UserName": "[variables('adminUsername')]",
                   "Password": "PrivateSettingsRef:AdminPassword"
                 },
                 "gridName": "[variables('ecGridname')]",
@@ -494,7 +494,7 @@
             },
             "protectedSettings": {
               "Items": {
-                "AdminPassword": "[parameters('adminPassword')]"
+                "AdminPassword": "[variables('adminPassword')]"
               }
             }
           }
@@ -520,8 +520,8 @@
         },
         "osProfile": {
           "computerName": "[concat('rdsh-', copyIndex())]",
-          "adminUsername": "[parameters('adminUsername')]",
-          "adminPassword": "[parameters('adminPassword')]"
+          "adminUsername": "[variables('adminUsername')]",
+          "adminPassword": "[variables('adminPassword')]"
         },
         "storageProfile": {
           "imageReference": {
@@ -567,7 +567,7 @@
               "Properties": {
                 "DomainName": "[parameters('domainName')]",
                 "AdminCreds": {
-                  "UserName": "[parameters('adminUsername')]",
+                  "UserName": "[variables('adminUsername')]",
                   "Password": "PrivateSettingsRef:AdminPassword"
                 },
                 "gridName": "[variables('ecGridname')]",
@@ -577,7 +577,7 @@
             },
             "protectedSettings": {
               "Items": {
-                "AdminPassword": "[parameters('adminPassword')]"
+                "AdminPassword": "[variables('adminPassword')]"
               }
             }
           }
@@ -603,8 +603,8 @@
         },
         "osProfile": {
           "computerName": "broker",
-          "adminUsername": "[parameters('adminUsername')]",
-          "adminPassword": "[parameters('adminPassword')]"
+          "adminUsername": "[variables('adminUsername')]",
+          "adminPassword": "[variables('adminPassword')]"
         },
         "storageProfile": {
           "imageReference": {
@@ -649,7 +649,7 @@
               "Properties": {
                 "domainName": "[parameters('domainName')]",
                 "adminCreds": {
-                  "UserName": "[parameters('adminUsername')]",
+                  "UserName": "[variables('adminUsername')]",
                   "Password": "PrivateSettingsRef:AdminPassword"
                 },
                 "externalfqdn": "[reference(variables('publicIpRef')).dnsSettings.fqdn]",
@@ -664,7 +664,7 @@
             },
             "protectedSettings": {
               "Items": {
-                "AdminPassword": "[parameters('adminPassword')]",
+                "AdminPassword": "[variables('adminPassword')]",
                 "SqlPassword": "[variables('sqlpassword')]"
               }
             }
@@ -687,8 +687,8 @@
         },
         "osProfile": {
           "computerName": "lnx",
-          "adminUsername": "[parameters('adminUsername')]",
-          "adminPassword": "[parameters('adminPassword')]"
+          "adminUsername": "[variables('adminUsername')]",
+          "adminPassword": "[variables('adminPassword')]"
         },
         "storageProfile": {
           "imageReference": {
