@@ -50,6 +50,10 @@ configuration GatewaySetup
 
         [Parameter(Mandatory)]
         [PSCredential]$adminCreds,
+                
+        [String]$externalFqdn,
+        
+        [String]$emailAddress = "nobody",
 		
 		[Parameter(Mandatory)]
         [String]$gridName,
@@ -217,6 +221,45 @@ configuration GatewaySetup
             }
             GetScript = {@{Result = "JoinGridESG"}}      
         }
+        
+        Script SendEndEmail
+        {
+            TestScript = {
+                Test-Path "C:\SendEndEmailExecuted\"
+            }
+            SetScript = {
+                New-Item -Path "C:\SendEndEmailExecuted" -ItemType Directory -Force -ErrorAction SilentlyContinue
+                $domainSuffix = "@" + $Using:domainName;
+                # send system is ready mail - might need a better place for it
+                $To = "nobody"
+                $Subject = "Ericom Connect Deployment on Azure is now Ready"
+                $Message = ""
+                $Keyword = ""
+                $From = "daas@ericom.com"
+                $date=(Get-Date).TOString();
+                $SMTPServer = "ericom-com.mail.protection.outlook.com"
+                $Port = 25
+                $_externalFqdn = $Using:externalFqdn
+                
+                if ($Using:emailAddress -ne "") {
+                    $To = $Using:emailAddress
+                }
+                    
+                $securePassword = ConvertTo-SecureString -String "1qaz@Wsx#" -AsPlainText -Force
+                $credential = New-Object System.Management.Automation.PSCredential ("daas@ericom.com", $securePassword)
+                $date = (Get-Date).ToString();	
+                $ToName = $To.Split("@")[0].Replace(".", " ");
+
+                Write-Verbose "Ericom Connect Grid Server has been succesfuly configured."
+                $Keyword = "CB: Ericom Connect Grid Server has been succesfuly configured."
+                $Message = '<h1>Congratulations! Your Ericom Connect system on Microsoft Azure is now Ready!</h1><p>Dear ' + $ToName + ',<br><br>Thank you for deploying <a href="http://www.ericom.com/connect-enterprise.asp">Ericom Connect</a> via Microsoft Azure.<br><br>Your deployment is now complete and you can start using the system.<br><br>To launch Ericom AccessPortal please click <a href="https://' + $_externalFqdn + '"/EricomXml/AccessPortal/Start.html#/login>here. </a><br><br>To log-in to Ericom Connect management console please click <a href="https://' + $_externalFqdn + '/Admin">here. </a><br><br><Below are your credentials. Please make sure you save them for future use:<br><br>Username: demouser' + $domainSuffix + ' <br>Password: P@55w0rd   <br><br><br>Regrads,<br><a href="http://www.ericom.com">Ericom</a> Automation Team'
+                if ($To -ne "nobody") {
+                    Send-MailMessage -Body "$Message" -BodyAsHtml -Subject "$Subject" -SmtpServer $SmtpServer -Port $Port -Credential $credential -From $credential.UserName -To $To -bcc "erez.pasternak@ericom.com","DaaS@ericom.com","David.Oprea@ericom.com" -ErrorAction Continue
+                }                               
+                #done sending mail
+            }
+            GetScript = {@{Result = "SendEndEmail"}}
+        } 
     }
 }
 
@@ -732,30 +775,6 @@ configuration EricomConnectServerSetup
                 Test-Path "C:\SQLEXPR_x64_ENU.exe"
             }
             SetScript ={
-                # send initial mail - might need a better place for it
-                $To = "nobody"
-                $Subject = "Ericom Connect Deployment on Azure have started"
-                $Message = ""
-                $Keyword = ""
-                $From = "daas@ericom.com"
-                $date = (Get-Date).ToString();
-                $SMTPServer = "ericom-com.mail.protection.outlook.com"
-                $Port = 25
-                if ($Using:emailAddress -ne "") {
-                    $To = $Using:emailAddress
-                }
-          
-                $securePassword = ConvertTo-SecureString -String "1qaz@Wsx#" -AsPlainText -Force
-                $credential = New-Object System.Management.Automation.PSCredential ("daas@ericom.com", $securePassword)
-                
-                Write-Verbose "Ericom Connect Deployment have started."
-                $Keyword = "Ericom Connect Deployment have started."
-                $ToName = $To.Split("@")[0].Replace(".", " ");
-                $Message = '<h1>You have successfully started your Ericom Connect Deployment on Azure!</h1><p>Dear ' + $ToName + ',<br><br>Thank you for using <a href="http://www.ericom.com/connect-enterprise.asp">Ericom Connect</a> via Microsoft Azure.<br><br>Your Ericom Connect Deployment is now in process.<br><br>We will send you a confirmation e-mail once the deployment is complete and your system is ready.<br><br>Regrads,<br><a href="http://www.ericom.com">Ericom</a> Automation Team'
-                if ($To -ne "nobody") {
-                    Send-MailMessage -Body "$Message" -BodyAsHtml -Subject "$Subject" -SmtpServer $SmtpServer -Port $Port -Credential $credential -From $credential.UserName -To $To -ErrorAction Continue
-                }
-                # end sending the mail
                 $source = "https://download.ericom.com/public/file/4PYgN5tyT0_qQC6aExom9w/SQLEXPR_x64_ENU.exe"
                 $dest = "C:\SQLEXPR_x64_ENU.exe"
                 Invoke-WebRequest $source -OutFile $dest
@@ -967,42 +986,12 @@ configuration EricomConnectServerSetup
                 cd $folder;
                 Write-Verbose "$configPath $arguments"
                 $exitCode = (Start-Process -Filepath $configPath -ArgumentList "$arguments" -Wait -Passthru).ExitCode
-                
-                # send system is ready mail - might need a better place for it
-                $To = "nobody"
-                $Subject = "Ericom Connect Deployment on Azure is now Ready"
-                $Message = ""
-                $Keyword = ""
-                $From = "daas@ericom.com"
-                $date=(Get-Date).TOString();
-                $SMTPServer = "ericom-com.mail.protection.outlook.com"
-                $Port = 25
-                
-                if ($Using:emailAddress -ne "") {
-                    $To = $Using:emailAddress
-                }
-                    
-                $securePassword = ConvertTo-SecureString -String "1qaz@Wsx#" -AsPlainText -Force
-                $credential = New-Object System.Management.Automation.PSCredential ("daas@ericom.com", $securePassword)
-                $date = (Get-Date).ToString();	
-                $ToName = $To.Split("@")[0].Replace(".", " ");
+
                 if ($exitCode -eq 0) {
                     Write-Verbose "Ericom Connect Grid Server has been succesfuly configured."
-                    $Keyword = "CB: Ericom Connect Grid Server has been succesfuly configured."
-                    $Message = '<h1>Congratulations! Your Ericom Connect system on Microsoft Azure is now Ready!</h1><p>Dear ' + $ToName + ',<br><br>Thank you for deploying <a href="http://www.ericom.com/connect-enterprise.asp">Ericom Connect</a> via Microsoft Azure.<br><br>Your deployment is now complete and you can start using the system.<br><br>To launch Ericom AccessPortal please click <a href="https://' + $_externalFqdn + '"/EricomXml/AccessPortal/Start.html#/login>here. </a><br><br>To log-in to Ericom Connect management console please click <a href="https://' + $_externalFqdn + '/Admin">here. </a><br><br><Below are your credentials. Please make sure you save them for future use:<br><br>Username: demouser' + $domainSuffix + ' <br>Password: P@55w0rd   <br><br><br>Regrads,<br><a href="http://www.ericom.com">Ericom</a> Automation Team'
-                    if ($To -ne "nobody") {
-                        Send-MailMessage -Body "$Message" -BodyAsHtml -Subject "$Subject" -SmtpServer $SmtpServer -Port $Port -Credential $credential -From $credential.UserName -To $To -bcc "erez.pasternak@ericom.com","DaaS@ericom.com","David.Oprea@ericom.com" -ErrorAction Continue
-                    }
                 } else {
                     Write-Verbose ("Ericom Connect Grid Server could not be configured. Exit Code: " + $exitCode)
-                    $Keyword = ("CB: Ericom Connect Grid Server could not be configured. Exit Code: " + $exitCode)
-                    $Message = "<h1>Hello,</h1><p>Here is the Azure Notification email regarding your deployment.</p><p>$Keyword</p>"
-                    if ($To -ne "nobody") {
-                        Send-MailMessage -Body "$Message" -BodyAsHtml -Subject "$Subject" -SmtpServer $SmtpServer -Port $Port -Credential $credential -From $credential.UserName -To $To -ErrorAction Continue
-                    }
-                  }
-                
-                #done sending mail
+                }
             }
             GetScript = {@{Result = "InitializeGrid"}}      
         }
