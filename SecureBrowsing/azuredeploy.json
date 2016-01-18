@@ -42,7 +42,7 @@
     "domainName": "esb.local",
     "adminUsername": "ericom",
     "adminPassword": "Ericom123$",
-    "numberOfRdshInstances": 1,
+    "numberOfRdshInstances": "1",
     "rdshVmSize": "Standard_D2",
     "imagePublisherWindows": "MicrosoftWindowsServer",
     "imagePublisherLinux": "Canonical",
