@@ -265,8 +265,7 @@ configuration ApplicationHost
             Ensure = "Present"
             Name = "RDS-RD-Server"
         }
-	
-		 
+
 	    Script DownloadGridMSI
         {
             TestScript = {
@@ -303,8 +302,7 @@ configuration ApplicationHost
                 Invoke-WebRequest $source -OutFile $dest
             }
             GetScript = {@{Result = "DownloadRemoteAgentMSI"}}
-      
-        }
+         }
 		
         Package InstallRemoteAgentMSI
         {
@@ -417,6 +415,14 @@ configuration ApplicationHost
     }
 
 }
+
+
+
+
+
+
+
+
 
 configuration DesktopHost
 {
@@ -639,10 +645,6 @@ configuration DesktopHost
     }
 
 }
-
-
-
-
 
 configuration EricomConnectServerSetup
 {
