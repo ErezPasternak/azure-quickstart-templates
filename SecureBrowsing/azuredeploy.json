@@ -700,10 +700,10 @@
       }
     },
     {
-      "apiVersion": "[variables('api-version')]",
+      "apiVersion": "[variables('apiVersion')]",
       "type": "Microsoft.Compute/virtualMachines/extensions",
       "name": "lnx-vm/enablevmaccess')]",
-      "location": "[parameters('location')]",
+      "location": "[resourceGroup().location]",
       "dependsOn": [
         "Microsoft.Compute/virtualMachines/lnx-vm"
       ],
