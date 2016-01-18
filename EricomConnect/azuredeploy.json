@@ -54,7 +54,7 @@
 
         "assetLocation": {
             "type": "string",
-            "defaultValue": "https://raw.githubusercontent.com/ErezPasternak/azure-quickstart-templates/EricomConnect/ec-deployment-new",
+            "defaultValue": "https://raw.githubusercontent.com/ErezPasternak/azure-quickstart-templates/EricomConnect/EricomConnect73",
             "metadata": {
                 "description": "The location of resources such as templates and DSC modules that the script is dependent"
             }
@@ -71,7 +71,7 @@
         "dnsServerPrivateIp": "10.0.0.8",
         "subnetName": "Subnet",
         "subnet-id": "[concat(resourceId('Microsoft.Network/virtualNetworks','VNET'),'/subnets/',variables('subnetName'))]",
-	    "customScriptLocation": "https://raw.githubusercontent.com/ErezPasternak/azure-quickstart-templates/EricomConnect/ec-deployment-new/",
+	    "customScriptLocation": "https://raw.githubusercontent.com/ErezPasternak/azure-quickstart-templates/EricomConnect/EricomConnect73/",
         "publicIpRef": "publicIp",
 	    "ecGridname" : "ecgrid",
 	    "sqlserver" : "localhost",
