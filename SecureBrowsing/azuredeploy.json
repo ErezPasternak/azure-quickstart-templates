@@ -259,7 +259,7 @@
               "ModulesUrl": "[concat(variables('customScriptLocation'),'CreateADPDC.zip')]",
               "ConfigurationFunction": "CreateADPDC.ps1\\CreateADPDC",
               "Properties": {
-                "DomainName": "[parameters('domainName')]",
+                "DomainName": "[variables('domainName')]",
                 "AdminCreds": {
                   "UserName": "[variables('adminUsername')]",
                   "Password": "PrivateSettingsRef:AdminPassword"
@@ -480,7 +480,7 @@
               "ModulesUrl": "[concat(variables('customScriptLocation'),'Configuration.zip')]",
               "ConfigurationFunction": "Configuration.ps1\\GatewaySetup",
               "Properties": {
-                "DomainName": "[parameters('domainName')]",
+                "DomainName": "[variables('domainName')]",
                 "AdminCreds": {
                   "UserName": "[variables('adminUsername')]",
                   "Password": "PrivateSettingsRef:AdminPassword"
@@ -565,7 +565,7 @@
               "ModulesUrl": "[concat(variables('customScriptLocation'),'Configuration.zip')]",
               "ConfigurationFunction": "Configuration.ps1\\ApplicationHost",
               "Properties": {
-                "DomainName": "[parameters('domainName')]",
+                "DomainName": "[variables('domainName')]",
                 "AdminCreds": {
                   "UserName": "[variables('adminUsername')]",
                   "Password": "PrivateSettingsRef:AdminPassword"
@@ -647,7 +647,7 @@
               "ModulesUrl": "[concat(variables('customScriptLocation'),'Configuration.zip')]",
               "ConfigurationFunction": "Configuration.ps1\\EricomConnectServerSetup",
               "Properties": {
-                "domainName": "[parameters('domainName')]",
+                "domainName": "[variables('domainName')]",
                 "adminCreds": {
                   "UserName": "[variables('adminUsername')]",
                   "Password": "PrivateSettingsRef:AdminPassword"
