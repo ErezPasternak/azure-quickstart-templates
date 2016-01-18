@@ -77,6 +77,7 @@
             "type": "string",
             "defaultValue": "Standard_D2",
             "allowedValues": [
+                "Standard_D2",
                 "Standard_D3",
                 "Standard_DS3",
                 "Standard_D4",
@@ -98,6 +99,7 @@
             "type": "string",
             "defaultValue": "Standard_D2",
             "allowedValues": [
+                "Standard_D2",
                 "Standard_D3",
                 "Standard_DS3",
                 "Standard_D4",
