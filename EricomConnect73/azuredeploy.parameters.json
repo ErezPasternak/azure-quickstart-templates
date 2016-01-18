@@ -5,15 +5,15 @@
     "adminPassword": {
       "value": "Ericom123$"
     },
+    
     "adminUsername": {
       "value": "Ericom"
     },
+    
     "emailAddress": {
       "value": "David.Oprea@ericom.com"
     },
-    "assetLocation": {
-      "value": "https://github.com/ErezPasternak/azure-quickstart-templates/raw/EricomConnect/EricomConnect73"
-    },
+    
     "domainName": {
       "value": "test.local"
     },
