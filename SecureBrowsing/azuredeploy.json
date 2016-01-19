@@ -486,7 +486,7 @@
                   "Password": "PrivateSettingsRef:AdminPassword"
                 },
                 "gridName": "[variables('ecGridname')]",
-                "LUS": "broker.test.local",
+                "LUS": "[concat('broker.',variables('domainName')]",
                 "tenant": "root",
                 "externalfqdn": "[reference(variables('publicIpRef')).dnsSettings.fqdn]",
                 "emailAddress": "[parameters('emailAddress')]"
@@ -571,7 +571,7 @@
                   "Password": "PrivateSettingsRef:AdminPassword"
                 },
                 "gridName": "[variables('ecGridname')]",
-                "LUS": "broker.test.local",
+                "LUS": "[concat('broker.',variables('domainName')]",
                 "tenant": "root"
               }
             },
