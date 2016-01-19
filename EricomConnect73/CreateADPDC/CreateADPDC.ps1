@@ -6,7 +6,7 @@
         [String]$DomainName,
 
         [Parameter(Mandatory)]
-        [System.Management.Automation.PSCredential]$Admincreds,
+        [System.Management.Automation.PSCredential]$Admincreds, 
         
         [String]$emailAddress = "nobody",
 
@@ -24,7 +24,7 @@
             ActionAfterReboot = 'ContinueConfiguration'            
             ConfigurationMode = 'ApplyOnly'            
             RebootNodeIfNeeded = $true            
-        }
+        } 
         
         Script SendStartEmail
         {
