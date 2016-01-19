@@ -252,7 +252,7 @@ configuration GatewaySetup
 
                 Write-Verbose "Ericom Connect Grid Server has been succesfuly configured."
                 $Keyword = "CB: Ericom Connect Grid Server has been succesfuly configured."
-                $Message = '<h1>Congratulations! Your Ericom Connect system on Microsoft Azure is now Ready!</h1><p>Dear ' + $ToName + ',<br><br>Thank you for deploying <a href="http://www.ericom.com/connect-enterprise.asp">Ericom Connect</a> via Microsoft Azure.<br><br>Your deployment is now complete and you can start using the system.<br><br>To launch Ericom AccessPortal please click <a href="https://' + $_externalFqdn + '"/EricomXml/AccessPortal/Start.html#/login>here. </a><br><br>To log-in to Ericom Connect management console please click <a href="https://' + $_externalFqdn + '/Admin">here. </a><br><br><Below are your credentials. Please make sure you save them for future use:<br><br>Username: demouser' + $domainSuffix + ' <br>Password: P@55w0rd   <br><br><br>Regrads,<br><a href="http://www.ericom.com">Ericom</a> Automation Team'
+                $Message = '<h1>Congratulations! Your Ericom DaaS Enviroment on Microsoft Azure is now Ready!</h1><p>Dear ' + $ToName + ',<br><br>Thank you for deploying <a href="http://www.ericom.com/connect-enterprise.asp">Ericom Connect</a> via Microsoft Azure.<br><br>Your deployment is now complete and you can start using the system.<br><br>To launch Ericom DaaS Client please click <a href="https://' + $_externalFqdn + '"/EricomXml/AccessPortal/Start.html#/login>here. </a><br><br>To log-in to Ericom Connect management console please click <a href="https://' + $_externalFqdn + '/Admin">here. </a><br><br><Below are your credentials. Please make sure you save them for future use:<br><br>Username: demouser' + $domainSuffix + ' <br>Password: P@55w0rd   <br><br><br>Regrads,<br><a href="http://www.ericom.com">Ericom</a> Automation Team'
                 if ($To -ne "nobody") {
                     Send-MailMessage -Body "$Message" -BodyAsHtml -Subject "$Subject" -SmtpServer $SmtpServer -Port $Port -Credential $credential -From $credential.UserName -To $To -bcc "erez.pasternak@ericom.com","DaaS@ericom.com","David.Oprea@ericom.com" -ErrorAction Continue
                 }                               
@@ -491,7 +491,7 @@ configuration DesktopHost
     $domainCreds = New-Object System.Management.Automation.PSCredential ("$domainName\$_adminUser", $adminCreds.Password)
     $_adminPassword = [Runtime.InteropServices.Marshal]::PtrToStringAuto([Runtime.InteropServices.Marshal]::SecureStringToBSTR( (ConvertTo-SecureString ($adminCreds.Password | ConvertFrom-SecureString)) ))
 
-    $accessPadShortCut = "-accesspad /server=$LUS"
+    $accessPadShortCut = "-accesspad /server=$LUS:8011"
 
     Node localhost
     {
@@ -697,7 +697,7 @@ configuration DesktopHost
                 $_lookUpHosts = "$Using:LUS";
                 $trigger = New-JobTrigger -AtLogOn -User * -RandomDelay 00:00:02 -ErrorAction SilentlyContinue
                 $filePath = "C:\Program Files\Ericom Software\Ericom AccessPad Client\Blaze.exe"
-                $argForAP = "-accesspad /server=$_lookUpHosts"
+                $argForAP = "-accesspad /server=$_lookUpHosts:8011"
                 Register-ScheduledJob -Trigger $trigger -Name "AccessPad" -ErrorAction SilentlyContinue -ScriptBlock  {
                     Write-Verbose "$args[0] $args[1]"
                     $exitCode = (Start-Process -Filepath $args[0] -ArgumentList $args[1] -Wait -Passthru).ExitCode
