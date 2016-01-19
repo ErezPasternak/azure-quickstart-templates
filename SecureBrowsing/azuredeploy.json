@@ -149,18 +149,6 @@
               "backendPort": 443,
               "enableFloatingIP": false
             }
-          },
-          {
-            "name": "gateway",
-            "properties": {
-              "frontendIPConfiguration": {
-                "id": "[concat(resourceId('Microsoft.Network/loadBalancers','loadBalancer'),'/frontendIPConfigurations/LBFE')]"
-              },
-              "protocol": "udp",
-              "frontendPort": 3391,
-              "backendPort": 3391,
-              "enableFloatingIP": false
-            }
           }
         ]
       }
@@ -700,8 +688,8 @@
           "osDisk": {
             "name": "osdisk",
             "vhd": {
-              "uri": "[concat('http://',variables('StorageAccountName'),'.blob.core.windows.net/',variables('vmStorageAccountContainerName'),'/',variables('OSDiskName'),'.vhd')]"
-            },
+              "uri": "[concat('http://',variables('StorageAccountName'),'.blob.core.windows.net/vhds/lnx-vm-osdisk.vhd')]"
+             },
             "caching": "ReadWrite",
             "createOption": "FromImage"
           }
@@ -735,11 +723,11 @@
         "typeHandlerVersion": "1.1",
         "settings": {},
         "protectedSettings": {
-          "username": "[parameters('userName')]",
-          "password": "[parameters('password')]",
+          "username": "[variables('adminUsername')]",
+          "password": "[parameters('adminPassword')]",
           "reset_ssh": "[parameters('resetSSH')]",
-          "ssh_key": "[parameters('sshKey')]",
-          "remove_user": "[parameters('userNameToRemove')]"
+          "ssh_key": false ,
+          "remove_user": ""
         }
       }
     }
