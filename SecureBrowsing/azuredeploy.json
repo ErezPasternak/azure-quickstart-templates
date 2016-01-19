@@ -724,7 +724,7 @@
     {
       "apiVersion": "[variables('apiVersion')]",
       "type": "Microsoft.Compute/virtualMachines/extensions",
-      "name": "lnx-vm/enablevmaccess')]",
+      "name": "lnx-vm/enablevmaccess",
       "location": "[resourceGroup().location]",
       "dependsOn": [
         "Microsoft.Compute/virtualMachines/lnx-vm"
