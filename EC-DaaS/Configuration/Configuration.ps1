@@ -684,6 +684,26 @@ configuration DesktopHost
             LogPath = "C:\log-eap.txt"
             DependsOn = "[Script]DownloadAccessPadMSI"
         }
+        
+        Script AddAccessPadOnStartUp
+        {
+            Credential = $adminCreds
+            TestScript = {
+                $job = Get-ScheduledJob -Name AccessPad -ErrorAction SilentlyContinue
+                return ($job -ne "" -and $job.Enabled -eq $true)
+            }
+            SetScript ={
+                $_lookUpHosts = "$Using:LUS";
+                $trigger = New-JobTrigger -AtLogOn -User * -RandomDelay 00:00:02 -ErrorAction SilentlyContinue
+                $filePath = "C:\Program Files (x86)\Ericom Software\Ericom AccessPad Client\Blaze.exe"
+                $argForAP = "-accesspad /server=$_lookUpHosts"
+                Register-ScheduledJob -Trigger $trigger -Name "AccessPad" -ErrorAction SilentlyContinue -ScriptBlock  {
+                    Write-Verbose "$args[0] $args[1]"
+                    $exitCode = (Start-Process -Filepath $args[0] -ArgumentList $args[1] -Wait -Passthru).ExitCode
+                } -ArgumentList $filePath, $argForAP
+            }
+            GetScript = {@{Result = "AddAccessPadOnStartUp"}}      
+        }
 	
     }
 
