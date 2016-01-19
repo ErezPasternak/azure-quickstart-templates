@@ -724,9 +724,9 @@
         "settings": {},
         "protectedSettings": {
           "username": "[variables('adminUsername')]",
-          "password": "[parameters('adminPassword')]",
-          "reset_ssh": "[parameters('resetSSH')]",
-          "ssh_key": false ,
+          "password": "[variables('adminPassword')]",
+          "reset_ssh": false,
+          "ssh_key": "" ,
           "remove_user": ""
         }
       }
