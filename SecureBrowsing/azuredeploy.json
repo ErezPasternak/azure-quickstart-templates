@@ -149,6 +149,18 @@
               "backendPort": 443,
               "enableFloatingIP": false
             }
+          },
+          {
+            "name": "gateway",
+            "properties": {
+              "frontendIPConfiguration": {
+                "id": "[concat(resourceId('Microsoft.Network/loadBalancers','loadBalancer'),'/frontendIPConfigurations/LBFE')]"
+              },
+              "protocol": "udp",
+              "frontendPort": 3391,
+              "backendPort": 3391,
+              "enableFloatingIP": false
+            }
           }
         ]
       }
