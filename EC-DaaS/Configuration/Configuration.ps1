@@ -758,22 +758,6 @@ configuration EricomConnectServerSetup
     $_sqlUser = $sqlCreds.UserName
     $_sqlPassword = [Runtime.InteropServices.Marshal]::PtrToStringAuto([Runtime.InteropServices.Marshal]::SecureStringToBSTR( (ConvertTo-SecureString ($sqlCreds.Password | ConvertFrom-SecureString)) ))
 
-    if (-not $connectionBroker)   { $connectionBroker = $localhost }
-    if (-not $webAccessServer)    { $webAccessServer  = $localhost }
-
-    if ($sessionHostNamingPrefix)
-    { 
-        $sessionHosts = @( 0..($numberOfRdshInstances-1) | % { "$sessionHostNamingPrefix$_.$domainname"} )
-    }
-    else
-    {
-        $sessionHosts = @( $localhost )
-    }
-
-    if (-not $collectionName)         { $collectionName = "Desktop Collection" }
-    if (-not $collectionDescription)  { $collectionDescription = "A sample RD Session collection up in cloud." }
-
-
     Node localhost
     {
 
@@ -840,8 +824,7 @@ configuration EricomConnectServerSetup
                 $dest = "C:\EricomConnectDataGrid_x64_WT.msi"
                 Invoke-WebRequest $source -OutFile $dest
             }
-            GetScript = {@{Result = "DownloadGridMSI"}}
-      
+            GetScript = {@{Result = "DownloadGridMSI"}}   
         }
 		
         Package InstallGridMSI
@@ -865,8 +848,7 @@ configuration EricomConnectServerSetup
                 $dest = "C:\EricomConnectProcessingUnitServer.msi"
                 Invoke-WebRequest $source -OutFile $dest
             }
-            GetScript = {@{Result = "DownloadProcessingUnitServerMSI"}}
-      
+            GetScript = {@{Result = "DownloadProcessingUnitServerMSI"}}     
         }
 		
         Package InstallProcessingUnitServerMSI
