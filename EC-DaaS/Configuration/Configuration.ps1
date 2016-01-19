@@ -704,7 +704,6 @@ configuration DesktopHost
             }
             GetScript = {@{Result = "AddAccessPadOnStartUp"}}      
         }
-	
     }
 
 }
@@ -1014,6 +1013,58 @@ configuration EricomConnectServerSetup
                 }
             }
             GetScript = {@{Result = "InitializeGrid"}}      
+        }
+        
+        Script UnZipAir
+        {
+            TestScript = {
+                Test-Path "C:\Program Files\Ericom Software\Ericom Connect Client Web Service\WebServer\AirSSO\"
+            }
+            SetScript ={
+                $source = "C:\SSO.zip"
+                $destTmp = "C:\Program Files\Ericom Software\Ericom Connect Client Web Service\WebServer\"
+                $dest = "C:\Program Files\Ericom Software\Ericom Connect Client Web Service\WebServer\AirSSO\"
+                $shell = new-object -com shell.application
+                $zip = $shell.NameSpace($source)
+                foreach($item in $zip.items())
+                {
+                    $shell.Namespace($destTmp).copyhere($item)
+                }
+                Move-Item "$destTmp\SSO" -Destination $dest -Force -ErrorAction SilentlyContinue
+            }
+            GetScript = {@{Result = "UnZipAir"}}
+        }
+        
+        Script AlterAirURLPage
+        {
+            TestScript = {
+                return $false
+            }
+            SetScript ={
+                $domainSuffix = "@" + $Using:domainName;
+                # Call Configuration Tool
+                Write-Verbose "Configuration step"
+                $workingDirectory = "$env:ProgramFiles\Ericom Software\Ericom Connect Configuration Tool"
+                $newAirURL = "AirSSO/AccessSSO.htm"
+                $connectCli = "ConnectCli.exe"                  
+
+                $_adminUser = "$Using:_adminUser" + "$domainSuffix"
+                $_adminPass = "$Using:_adminPassword"
+                
+                $cliPath = Join-Path $workingDirectory -ChildPath $connectCli
+                
+                # publish admin page via ESG
+                $argumentsCli = "EsgConfig /adminUser `"$_adminUser`" /adminPassword `"$_adminPass`" common DefaultUrl=$newAirURL";
+                
+                $exitCodeCli = (Start-Process -Filepath $cliPath -ArgumentList "$argumentsCli" -Wait -Passthru).ExitCode;
+                if ($exitCodeCli -eq 0) {
+                    Write-Verbose "ESG: Air page has been succesfuly published."
+                } else {
+                    Write-Verbose "$cliPath $argumentsCli"
+                    Write-Verbose ("ESG: Air page could not be published.. Exit Code: " + $exitCode)
+                } 
+            }
+            GetScript = {@{Result = "AlterAirURLPage"}}
         }
 
     }
