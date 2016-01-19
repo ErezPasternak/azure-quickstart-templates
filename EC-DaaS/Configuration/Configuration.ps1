@@ -491,6 +491,7 @@ configuration DesktopHost
     $domainCreds = New-Object System.Management.Automation.PSCredential ("$domainName\$_adminUser", $adminCreds.Password)
     $_adminPassword = [Runtime.InteropServices.Marshal]::PtrToStringAuto([Runtime.InteropServices.Marshal]::SecureStringToBSTR( (ConvertTo-SecureString ($adminCreds.Password | ConvertFrom-SecureString)) ))
 
+    $accessPadShortCut = "-accesspad /server=$Using:LUS"
 
     Node localhost
     {
@@ -680,7 +681,7 @@ configuration DesktopHost
             Path  = "C:\EricomAccessPadClient64.msi"
             Name = "Ericom AccessPad Client"
             ProductId = "E5B16AFC-4452-4990-B94A-4380E1A84A5E"
-            Arguments = "ESSO=1"
+            Arguments = "ESSO=1 SHORTCUT_PARAMS=`"$accessPadShortCut`""
             LogPath = "C:\log-eap.txt"
             DependsOn = "[Script]DownloadAccessPadMSI"
         }
@@ -695,7 +696,7 @@ configuration DesktopHost
             SetScript ={
                 $_lookUpHosts = "$Using:LUS";
                 $trigger = New-JobTrigger -AtLogOn -User * -RandomDelay 00:00:02 -ErrorAction SilentlyContinue
-                $filePath = "C:\Program Files (x86)\Ericom Software\Ericom AccessPad Client\Blaze.exe"
+                $filePath = "C:\Program Files\Ericom Software\Ericom AccessPad Client\Blaze.exe"
                 $argForAP = "-accesspad /server=$_lookUpHosts"
                 Register-ScheduledJob -Trigger $trigger -Name "AccessPad" -ErrorAction SilentlyContinue -ScriptBlock  {
                     Write-Verbose "$args[0] $args[1]"
@@ -1022,6 +1023,7 @@ configuration EricomConnectServerSetup
             }
             SetScript ={
                 $source = "C:\SSO.zip"
+                Unblock-File -Path "C:\SSO.zip"
                 $destTmp = "C:\Program Files\Ericom Software\Ericom Connect Client Web Service\WebServer\"
                 $dest = "C:\Program Files\Ericom Software\Ericom Connect Client Web Service\WebServer\AirSSO\"
                 $shell = new-object -com shell.application
@@ -1053,15 +1055,15 @@ configuration EricomConnectServerSetup
                 
                 $cliPath = Join-Path $workingDirectory -ChildPath $connectCli
                 
-                # publish admin page via ESG
-                $argumentsCli = "EsgConfig /adminUser `"$_adminUser`" /adminPassword `"$_adminPass`" common DefaultUrl=$newAirURL";
+                # publish admin page via EuwsConfig
+                $argumentsCli = "EuwsConfig /adminUser `"$_adminUser`" /adminPassword `"$_adminPass`" common DefaultUrl=$newAirURL";
                 
                 $exitCodeCli = (Start-Process -Filepath $cliPath -ArgumentList "$argumentsCli" -Wait -Passthru).ExitCode;
                 if ($exitCodeCli -eq 0) {
-                    Write-Verbose "ESG: Air page has been succesfuly published."
+                    Write-Verbose "EuwsConfig: Air page has been succesfuly published."
                 } else {
                     Write-Verbose "$cliPath $argumentsCli"
-                    Write-Verbose ("ESG: Air page could not be published.. Exit Code: " + $exitCode)
+                    Write-Verbose ("EuwsConfig: Air page could not be published.. Exit Code: " + $exitCode)
                 } 
             }
             GetScript = {@{Result = "AlterAirURLPage"}}
