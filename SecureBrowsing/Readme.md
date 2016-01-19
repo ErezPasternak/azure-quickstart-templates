@@ -1,6 +1,6 @@
 ![Ericom::Access Done Right](http://www.ericom.com/imgs/home/EricomLogo2.jpg "Ericom Logo") 
 
-### Deploy **Ericom Connect** on a Multiple Virtual Machines Environment
+### Deploy **Secure Browsing using Ericom Connect** on Azure
 
 [![Deploy to Azure](http://azuredeploy.net/deploybutton.png)](https://azuredeploy.net/)
 
