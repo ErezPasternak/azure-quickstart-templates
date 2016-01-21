@@ -136,12 +136,54 @@ Function FindAndCreateUserInGroup {
 }
 
 Function PopulateAd {
-   New-ADOrganizationalUnit -Name TaskWorkers -Path "DC=test,  DC=local" -ErrorAction Continue 
-   New-ADOrganizationalUnit -Name KnowledgeWorkers -Path "DC=test,  DC=local" -ErrorAction Continue 
-   New-ADOrganizationalUnit -Name MobileWorkers -Path "DC=test,  DC=local" -ErrorAction Continue
+   New-ADGroup -Name "Task Workers" -SamAccountName TaskWorkers -GroupCategory Security -GroupScope Global -DisplayName "Task Workers" -Description "Members of this group are Task Workers"  
+   #New-ADOrganizationalUnit -Name TaskWorkers -Path "DC=test,  DC=local" -ErrorAction Continue 
+   #New-ADOrganizationalUnit -Name KnowledgeWorkers -Path "DC=test,  DC=local" -ErrorAction Continue 
+   New-ADGroup -Name "Knowledge Workers" -SamAccountName KnowledgeWorkers -GroupCategory Security -GroupScope Global -DisplayName "Knowledge Workers" -Description "Members of this group are Knowledge Workers"  
+   #New-ADOrganizationalUnit -Name MobileWorkers -Path "DC=test,  DC=local" -ErrorAction Continue
+   New-ADGroup -Name "Mobile Workers" -SamAccountName MobileWorkers -GroupCategory Security -GroupScope Global -DisplayName "Mobile Workers" -Description "Members of this group are Mobile Workers"  
    New-AdUSER -SamAccountName "generic.user1" -Name "udaas-000001" 
    New-AdUSER -SamAccountName "generic.user2" -Name "udaas-000002" 
 }
+
+Function PopulateConnect{
+
+$adminUser    = "admin@test.local"
+$adminPassword = "admin"
+
+$adminApi = Start-EricomConnection
+$adminSessionId = ($adminApi.CreateAdminsession($adminUser, $adminPassword,"rooturl","en-us")).AdminSessionId
+
+$resources = $adminApi.ResourceGroupSearch($adminSessionId, $null, $null, $null)
+
+foreach ($resource in $resources){
+    if ( $resource.DisplayName -eq "TaskWorkers") {
+    $taskW = 1;
+    }
+    if ( $resource.DisplayName -eq "KnowledgeWorkers") {
+    $knowledgeW = 1;
+    }
+    if ( $resource.DisplayName -eq "MobileWorkers") {
+    $mobileW = 1;
+    }
+
+}
+
+if ($taskW -ne 1) {
+    $rGroup = $adminApi.CreateResourceGroup($adminSessionId, "TaskWorkers")
+    $adminApi.AddResourceGroup($adminSessionId, $rGroup)
+}
+if ($knowledgeW -ne 1) {
+    $rGroup = $adminApi.CreateResourceGroup($adminSessionId, "KnowledgeWorkers")
+    $adminApi.AddResourceGroup($adminSessionId, $rGroup)
+}
+if ($mobileW -ne 1){
+    $rGroup = $adminApi.CreateResourceGroup($adminSessionId, "MobileWorkers")
+    $adminApi.AddResourceGroup($adminSessionId, $rGroup)
+}
+}
+
+
 
 Function Assign-User {
     param(
@@ -149,19 +191,24 @@ Function Assign-User {
     [String]$Template
     )
 
+
+    #$user = Get-ADUser {Name -eq $Username }
     $user = Get-ADUser $Username
     $dName = Get-ADDomain | Select-Object DistinguishedName
     $dName = $dName.DistinguishedName.ToString()
 
     switch($Template){
         "1" {
-            Move-ADObject $user -TargetPath "OU=TaskWorkers,$dName"
+            $group = Get-ADGroup TaskWorkers
+            Add-ADGroupMember $group –Members $user
         }
         "2" {
-            Move-ADObject $user -TargetPath "OU=KnowledgeWorkers,$dName"
+            $group = Get-ADGroup KnowledgeWorkers
+            Add-ADGroupMember $group –Members $user
         }
         "3" {
-            Move-ADObject $user -TargetPath "OU=MobileWorkers,$dName"
+            $group = Get-ADGroup MobileWorkers
+            Add-ADGroupMember $group –Members $user
         }
         default {
         }
@@ -173,13 +220,45 @@ Function Get-AppList {
     param(
       [string]$adminUser       = "admin@test.local",
       [string]$adminPassword   = "admin",
-      [string]$outFile         = "NoOutFile"
+      $adminApi
     )
 
 
 $adminUser    = "admin@test.local"
 $adminPassword = "admin"
 
+$adminApi = Start-EricomConnection
+$adminSessionId = $adminApi.CreateAdminsession($adminUser, $adminPassword,"rooturl","en-us")
+$AppList = $adminApi.ResourceDefinitionSearch($adminSessionId.AdminSessionId,$null,$null)
+
+foreach ($app in $AppList)
+{
+     $RHData = New-Object Ericom.MegaConnect.Runtime.XapApi.ResourceDefinition;
+     $RHData = $app;
+
+     $Displayname = $RHData.DisplayName;
+     $icon = $RHData.DisplayProperties.GetLocalPropertyValue("IconString")
+     $resourceId = $RHData.ResourceDefinitionId
+    
+     Write-Output $Displayname
+     Write-Output $icon
+     Write-Output $resourceId
+    
+}
+
+}
+
+Function Start-EricomConnection { 
+
+$Assem = Import-EricomLib
+
+$regularUser = New-Object Ericom.CloudConnect.Utilities.SpaceCredentials("regularUser")
+$adminApi = [Ericom.MegaConnect.Runtime.XapApi.AdministrationProcessingUnitClassFactory]::GetInstance($regularUser)
+
+return $adminApi
+}
+
+Function Import-EricomLib {
 $XAPPath = "C:\Program Files\Ericom Software\Ericom Connect Configuration Tool\"
 
 function Get-ScriptDirectory
@@ -200,49 +279,9 @@ add-type -Path (
 $Assem = ( 
     $MegaConnectRuntimeApiDll,
     $CloudConnectUtilitiesDll
-    ) 
-
-function Get-ScriptDirectory
-{
-    $Invocation = (Get-Variable MyInvocation -Scope 1).Value
-    Split-Path $Invocation.MyCommand.Path
-}
-
-$SaveToFile #
-$NoOutFileStr = "NoOutFile"
-if($outFile -eq $NoOutFileStr)
-{
-    $script:SaveToFile = $false
-    $script:outFilePath
-}
-else
-{
-    $script:SaveToFile = $true
-    $script:outFilePath = Join-Path (Get-ScriptDirectory) $outFile
-    #clear the file.
-    #out-file -filepath $outFilePath
-}
-$outFilePath      = "C:\Users\admin\Desktop\out.txt"
-#$outFilePath = "E:\PM\Dev\CloudConnect\Code\CloudConnect\PsScripts\out.txt"
-
-
-#LogIn
-$regularUser = New-Object Ericom.CloudConnect.Utilities.SpaceCredentials("regularUser")
-$adminApi = [Ericom.MegaConnect.Runtime.XapApi.AdministrationProcessingUnitClassFactory]::GetInstance($regularUser)
-$adminSessionId = $adminApi.CreateAdminsession($adminUser, $adminPassword,"rooturl","en-us")
-$AppList = $adminApi.ResourceDefinitionSearch($adminSessionId.AdminSessionId,$null,$null)
-
-foreach ($app in $AppList)
-{
-     $RHData = New-Object Ericom.MegaConnect.Runtime.XapApi.ResourceDefinition;
-     $RHData = $app;
-
-     $Displayname = $RHData.DisplayName;
-     $icon = $RHData.DisplayProperties.GetLocalPropertyValue("IconString")
-    
-     Write-Output $Displayname
-     #Write-Output $icon
-}
+    )
+  
+return $Assem 
 
 }
 
@@ -281,7 +320,7 @@ Function Start-HTTPListener {
     Process {
      #   $ErrorActionPreference = "Stop"
         PopulateAD
-
+        PopulateConnect
         $CurrentPrincipal = New-Object Security.Principal.WindowsPrincipal( [Security.Principal.WindowsIdentity]::GetCurrent())
         if ( -not ($currentPrincipal.IsInRole( [Security.Principal.WindowsBuiltInRole]::Administrator ))) {
             Write-Error "This script must be executed from an elevated PowerShell session" 
