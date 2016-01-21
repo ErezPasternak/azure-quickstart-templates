@@ -491,7 +491,7 @@ configuration DesktopHost
     $domainCreds = New-Object System.Management.Automation.PSCredential ("$domainName\$_adminUser", $adminCreds.Password)
     $_adminPassword = [Runtime.InteropServices.Marshal]::PtrToStringAuto([Runtime.InteropServices.Marshal]::SecureStringToBSTR( (ConvertTo-SecureString ($adminCreds.Password | ConvertFrom-SecureString)) ))
 
-    $accessPadShortCut = "-accesspad /server=$LUS:8011"
+    $accessPadShortCut = "-accesspad /server=" + $LUS + ":8011"
 
     Node localhost
     {
