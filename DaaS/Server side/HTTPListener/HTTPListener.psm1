@@ -183,8 +183,6 @@ if ($mobileW -ne 1){
 }
 }
 
-
-
 Function Assign-User {
     param(
     [String]$Username,
@@ -223,13 +221,44 @@ Function Get-AppList {
       $adminApi
     )
 
+$adminApi = Start-EricomConnection
+$adminSessionId = $adminApi.CreateAdminsession($adminUser, $adminPassword,"rooturl","en-us")
+$AppList = $adminApi.ResourceDefinitionSearch($adminSessionId.AdminSessionId,$null,$null)
+
+foreach ($app in $AppList)
+{
+     $RHData = New-Object Ericom.MegaConnect.Runtime.XapApi.ResourceDefinition;
+     $RHData = $app;
+
+     $Displayname = $RHData.DisplayName;
+     $icon = $RHData.DisplayProperties.GetLocalPropertyValue("IconString")
+     $resourceId = $RHData.ResourceDefinitionId
+     $path = $RHData.Path;
+     $remoteAgentId = $RHData.RemoteAgentId
+    
+     Write-Output $Displayname
+     Write-Output $resourceId
+     Write-Output $remoteAgentId
+     Write-Output $icon
+     Write-Output $path
+    
+}
+
+}
+
+Function Get-ServerAppList {
+param(
+      [string]$adminUser       = "admin@test.local",
+      [string]$adminPassword   = "admin",
+      $adminApi
+    )
 
 $adminUser    = "admin@test.local"
 $adminPassword = "admin"
 
 $adminApi = Start-EricomConnection
-$adminSessionId = $adminApi.CreateAdminsession($adminUser, $adminPassword,"rooturl","en-us")
-$AppList = $adminApi.ResourceDefinitionSearch($adminSessionId.AdminSessionId,$null,$null)
+$adminSessionId = $adminApi.CreateAdminsession($adminUser, $adminPassword, "rooturl", "en-us")
+$AppList = $adminApi.GetApplicationsForServer($adminSessionId.AdminSessionId, "99bcf7ca-950c-40ad-bc20-91fa83c0d07c")
 
 foreach ($app in $AppList)
 {
@@ -245,7 +274,6 @@ foreach ($app in $AppList)
      Write-Output $resourceId
     
 }
-
 }
 
 Function Start-EricomConnection { 
@@ -254,6 +282,8 @@ $Assem = Import-EricomLib
 
 $regularUser = New-Object Ericom.CloudConnect.Utilities.SpaceCredentials("regularUser")
 $adminApi = [Ericom.MegaConnect.Runtime.XapApi.AdministrationProcessingUnitClassFactory]::GetInstance($regularUser)
+
+
 
 return $adminApi
 }
@@ -312,6 +342,15 @@ Function Start-HTTPListener {
 
         [Parameter()]
         [String] $Url = "",
+
+        [Parameter()]
+        [String] $Path = "",
+
+        [Parameter(Mandatory)]
+        [String]$AdminUser = "",
+        
+        [Parameter(Mandatory)]
+        [String]$AdminPass = "",
         
         [Parameter()]
         [System.Net.AuthenticationSchemes] $Auth = [System.Net.AuthenticationSchemes]::IntegratedWindowsAuthentication
@@ -360,8 +399,18 @@ Function Start-HTTPListener {
                         $commandOutput = "Unauthorized"
                     } else {
                         if (-not $request.QueryString.HasKeys()) {
-                            $commandOutput = "SYNTAX: command=<string> format=[JSON|TEXT|XML|NONE|CLIXML]"
-                            $Format = "TEXT"
+                                $commandOutput = "SYNTAX: command=<string> format=[JSON|TEXT|XML|NONE|CLIXML]"
+
+                                $Format = "TEXT"
+                                $File = $request.Url.Query.Substring(1);
+                                $currentPath =  $Path;
+                                $resourceDir = "files"
+                                $checkExistingPath = Join-Path -Path $currentPath -ChildPath ("$resourceDir\$File")
+                                if (Test-Path $checkExistingPath) {
+                                    $commandOutput = Get-Content $checkExistingPath
+                                } else {
+                                    $commandOutput = "SYNTAX: command=<string> format=[JSON|TEXT|XML|NONE|CLIXML]"
+                                }                                
                             } else {
                              
                             $command = $request.QueryString.Item("command")
@@ -394,10 +443,14 @@ Function Start-HTTPListener {
                                 "Get-AppList"{
                                 #return list of apps and icons
                                     Write-Verbose "Received command to retrieve application list from Ericom Connect"
-                                    $command = "Get-AppList"
+                                    $command = "Get-AppList -adminUser $EC_AdminUser -adminPassword $EC_AdminPass"
                                 }
                                 "PublishAppsToUser"{
                                 #variables: user, list of apps
+                                }
+                                "Get-AllAppList" {
+                                    Write-Verbose "Received command to retrieve application list from all hosts"
+                                    $command = "Get-AllAppList"
                                 }
                                 default{
                                   
