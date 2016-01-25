@@ -495,7 +495,7 @@ configuration EricomConnectServerSetup
         [PSCredential]$sqlCreds,
         
         [Parameter(Mandatory)]
-        [String]$softwareBaseLocation,
+        [String]$softwareBaseLocation
 
     ) 
 
