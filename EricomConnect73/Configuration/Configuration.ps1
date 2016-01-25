@@ -65,7 +65,7 @@ configuration GatewaySetup
         [String]$tenant,
         
         [Parameter(Mandatory)]
-        [String]$SoftwareBaseLocation
+        [String]$softwareBaseLocation
         
     ) 
 
@@ -96,7 +96,8 @@ configuration GatewaySetup
                 Test-Path "C:\EricomConnectDataGrid_x64_WT.msi"
             }
             SetScript ={
-                $source = ($softwareBaseLocation + "EricomConnectDataGrid_x64_WT.msi")
+                $_softwareBaseLocation = "$using:softwareBaseLocation"
+                $source = ($_softwareBaseLocation + "EricomConnectDataGrid_x64_WT.msi")
                 $dest = "C:\EricomConnectDataGrid_x64_WT.msi"
                 Invoke-WebRequest $source -OutFile $dest
             }
@@ -121,7 +122,8 @@ configuration GatewaySetup
                 Test-Path "C:\EricomConnectSecureGateway.msi"
             }
             SetScript ={
-                $source = ($softwareBaseLocation + "EricomConnectSecureGateway.msi")
+                $_softwareBaseLocation = "$using:softwareBaseLocation"
+                $source = ($_softwareBaseLocation + "EricomConnectSecureGateway.msi")
                 $dest = "C:\EricomConnectSecureGateway.msi"
                 Invoke-WebRequest $source -OutFile $dest
             }
@@ -141,7 +143,8 @@ configuration GatewaySetup
         
         Package vcRedist 
         { 
-            Path = ($softwareBaseLocation+"vcredist_x64.exe" )
+            $_softwareBaseLocation = "$using:softwareBaseLocation"
+            Path = ($_softwareBaseLocation+"vcredist_x64.exe" )
             ProductId = "{DA5E371C-6333-3D8A-93A4-6FD5B20BCC6E}" 
             Name = "Microsoft Visual C++ 2010 x64 Redistributable - 10.0.30319" 
             Arguments = "/install /passive /norestart"
@@ -323,7 +326,8 @@ configuration ApplicationHost
                 Test-Path "C:\EricomConnectDataGrid_x64.msi"
             }
             SetScript ={
-                $source = ($softwareBaseLocation + "EricomConnectDataGrid_x64.msi")
+                $_softwareBaseLocation = "$using:softwareBaseLocation"
+                $source = ($_softwareBaseLocation + "EricomConnectDataGrid_x64.msi")
                 $dest = "C:\EricomConnectDataGrid_x64.msi"
                 Invoke-WebRequest $source -OutFile $dest
             }
@@ -348,7 +352,8 @@ configuration ApplicationHost
                 Test-Path "C:\EricomConnectRemoteAgentClient_x64.msi"
             }
             SetScript ={
-                $source = ($softwareBaseLocation + "EricomConnectRemoteAgentClient_x64.msi")
+                $_softwareBaseLocation = "$using:softwareBaseLocation"
+                $source = ($_softwareBaseLocation + "EricomConnectRemoteAgentClient_x64.msi")
                 $dest = "C:\EricomConnectRemoteAgentClient_x64.msi"
                 Invoke-WebRequest $source -OutFile $dest
             }
@@ -373,7 +378,8 @@ configuration ApplicationHost
                 Test-Path "c:\EricomAccessServer64.msi"
             }
             SetScript ={
-                $source = ($softwareBaseLocation + "EricomAccessServer64.msi")
+                $_softwareBaseLocation = "$using:softwareBaseLocation"
+                $source = ($_softwareBaseLocation + "EricomAccessServer64.msi")
                 $dest = "C:\EricomAccessServer64.msi"
                 Invoke-WebRequest $source -OutFile $dest
             }
@@ -394,7 +400,8 @@ configuration ApplicationHost
 
 	    Package vcRedist 
         { 
-            Path = ($softwareBaseLocation + "vcredist_x64.exe") 
+            $_softwareBaseLocation = "$using:softwareBaseLocation"
+            Path = ($_softwareBaseLocation + "vcredist_x64.exe") 
             ProductId = "{DA5E371C-6333-3D8A-93A4-6FD5B20BCC6E}" 
             Name = "Microsoft Visual C++ 2010 x64 Redistributable - 10.0.30319" 
             Arguments = "/install /passive /norestart" 
