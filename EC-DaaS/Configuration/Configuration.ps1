@@ -7,7 +7,7 @@
 
         [Parameter(Mandatory)]
         [PSCredential]$adminCreds
-    ) 
+    )
     
     Import-DscResource -ModuleName xActiveDirectory, xComputerManagement
 
@@ -62,7 +62,11 @@ configuration GatewaySetup
         [String]$LUS,
 		
 		[Parameter(Mandatory)]
-        [String]$tenant
+        [String]$tenant,
+        
+        [Parameter(Mandatory)]
+        [String]$softwareBaseLocation
+        
     ) 
 
     Import-DscResource -ModuleName PSDesiredStateConfiguration, xActiveDirectory, xComputerManagement
@@ -92,7 +96,8 @@ configuration GatewaySetup
                 Test-Path "C:\EricomConnectDataGrid_x64_WT.msi"
             }
             SetScript ={
-                $source = "https://download.ericom.com/public/file/eV4Ahpl_P0Sktt_rLDE_2w/EricomConnectDataGrid_x64_WT.msi"
+                $_softwareBaseLocation = "$using:softwareBaseLocation"
+                $source = ($_softwareBaseLocation + "EricomConnectDataGrid_x64_WT.msi")
                 $dest = "C:\EricomConnectDataGrid_x64_WT.msi"
                 Invoke-WebRequest $source -OutFile $dest
             }
@@ -117,12 +122,12 @@ configuration GatewaySetup
                 Test-Path "C:\EricomConnectSecureGateway.msi"
             }
             SetScript ={
-                $source = "https://download.ericom.com/public/file/SkL3cdmCG0uy4x_3-2BFTg/EricomConnectSecureGateway.msi"
+                $_softwareBaseLocation = "$using:softwareBaseLocation"
+                $source = ($_softwareBaseLocation + "EricomConnectSecureGateway.msi")
                 $dest = "C:\EricomConnectSecureGateway.msi"
                 Invoke-WebRequest $source -OutFile $dest
             }
             GetScript = {@{Result = "DownloadSecureGatewayMSI"}}
-      
         }
 		
         Package InstallSecureGatewayMSI
@@ -138,7 +143,8 @@ configuration GatewaySetup
                 
         Package vcRedist 
         { 
-            Path = "https://download.microsoft.com/download/3/2/2/3224B87F-CFA0-4E70-BDA3-3DE650EFEBA5/vcredist_x64.exe" 
+            $_softwareBaseLocation = "$using:softwareBaseLocation"
+            Path = ($_softwareBaseLocation+"vcredist_x64.exe" )
             ProductId = "{DA5E371C-6333-3D8A-93A4-6FD5B20BCC6E}" 
             Name = "Microsoft Visual C++ 2010 x64 Redistributable - 10.0.30319" 
             Arguments = "/install /passive /norestart"
@@ -264,209 +270,6 @@ configuration GatewaySetup
 }
 
 
-configuration ApplicationHost
-{
-   param 
-    ( 
-        [Parameter(Mandatory)]
-        [String]$domainName,
-
-        [Parameter(Mandatory)]
-        [PSCredential]$adminCreds,
-		
-		[Parameter(Mandatory)]
-        [String]$gridName,
-		
-		[Parameter(Mandatory)]
-        [String]$LUS,
-		
-		[Parameter(Mandatory)]
-        [String]$tenant
-    ) 
-
-    $_adminUser = $adminCreds.UserName
-    $domainCreds = New-Object System.Management.Automation.PSCredential ("$domainName\$_adminUser", $adminCreds.Password)
-    $_adminPassword = [Runtime.InteropServices.Marshal]::PtrToStringAuto([Runtime.InteropServices.Marshal]::SecureStringToBSTR( (ConvertTo-SecureString ($adminCreds.Password | ConvertFrom-SecureString)) ))
-
-
-    Node localhost
-    {
-        LocalConfigurationManager
-        {
-            RebootNodeIfNeeded = $true
-            ConfigurationMode = "ApplyOnly"
-        }
-
-        DomainJoin DomainJoin
-        {
-            domainName = $domainName 
-            adminCreds = $adminCreds 
-        }
-
-        WindowsFeature RDS-RD-Server
-        {
-            Ensure = "Present"
-            Name = "RDS-RD-Server"
-        }
-
-	    Script DownloadGridMSI
-        {
-            TestScript = {
-                Test-Path "C:\EricomConnectDataGrid_x64.msi"
-            }
-            SetScript ={
-                $source = "https://download.ericom.com/public/file/9mKtbaJhwk_rlYv7yLFRXQ/EricomConnectDataGrid_x64.msi"
-                $dest = "C:\EricomConnectDataGrid_x64.msi"
-                Invoke-WebRequest $source -OutFile $dest
-            }
-            GetScript = {@{Result = "DownloadGridMSI"}}
-      
-        }
-		
-        Package InstallGridMSI
-        {
-            Ensure = "Present" 
-            Path  = "C:\EricomConnectDataGrid_x64.msi"
-            Name = "Ericom Connect Data Grid"
-            ProductId = "E94F3137-AD33-434F-94B1-D34E12C02064"
-            Arguments = ""
-            LogPath = "C:\log-ecdg.txt"
-            DependsOn = "[Script]DownloadGridMSI"
-        }
-        
-	    Script DownloadRemoteAgentMSI
-        {
-            TestScript = {
-                Test-Path "C:\EricomConnectRemoteAgentClient_x64.msi"
-            }
-            SetScript ={
-                $source = "https://download.ericom.com/public/file/sA5xpahFyEWLEGMSfHpp-g/EricomConnectRemoteAgentClient_x64.msi"
-                $dest = "C:\EricomConnectRemoteAgentClient_x64.msi"
-                Invoke-WebRequest $source -OutFile $dest
-            }
-            GetScript = {@{Result = "DownloadRemoteAgentMSI"}}
-         }
-		
-        Package InstallRemoteAgentMSI
-        {
-            Ensure = "Present" 
-            Path  = "C:\EricomConnectRemoteAgentClient_x64.msi"
-            Name = "Ericom Connect Remote Agent Client"
-            ProductId = "91D821BA-94CA-4383-B5D8-709239F39553"
-            Arguments = ""
-            LogPath = "C:\log-ecrac.txt"
-            DependsOn = "[Script]DownloadRemoteAgentMSI"
-        }
-
-	    Script DownloadAccessServerMSI
-        {
-            TestScript = {
-                Test-Path "c:\EricomAccessServer64.msi"
-            }
-            SetScript ={
-                $source = "https://download.ericom.com/public/file/ww2wz-NYAkSUE9KqU4IYLQ/EricomAccessServer64.msi"
-                $dest = "C:\EricomAccessServer64.msi"
-                Invoke-WebRequest $source -OutFile $dest
-            }
-            GetScript = {@{Result = "DownloadAccessServerMSI"}}
-      
-        }
-		
-        Package InstallAccessServerMSI
-        {
-            Ensure = "Present" 
-            Path  = "C:\EricomAccessServer64.msi"
-            Name = "Ericom Access Server"
-            ProductId = "F340EF5E-D4D8-4FB8-AE87-11459D65ED7F"
-            Arguments = ""
-            LogPath = "C:\log-eas.txt"
-            DependsOn = "[Script]DownloadAccessServerMSI"
-        }
-
-	    Package vcRedist 
-        { 
-            Path = "https://download.microsoft.com/download/3/2/2/3224B87F-CFA0-4E70-BDA3-3DE650EFEBA5/vcredist_x64.exe" 
-            ProductId = "{DA5E371C-6333-3D8A-93A4-6FD5B20BCC6E}" 
-            Name = "Microsoft Visual C++ 2010 x64 Redistributable - 10.0.30319" 
-            Arguments = "/install /passive /norestart" 
-        }
-        
-        Script DisableFirewallDomainProfile
-        {
-            TestScript = {
-                return ((Get-NetFirewallProfile -Profile Domain).Enabled -eq $false)
-            }
-            SetScript = {
-                Set-NetFirewallProfile -Profile Domain -Enabled False
-            }
-            GetScript = {@{Result = "DisableFirewallDomainProfile"}}
-        }
-
-        Script JoinGridRemoteAgent
-        {
-            TestScript = {
-                $isRARunning = $false;
-                $allServices = Get-Service | Where { $_.DisplayName.StartsWith("Ericom")}
-                foreach($service in $seallServicesrvices)
-                {
-                    if ($service.Name -contains "EricomConnectRemoteAgentService") {
-                        if ($service.Status -eq "Running") {
-                            Write-Verbose "ECRAS service is running"
-                            $isRARunning = $true;
-                        } elseif ($service.Status -eq "Stopped") {
-                            Write-Verbose "ECRAS service is stopped"
-                            $isRARunning = $false;
-                        } else {
-                            $statusECRAS = $service.Status
-                            Write-Verbose "ECRAS status: $statusECRAS"
-                        }
-                    }
-                }
-                return ($isRARunning -eq $true);
-            }
-            SetScript ={
-                $domainSuffix = "@" + $Using:domainName;
-                # Call Configuration Tool
-                Write-Verbose "Configuration step"
-                $workingDirectory = "$env:ProgramFiles\Ericom Software\Ericom Connect Remote Agent Client"
-                $configFile = "RemoteAgentConfigTool_4_5.exe"                
-
-                $_adminUser = "$Using:_adminUser" + "$domainSuffix"
-                $_adminPass = "$Using:_adminPassword"
-                $_gridName = "$Using:gridName"
-                $_lookUpHosts = "$Using:LUS"
-
-
-                $configPath = Join-Path $workingDirectory -ChildPath $configFile
-                
-                $arguments = " connect /gridName `"$_gridName`" /myIP `"$env:COMPUTERNAME`" /lookupServiceHosts `"$_lookUpHosts`""                
-
-                $baseFileName = [System.IO.Path]::GetFileName($configPath);
-                $folder = Split-Path $configPath;
-                cd $folder;
-                
-                $exitCode = (Start-Process -Filepath $configPath -ArgumentList "$arguments" -Wait -Passthru).ExitCode
-                if ($exitCode -eq 0) {
-                    Write-Verbose "Ericom Connect Remote Agent has been succesfuly configured."
-                } else {
-                    Write-Verbose ("Ericom Connect Remote Agent could not be configured. Exit Code: " + $exitCode)
-                }                
-            }
-            GetScript = {@{Result = "JoinGridRemoteAgent"}}      
-        }
-		
-    }
-
-}
-
-
-
-
-
-
-
-
-
 configuration DesktopHost
 {
    param 
@@ -477,14 +280,17 @@ configuration DesktopHost
         [Parameter(Mandatory)]
         [PSCredential]$adminCreds,
 		
-		[Parameter(Mandatory)]
+	    [Parameter(Mandatory)]
         [String]$gridName,
 		
-		[Parameter(Mandatory)]
+	    [Parameter(Mandatory)]
         [String]$LUS,
 		
-		[Parameter(Mandatory)]
-        [String]$tenant
+	    [Parameter(Mandatory)]
+        [String]$tenant,
+        
+        [Parameter(Mandatory)]
+        [String]$softwareBaseLocation
     ) 
 
     $_adminUser = $adminCreds.UserName
@@ -520,7 +326,8 @@ configuration DesktopHost
                 Test-Path "C:\EricomConnectDataGrid_x64.msi"
             }
             SetScript ={
-                $source = "https://download.ericom.com/public/file/9mKtbaJhwk_rlYv7yLFRXQ/EricomConnectDataGrid_x64.msi"
+                $_softwareBaseLocation = "$using:softwareBaseLocation"
+                $source = ($_softwareBaseLocation + "EricomConnectDataGrid_x64.msi")
                 $dest = "C:\EricomConnectDataGrid_x64.msi"
                 Invoke-WebRequest $source -OutFile $dest
             }
@@ -545,7 +352,8 @@ configuration DesktopHost
                 Test-Path "C:\EricomConnectRemoteAgentClient_x64.msi"
             }
             SetScript ={
-                $source = "https://download.ericom.com/public/file/sA5xpahFyEWLEGMSfHpp-g/EricomConnectRemoteAgentClient_x64.msi"
+                $_softwareBaseLocation = "$using:softwareBaseLocation"
+                $source = ($_softwareBaseLocation + "EricomConnectRemoteAgentClient_x64.msi")
                 $dest = "C:\EricomConnectRemoteAgentClient_x64.msi"
                 Invoke-WebRequest $source -OutFile $dest
             }
@@ -570,7 +378,8 @@ configuration DesktopHost
                 Test-Path "c:\EricomAccessServer64.msi"
             }
             SetScript ={
-                $source = "https://download.ericom.com/public/file/ww2wz-NYAkSUE9KqU4IYLQ/EricomAccessServer64.msi"
+                $_softwareBaseLocation = "$using:softwareBaseLocation"
+                $source = ($_softwareBaseLocation + "EricomAccessServer64.msi")
                 $dest = "C:\EricomAccessServer64.msi"
                 Invoke-WebRequest $source -OutFile $dest
             }
@@ -591,7 +400,8 @@ configuration DesktopHost
 
 	    Package vcRedist 
         { 
-            Path = "https://download.microsoft.com/download/3/2/2/3224B87F-CFA0-4E70-BDA3-3DE650EFEBA5/vcredist_x64.exe" 
+            $_softwareBaseLocation = "$using:softwareBaseLocation"
+            Path = ($_softwareBaseLocation + "vcredist_x64.exe") 
             ProductId = "{DA5E371C-6333-3D8A-93A4-6FD5B20BCC6E}" 
             Name = "Microsoft Visual C++ 2010 x64 Redistributable - 10.0.30319" 
             Arguments = "/install /passive /norestart" 
@@ -667,7 +477,8 @@ configuration DesktopHost
                 Test-Path "C:\EricomAccessPadClient64.msi"
             }
             SetScript ={
-                $source = "http://www.ericom.com/demos/EricomAccessPadClient64.msi"
+                $_softwareBaseLocation = "$using:softwareBaseLocation"
+                $source = ($_softwareBaseLocation + "EricomAccessPadClient64.msi") 
                 $dest = "C:\EricomAccessPadClient64.msi"
                 Invoke-WebRequest $source -OutFile $dest
             }
@@ -709,6 +520,209 @@ configuration DesktopHost
 
 }
 
+configuration ApplicationHost
+{
+   param 
+    ( 
+        [Parameter(Mandatory)]
+        [String]$domainName,
+
+        [Parameter(Mandatory)]
+        [PSCredential]$adminCreds,
+		
+		[Parameter(Mandatory)]
+        [String]$gridName,
+				
+	    [Parameter(Mandatory)]
+        [String]$LUS,
+		
+	    [Parameter(Mandatory)]
+        [String]$tenant,
+        
+        [Parameter(Mandatory)]
+        [String]$softwareBaseLocation
+    ) 
+
+    $_adminUser = $adminCreds.UserName
+    $domainCreds = New-Object System.Management.Automation.PSCredential ("$domainName\$_adminUser", $adminCreds.Password)
+    $_adminPassword = [Runtime.InteropServices.Marshal]::PtrToStringAuto([Runtime.InteropServices.Marshal]::SecureStringToBSTR( (ConvertTo-SecureString ($adminCreds.Password | ConvertFrom-SecureString)) ))
+
+    Node localhost
+    {
+        LocalConfigurationManager
+        {
+            RebootNodeIfNeeded = $true
+            ConfigurationMode = "ApplyOnly"
+        }
+
+        DomainJoin DomainJoin
+        {
+            domainName = $domainName 
+            adminCreds = $adminCreds 
+        }
+
+        WindowsFeature RDS-RD-Server
+        {
+            Ensure = "Present"
+            Name = "RDS-RD-Server"
+        }
+
+	    Script DownloadGridMSI
+        {
+            TestScript = {
+                Test-Path "C:\EricomConnectDataGrid_x64.msi"
+            }
+            SetScript ={
+                $_softwareBaseLocation = "$using:softwareBaseLocation"
+                $source = ($_softwareBaseLocation + "EricomConnectDataGrid_x64.msi")
+                $dest = "C:\EricomConnectDataGrid_x64.msi"
+                Invoke-WebRequest $source -OutFile $dest
+            }
+            GetScript = {@{Result = "DownloadGridMSI"}}
+      
+        }
+		
+        Package InstallGridMSI
+        {
+            Ensure = "Present" 
+            Path  = "C:\EricomConnectDataGrid_x64.msi"
+            Name = "Ericom Connect Data Grid"
+            ProductId = "E94F3137-AD33-434F-94B1-D34E12C02064"
+            Arguments = ""
+            LogPath = "C:\log-ecdg.txt"
+            DependsOn = "[Script]DownloadGridMSI"
+        }
+        
+	    Script DownloadRemoteAgentMSI
+        {
+            TestScript = {
+                Test-Path "C:\EricomConnectRemoteAgentClient_x64.msi"
+            }
+            SetScript ={
+                $_softwareBaseLocation = "$using:softwareBaseLocation"
+                $source = ($_softwareBaseLocation + "EricomConnectRemoteAgentClient_x64.msi")
+                $dest = "C:\EricomConnectRemoteAgentClient_x64.msi"
+                Invoke-WebRequest $source -OutFile $dest
+            }
+            GetScript = {@{Result = "DownloadRemoteAgentMSI"}}
+      
+         }
+		
+        Package InstallRemoteAgentMSI
+        {
+            Ensure = "Present" 
+            Path  = "C:\EricomConnectRemoteAgentClient_x64.msi"
+            Name = "Ericom Connect Remote Agent Client"
+            ProductId = "91D821BA-94CA-4383-B5D8-709239F39553"
+            Arguments = ""
+            LogPath = "C:\log-ecrac.txt"
+            DependsOn = "[Script]DownloadRemoteAgentMSI"
+        }
+
+	    Script DownloadAccessServerMSI
+        {
+            TestScript = {
+                Test-Path "c:\EricomAccessServer64.msi"
+            }
+            SetScript ={
+                $_softwareBaseLocation = "$using:softwareBaseLocation"
+                $source = ($_softwareBaseLocation + "EricomAccessServer64.msi")
+                $dest = "C:\EricomAccessServer64.msi"
+                Invoke-WebRequest $source -OutFile $dest
+            }
+            GetScript = {@{Result = "DownloadAccessServerMSI"}}
+      
+        }
+		
+        Package InstallAccessServerMSI
+        {
+            Ensure = "Present" 
+            Path  = "C:\EricomAccessServer64.msi"
+            Name = "Ericom Access Server"
+            ProductId = "F340EF5E-D4D8-4FB8-AE87-11459D65ED7F"
+            Arguments = ""
+            LogPath = "C:\log-eas.txt"
+            DependsOn = "[Script]DownloadAccessServerMSI"
+        }
+
+	    Package vcRedist 
+        { 
+            $_softwareBaseLocation = "$using:softwareBaseLocation"
+            Path = ($_softwareBaseLocation + "vcredist_x64.exe") 
+            ProductId = "{DA5E371C-6333-3D8A-93A4-6FD5B20BCC6E}" 
+            Name = "Microsoft Visual C++ 2010 x64 Redistributable - 10.0.30319" 
+            Arguments = "/install /passive /norestart" 
+        }
+        
+        Script DisableFirewallDomainProfile
+        {
+            TestScript = {
+                return ((Get-NetFirewallProfile -Profile Domain).Enabled -eq $false)
+            }
+            SetScript = {
+                Set-NetFirewallProfile -Profile Domain -Enabled False
+            }
+            GetScript = {@{Result = "DisableFirewallDomainProfile"}}
+        }
+
+        Script JoinGridRemoteAgent
+        {
+            TestScript = {
+                $isRARunning = $false;
+                $allServices = Get-Service | Where { $_.DisplayName.StartsWith("Ericom")}
+                foreach($service in $seallServicesrvices)
+                {
+                    if ($service.Name -contains "EricomConnectRemoteAgentService") {
+                        if ($service.Status -eq "Running") {
+                            Write-Verbose "ECRAS service is running"
+                            $isRARunning = $true;
+                        } elseif ($service.Status -eq "Stopped") {
+                            Write-Verbose "ECRAS service is stopped"
+                            $isRARunning = $false;
+                        } else {
+                            $statusECRAS = $service.Status
+                            Write-Verbose "ECRAS status: $statusECRAS"
+                        }
+                    }
+                }
+                return ($isRARunning -eq $true);
+            }
+            SetScript ={
+                $domainSuffix = "@" + $Using:domainName;
+                # Call Configuration Tool
+                Write-Verbose "Configuration step"
+                $workingDirectory = "$env:ProgramFiles\Ericom Software\Ericom Connect Remote Agent Client"
+                $configFile = "RemoteAgentConfigTool_4_5.exe"                
+
+                $_adminUser = "$Using:_adminUser" + "$domainSuffix"
+                $_adminPass = "$Using:_adminPassword"
+                $_gridName = "$Using:gridName"
+                $_lookUpHosts = "$Using:LUS"
+
+
+                $configPath = Join-Path $workingDirectory -ChildPath $configFile
+                
+                $arguments = " connect /gridName `"$_gridName`" /myIP `"$env:COMPUTERNAME`" /lookupServiceHosts `"$_lookUpHosts`""                
+
+                $baseFileName = [System.IO.Path]::GetFileName($configPath);
+                $folder = Split-Path $configPath;
+                cd $folder;
+                
+                $exitCode = (Start-Process -Filepath $configPath -ArgumentList "$arguments" -Wait -Passthru).ExitCode
+                if ($exitCode -eq 0) {
+                    Write-Verbose "Ericom Connect Remote Agent has been succesfuly configured."
+                } else {
+                    Write-Verbose ("Ericom Connect Remote Agent could not be configured. Exit Code: " + $exitCode)
+                }                
+            }
+            GetScript = {@{Result = "JoinGridRemoteAgent"}}      
+        }
+		
+    }
+
+}
+
+
 configuration EricomConnectServerSetup
 {
    param 
@@ -718,12 +732,6 @@ configuration EricomConnectServerSetup
 
         [Parameter(Mandatory)]
         [PSCredential]$adminCreds,
-
-        # Connection Broker Node name
-        [String]$connectionBroker,
-        
-        # Web Access Node name
-        [String]$webAccessServer,
 
         # Gateway external FQDN
         [String]$externalFqdn,
@@ -741,7 +749,8 @@ configuration EricomConnectServerSetup
         [Parameter(Mandatory)]
         [PSCredential]$sqlCreds,
         
-        [String]$emailAddress
+        [Parameter(Mandatory)]
+        [String]$softwareBaseLocation
 
     ) 
 
@@ -760,7 +769,7 @@ configuration EricomConnectServerSetup
 
     Node localhost
     {
-
+       
         LocalConfigurationManager
         {
             RebootNodeIfNeeded = $true
@@ -779,7 +788,8 @@ configuration EricomConnectServerSetup
                 Test-Path "C:\SQLEXPR_x64_ENU.exe"
             }
             SetScript ={
-                $source = "https://download.ericom.com/public/file/4PYgN5tyT0_qQC6aExom9w/SQLEXPR_x64_ENU.exe"
+                $_softwareBaseLocation = "$using:softwareBaseLocation"
+                $source = ($_softwareBaseLocation+ "SQLEXPR_x64_ENU.exe")
                 $dest = "C:\SQLEXPR_x64_ENU.exe"
                 Invoke-WebRequest $source -OutFile $dest
             }
@@ -820,11 +830,13 @@ configuration EricomConnectServerSetup
                 Test-Path "C:\EricomConnectDataGrid_x64_WT.msi"
             }
             SetScript ={
-                $source = "https://download.ericom.com/public/file/eV4Ahpl_P0Sktt_rLDE_2w/EricomConnectDataGrid_x64_WT.msi"
+                $_softwareBaseLocation = "$using:softwareBaseLocation"
+                $source = ($_softwareBaseLocation + "EricomConnectDataGrid_x64_WT.msi")
                 $dest = "C:\EricomConnectDataGrid_x64_WT.msi"
                 Invoke-WebRequest $source -OutFile $dest
             }
-            GetScript = {@{Result = "DownloadGridMSI"}}   
+            GetScript = {@{Result = "DownloadGridMSI"}}
+      
         }
 		
         Package InstallGridMSI
@@ -844,11 +856,13 @@ configuration EricomConnectServerSetup
                 Test-Path "C:\EricomConnectProcessingUnitServer.msi"
             }
             SetScript ={
-                $source = "https://download.ericom.com/public/file/SJEcdw86E0CLwhOTAHoRIA/EricomConnectProcessingUnitServer.msi"
+                $_softwareBaseLocation = "$using:softwareBaseLocation"
+                $source = ($_softwareBaseLocation + "EricomConnectProcessingUnitServer.msi")
                 $dest = "C:\EricomConnectProcessingUnitServer.msi"
                 Invoke-WebRequest $source -OutFile $dest
             }
-            GetScript = {@{Result = "DownloadProcessingUnitServerMSI"}}     
+            GetScript = {@{Result = "DownloadProcessingUnitServerMSI"}}
+      
         }
 		
         Package InstallProcessingUnitServerMSI
@@ -869,7 +883,8 @@ configuration EricomConnectServerSetup
                 Test-Path "C:\EricomConnectAdminWebService.msi"
             }
             SetScript ={
-                $source = "https://download.ericom.com/public/file/xyRW03bY30OSaHJxpgQxOA/EricomConnectAdminWebService.msi"
+                $_softwareBaseLocation = "$using:softwareBaseLocation"
+                $source = ($_softwareBaseLocation + "EricomConnectAdminWebService.msi")
                 $dest = "C:\EricomConnectAdminWebService.msi"
                 Invoke-WebRequest $source -OutFile $dest
             }
@@ -894,7 +909,8 @@ configuration EricomConnectServerSetup
                 Test-Path "C:\EricomConnectClientWebService.msi"
             }
             SetScript ={
-                $source = "https://download.ericom.com/public/file/V8MjLB1gmU2ZwVSF79t0Og/EricomConnectClientWebService.msi"
+                $_softwareBaseLocation = "$using:softwareBaseLocation"
+                $source = ($_softwareBaseLocation + "EricomConnectClientWebService.msi")
                 $dest = "C:\EricomConnectClientWebService.msi"
                 Invoke-WebRequest $source -OutFile $dest
             }
@@ -988,7 +1004,7 @@ configuration EricomConnectServerSetup
                 cd $folder;
                 Write-Verbose "$configPath $arguments"
                 $exitCode = (Start-Process -Filepath $configPath -ArgumentList "$arguments" -Wait -Passthru).ExitCode
-
+                
                 if ($exitCode -eq 0) {
                     Write-Verbose "Ericom Connect Grid Server has been succesfuly configured."
                 } else {
