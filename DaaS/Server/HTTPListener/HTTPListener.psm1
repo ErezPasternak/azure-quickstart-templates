@@ -104,6 +104,89 @@ Function Create-User {
     FindAndCreateUserInGroup -Username $Username -Password $Password -Email $Email 
 }
 
+Function List-AllApps{
+    param(
+      [string]$adminUser       = "admin@test.local",
+      [string]$adminPassword   = "admin",
+      $adminApi
+    )
+
+
+$adminApi = Start-EricomConnection
+$adminSessionId = ($adminApi.CreateAdminsession($adminUser, $adminPassword,"rooturl","en-us"))
+
+
+$RemoteHostList = $adminApi.RemoteHostStatusSearch($adminSessionId.AdminSessionId, "Running", "", "100", "100", "0", "", "true", "true", "true")
+[Array]$OutArray = @()
+
+[System.Collections.Generic.List[Object]]$serverAppList = New-Object System.Collections.Generic.List[Object];
+
+#FlattenFilesForDirectory(string remoteHostId, List<HostApplication> applications, string remoteAgentId, BrowsingFolder browsingFolder)
+function FlattenFilesForDirectory ($browsingFolder)
+{
+	foreach ($browsingItem in $browsingFolder.Files.Values)
+	{
+        #$script:OutArray =  [Array]$OutArray + $browsingItem
+        $serverAppList.Add($browsingItem)
+	}
+
+	foreach ($directory in $browsingFolder.SubFolders.Values)
+	{
+		FlattenFilesForDirectory($directory);
+	} 
+}
+
+foreach ($RH in $RemoteHostList)
+{
+    
+   $RHData = New-Object Ericom.MegaConnect.Runtime.XapApi.BrowsingApplication
+   $RHData.Path = $RH.SystemInfo.ComputerName
+   $script:OutArray =  [Array]$OutArray + $RHData
+    ""
+    ""
+    $RH.SystemInfo.ComputerName
+    "____________"
+    ""
+    $browsingFolder = $adminApi.SendCustomRequest(	$adminSessionId.AdminSessionId, 
+												    $RH.RemoteAgentId,
+											       [Ericom.MegaConnect.Runtime.XapApi.StandaloneServerRequestType]::HostAgentApplications,
+											       "null",
+											       "false",
+											       "999999999")
+   #$browsingFolder
+   FlattenFilesForDirectory ($browsingFolder)
+}
+foreach ($app in $serverAppList){
+ Write-Output $app
+ }
+}
+
+Function Create-RemoteHostsGroup {
+       param(
+      [string]$adminUser       = "admin@test.local",
+      [string]$adminPassword   = "admin",
+      [string]$groupName = "newGroup"
+      )
+
+$groupName = $groupName + "3"
+$adminApi = Start-EricomConnection
+$adminSessionId = $adminApi.CreateAdminsession($adminUser, $adminPassword,"rooturl","en-us");
+[Ericom.MegaConnect.Runtime.XapApi.RemoteHostMembershipComputation]$rhmc = 0;
+$rGroup = $adminApi.CreateRemoteHostGroup($adminSessionId.AdminSessionId, $groupName, $rhmc);
+[System.Collections.Generic.List[String]]$remoteHostsList = New-Object System.Collections.Generic.List[String];
+
+[Ericom.MegaConnect.Runtime.XapApi.RemoteHostSearchConstraints]$rhsc = New-Object Ericom.MegaConnect.Runtime.XapApi.RemoteHostSearchConstraints;
+$rhsc.HostnamePattern = "win-*"; #TODO: Update HERE!
+$rhl = $adminApi.GetRemoteHostList($adminSessionId.AdminSessionId, $rhsc)
+foreach($h in $rhl)
+{
+	$remoteHostList.Add($h.RemoteHostId)
+}
+$rGroup.RemoteHostIds = $remoteHostsList;
+$adminApi.AddRemoteHostGroup($adminSessionId.AdminSessionId, $rGroup)
+
+}
+
 Function FindAndCreateUserInGroup {
 	param(
 		[String]$Username,
@@ -147,6 +230,11 @@ Function PopulateAd {
 }
 
 Function PopulateConnect{
+    param(
+      [string]$adminUser       = "admin@test.local",
+      [string]$adminPassword   = "admin",
+      $adminApi
+    )
 
 $adminUser    = "admin@test.local"
 $adminPassword = "admin"
@@ -260,6 +348,8 @@ $adminApi = Start-EricomConnection
 $adminSessionId = $adminApi.CreateAdminsession($adminUser, $adminPassword, "rooturl", "en-us")
 $AppList = $adminApi.GetApplicationsForServer($adminSessionId.AdminSessionId, "99bcf7ca-950c-40ad-bc20-91fa83c0d07c")
 
+
+
 foreach ($app in $AppList)
 {
      $RHData = New-Object Ericom.MegaConnect.Runtime.XapApi.ResourceDefinition;
@@ -343,15 +433,15 @@ Function Start-HTTPListener {
         [Parameter()]
         [String] $Url = "",
 
-        [Parameter()]
-        [String] $Path = "",
-
         [Parameter(Mandatory)]
         [String]$AdminUser = "",
         
         [Parameter(Mandatory)]
         [String]$AdminPass = "",
-        
+
+        [Parameter()]
+        [String]$WebsitePath,
+
         [Parameter()]
         [System.Net.AuthenticationSchemes] $Auth = [System.Net.AuthenticationSchemes]::IntegratedWindowsAuthentication
         )
@@ -403,7 +493,7 @@ Function Start-HTTPListener {
 
                                 $Format = "TEXT"
                                 $File = $request.Url.Query.Substring(1);
-                                $currentPath =  $Path;
+                                $currentPath =  $WebsitePath;
                                 $resourceDir = "files"
                                 $checkExistingPath = Join-Path -Path $currentPath -ChildPath ("$resourceDir\$File")
                                 if (Test-Path $checkExistingPath) {
@@ -452,6 +542,14 @@ Function Start-HTTPListener {
                                     Write-Verbose "Received command to retrieve application list from all hosts"
                                     $command = "Get-AllAppList"
                                 }
+                                "Create-RemoteHostsGroup"{
+                                    Write-Verbose "Received command to create Remote Hosts Group"
+                                    $command = "Create-RemoteHostsGroup"
+                                }
+                                "List-AllApps"{
+                                    Write-Verbose "Received command to list all apps"
+                                    $command = "List-AllApps"
+                                }
                                 default{
                                   
                                 }
@@ -481,7 +579,7 @@ Function Start-HTTPListener {
                         }
                         $commandOutput = switch ($Format) {
                             TEXT    { $commandOutput | Out-String ; break } 
-                            JSON    { $commandOutput | ConvertTo-JSON; break }
+                            JSON    { $commandOutput | ConvertTo-JSON -Compress; break }
                             XML     { $commandOutput | ConvertTo-XML -As String; break }
                             CLIXML  { [System.Management.Automation.PSSerializer]::Serialize($commandOutput) ; break }
                             default { "Invalid output format selected, valid choices are TEXT, JSON, XML, and CLIXML"; $statusCode = 501; break }
