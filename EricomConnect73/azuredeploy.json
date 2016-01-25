@@ -101,6 +101,7 @@
         "subnetName": "Subnet",
         "subnet-id": "[concat(resourceId('Microsoft.Network/virtualNetworks','VNET'),'/subnets/',variables('subnetName'))]",
 	    "customScriptLocation": "https://raw.githubusercontent.com/ErezPasternak/azure-quickstart-templates/EricomConnect/EricomConnect73/",
+        "softwareBaseLocation": "http://tswc.ericom.com:501/erez/73/",
         "publicIpRef": "publicIp",
 	    "ecGridname" : "ecgrid",
 	    "sqlserver" : "localhost",
@@ -518,10 +519,11 @@
                                      "Password": "PrivateSettingsRef:AdminPassword"
                                  },		
                                 "gridName": "[variables('ecGridname')]",		
-                                "LUS": "broker.test.local",		
+                                "LUS": "[concat('broker.',variables('domainName'))]",		
                                 "tenant": "root",
                                 "externalfqdn" : "[reference(variables('publicIpRef')).dnsSettings.fqdn]",
-                                "emailAddress" : "[parameters('emailAddress')]"
+                                "emailAddress" : "[parameters('emailAddress')]",
+                                "softwareBaseLocation": "[variables('softwareBaseLocation')]"
                              }		
                          },		
                          "protectedSettings": {		
@@ -606,8 +608,9 @@
                                     "Password": "PrivateSettingsRef:AdminPassword"
                                 },
  				            "gridName": "[variables('ecGridname')]",
-				            "LUS": "broker.test.local",
-				            "tenant": "root"
+				            "LUS": "[concat('broker.',variables('domainName'))]",
+				            "tenant": "root",
+                            "softwareBaseLocation": "[variables('softwareBaseLocation')]"
 
                             }
                         },
@@ -697,7 +700,8 @@
                             "sqlCreds" : { 
                                 "UserName" : "[variables('sqluser')]",
                                 "Password" : "PrivateSettingsRef:SqlPassword"
-                                        }
+                             },
+                             "softwareBaseLocation": "[variables('softwareBaseLocation')]"
                                     }
                              },
                     "protectedSettings" : { 

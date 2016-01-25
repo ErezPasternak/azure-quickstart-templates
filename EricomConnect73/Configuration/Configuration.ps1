@@ -62,7 +62,11 @@ configuration GatewaySetup
         [String]$LUS,
 		
 		[Parameter(Mandatory)]
-        [String]$tenant
+        [String]$tenant,
+        
+        [Parameter(Mandatory)]
+        [String]$SoftwareBaseLocation
+        
     ) 
 
     Import-DscResource -ModuleName PSDesiredStateConfiguration, xActiveDirectory, xComputerManagement
@@ -92,7 +96,7 @@ configuration GatewaySetup
                 Test-Path "C:\EricomConnectDataGrid_x64_WT.msi"
             }
             SetScript ={
-                $source = "https://download.ericom.com/public/file/eV4Ahpl_P0Sktt_rLDE_2w/EricomConnectDataGrid_x64_WT.msi"
+                $source = $softwareBaseLocation"EricomConnectDataGrid_x64_WT.msi"
                 $dest = "C:\EricomConnectDataGrid_x64_WT.msi"
                 Invoke-WebRequest $source -OutFile $dest
             }
@@ -117,7 +121,7 @@ configuration GatewaySetup
                 Test-Path "C:\EricomConnectSecureGateway.msi"
             }
             SetScript ={
-                $source = "https://download.ericom.com/public/file/SkL3cdmCG0uy4x_3-2BFTg/EricomConnectSecureGateway.msi"
+                $source = $softwareBaseLocation"EricomConnectSecureGateway.msi"
                 $dest = "C:\EricomConnectSecureGateway.msi"
                 Invoke-WebRequest $source -OutFile $dest
             }
@@ -137,7 +141,7 @@ configuration GatewaySetup
         
         Package vcRedist 
         { 
-            Path = "https://download.microsoft.com/download/3/2/2/3224B87F-CFA0-4E70-BDA3-3DE650EFEBA5/vcredist_x64.exe" 
+            Path = $softwareBaseLocation"vcredist_x64.exe" 
             ProductId = "{DA5E371C-6333-3D8A-93A4-6FD5B20BCC6E}" 
             Name = "Microsoft Visual C++ 2010 x64 Redistributable - 10.0.30319" 
             Arguments = "/install /passive /norestart"
@@ -280,7 +284,11 @@ configuration ApplicationHost
         [String]$LUS,
 		
 		[Parameter(Mandatory)]
-        [String]$tenant
+        [String]$tenant,
+        
+        [Parameter(Mandatory)]
+        [String]$softwareBaseLocation
+        
     ) 
 
     $_adminUser = $adminCreds.UserName
@@ -315,7 +323,7 @@ configuration ApplicationHost
                 Test-Path "C:\EricomConnectDataGrid_x64.msi"
             }
             SetScript ={
-                $source = "https://download.ericom.com/public/file/9mKtbaJhwk_rlYv7yLFRXQ/EricomConnectDataGrid_x64.msi"
+                $source = $softwareBaseLocation"EricomConnectDataGrid_x64.msi"
                 $dest = "C:\EricomConnectDataGrid_x64.msi"
                 Invoke-WebRequest $source -OutFile $dest
             }
@@ -340,7 +348,7 @@ configuration ApplicationHost
                 Test-Path "C:\EricomConnectRemoteAgentClient_x64.msi"
             }
             SetScript ={
-                $source = "https://download.ericom.com/public/file/sA5xpahFyEWLEGMSfHpp-g/EricomConnectRemoteAgentClient_x64.msi"
+                $source = $softwareBaseLocation"EricomConnectRemoteAgentClient_x64.msi"
                 $dest = "C:\EricomConnectRemoteAgentClient_x64.msi"
                 Invoke-WebRequest $source -OutFile $dest
             }
@@ -365,7 +373,7 @@ configuration ApplicationHost
                 Test-Path "c:\EricomAccessServer64.msi"
             }
             SetScript ={
-                $source = "https://download.ericom.com/public/file/ww2wz-NYAkSUE9KqU4IYLQ/EricomAccessServer64.msi"
+                $source = $softwareBaseLocation"EricomAccessServer64.msi"
                 $dest = "C:\EricomAccessServer64.msi"
                 Invoke-WebRequest $source -OutFile $dest
             }
@@ -386,7 +394,7 @@ configuration ApplicationHost
 
 	    Package vcRedist 
         { 
-            Path = "https://download.microsoft.com/download/3/2/2/3224B87F-CFA0-4E70-BDA3-3DE650EFEBA5/vcredist_x64.exe" 
+            Path = $softwareBaseLocation"vcredist_x64.exe" 
             ProductId = "{DA5E371C-6333-3D8A-93A4-6FD5B20BCC6E}" 
             Name = "Microsoft Visual C++ 2010 x64 Redistributable - 10.0.30319" 
             Arguments = "/install /passive /norestart" 
@@ -490,7 +498,10 @@ configuration EricomConnectServerSetup
         
          # sql credentials 
         [Parameter(Mandatory)]
-        [PSCredential]$sqlCreds
+        [PSCredential]$sqlCreds,
+        
+        [Parameter(Mandatory)]
+        [String]$softwareBaseLocation,
 
     ) 
 
@@ -544,7 +555,7 @@ configuration EricomConnectServerSetup
                 Test-Path "C:\SQLEXPR_x64_ENU.exe"
             }
             SetScript ={
-                $source = "https://download.ericom.com/public/file/4PYgN5tyT0_qQC6aExom9w/SQLEXPR_x64_ENU.exe"
+                $source = $softwareBaseLocation"SQLEXPR_x64_ENU.exe"
                 $dest = "C:\SQLEXPR_x64_ENU.exe"
                 Invoke-WebRequest $source -OutFile $dest
             }
@@ -585,7 +596,7 @@ configuration EricomConnectServerSetup
                 Test-Path "C:\EricomConnectDataGrid_x64_WT.msi"
             }
             SetScript ={
-                $source = "https://download.ericom.com/public/file/eV4Ahpl_P0Sktt_rLDE_2w/EricomConnectDataGrid_x64_WT.msi"
+                $source = $softwareBaseLocation"EricomConnectDataGrid_x64_WT.msi"
                 $dest = "C:\EricomConnectDataGrid_x64_WT.msi"
                 Invoke-WebRequest $source -OutFile $dest
             }
@@ -610,7 +621,7 @@ configuration EricomConnectServerSetup
                 Test-Path "C:\EricomConnectProcessingUnitServer.msi"
             }
             SetScript ={
-                $source = "https://download.ericom.com/public/file/SJEcdw86E0CLwhOTAHoRIA/EricomConnectProcessingUnitServer.msi"
+                $source = $softwareBaseLocation"EricomConnectProcessingUnitServer.msi"
                 $dest = "C:\EricomConnectProcessingUnitServer.msi"
                 Invoke-WebRequest $source -OutFile $dest
             }
@@ -636,7 +647,7 @@ configuration EricomConnectServerSetup
                 Test-Path "C:\EricomConnectAdminWebService.msi"
             }
             SetScript ={
-                $source = "https://download.ericom.com/public/file/xyRW03bY30OSaHJxpgQxOA/EricomConnectAdminWebService.msi"
+                $source = $softwareBaseLocation"EricomConnectAdminWebService.msi"
                 $dest = "C:\EricomConnectAdminWebService.msi"
                 Invoke-WebRequest $source -OutFile $dest
             }
@@ -661,7 +672,7 @@ configuration EricomConnectServerSetup
                 Test-Path "C:\EricomConnectClientWebService.msi"
             }
             SetScript ={
-                $source = "https://download.ericom.com/public/file/V8MjLB1gmU2ZwVSF79t0Og/EricomConnectClientWebService.msi"
+                $source = $softwareBaseLocation"EricomConnectClientWebService.msi"
                 $dest = "C:\EricomConnectClientWebService.msi"
                 Invoke-WebRequest $source -OutFile $dest
             }
