@@ -691,8 +691,6 @@
                                 "UserName" : "[parameters('adminUsername')]",
                                 "Password" : "PrivateSettingsRef:AdminPassword"
                                         },
-                            "connectionBroker" : "[concat('broker.',parameters('domainName'))]",
-                            "webAccessServer" : "[concat('gateway.',parameters('domainName'))]",
                             "externalfqdn" : "[reference(variables('publicIpRef')).dnsSettings.fqdn]",
                             "gridName" : "[variables('ecGridname')]",
                             "sqlserver" : "[variables('sqlserver')]",

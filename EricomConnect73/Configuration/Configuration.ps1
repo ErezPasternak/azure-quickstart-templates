@@ -478,12 +478,6 @@ configuration EricomConnectServerSetup
         [Parameter(Mandatory)]
         [PSCredential]$adminCreds,
 
-        # Connection Broker Node name
-        [String]$connectionBroker,
-        
-        # Web Access Node name
-        [String]$webAccessServer,
-
         # Gateway external FQDN
         [String]$externalFqdn,
         
@@ -517,22 +511,6 @@ configuration EricomConnectServerSetup
 
     $_sqlUser = $sqlCreds.UserName
     $_sqlPassword = [Runtime.InteropServices.Marshal]::PtrToStringAuto([Runtime.InteropServices.Marshal]::SecureStringToBSTR( (ConvertTo-SecureString ($sqlCreds.Password | ConvertFrom-SecureString)) ))
-
-    if (-not $connectionBroker)   { $connectionBroker = $localhost }
-    if (-not $webAccessServer)    { $webAccessServer  = $localhost }
-
-    if ($sessionHostNamingPrefix)
-    { 
-        $sessionHosts = @( 0..($numberOfRdshInstances-1) | % { "$sessionHostNamingPrefix$_.$domainname"} )
-    }
-    else
-    {
-        $sessionHosts = @( $localhost )
-    }
-
-    if (-not $collectionName)         { $collectionName = "Desktop Collection" }
-    if (-not $collectionDescription)  { $collectionDescription = "A sample RD Session collection up in cloud." }
-
 
     Node localhost
     {
