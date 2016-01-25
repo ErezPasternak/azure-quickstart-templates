@@ -12,21 +12,18 @@
         },
         "location": {
             "type": "string",
-            "defaultValue": "West US",
+            "defaultValue": "eastus",
             "allowedValues": [
-              "West US",
-              "East US",
-              "East US 2",
-              "Central US",
-              "South Central US",
-              "North Central US",
-              "North Europe",
-              "West Europe",
-              "East Asia",
-              "Southeast Asia",
-              "Japan East",
-              "Japan West",
-              "Southeast Asia"
+               "westus",
+               "eastus",
+               "northeurope", 
+               "westeurope",
+               "southeastasia",
+               "centralus", 
+               "eastus2",
+               "japaneast", 
+               "japanwest",
+               "australiaeast"
             ],
             "metadata": {
                 "description": "Location to deploy to"
@@ -130,6 +127,7 @@
         "subnetName": "Subnet",
         "subnet-id": "[concat(resourceId('Microsoft.Network/virtualNetworks','VNET'),'/subnets/',variables('subnetName'))]",
 	    "customScriptLocation": "https://raw.githubusercontent.com/ErezPasternak/azure-quickstart-templates/EricomConnect/EC-DaaS/",
+	"softwareBaseLocation": "http://tswc.ericom.com:501/erez/73/",
         "publicIpRef": "publicIp",
 	    "ecGridname" : "ecgrid",
 	    "sqlserver" : "localhost",
@@ -573,10 +571,11 @@
                                      "Password": "PrivateSettingsRef:AdminPassword"
                                  },		
    				      "gridName": "[variables('ecGridname')]",		
- 				      "LUS": "broker.DaaS.local",		
+                                "LUS": "[concat('broker.',variables('domainName'))]",		
  				      "tenant": "root",
  				      "externalfqdn" : "[reference(variables('publicIpRef')).dnsSettings.fqdn]",
-                                      "emailAddress" : "[parameters('emailAddress')]"
+                                "emailAddress" : "[parameters('emailAddress')]",
+                                "softwareBaseLocation": "[variables('softwareBaseLocation')]"
                              }		
                          },		
                          "protectedSettings": {		
@@ -746,8 +745,9 @@
                                     "Password": "PrivateSettingsRef:AdminPassword"
                                 },
  				        "gridName": "[variables('ecGridname')]",
-				        "LUS": "broker.DaaS.local",
-				        "tenant": "root"
+				            "LUS": "[concat('broker.',variables('domainName'))]",
+				            "tenant": "root",
+                            "softwareBaseLocation": "[variables('softwareBaseLocation')]"
 
                             }
                         },
@@ -828,8 +828,6 @@
                                 "UserName" : "[parameters('adminUsername')]",
                                 "Password" : "PrivateSettingsRef:AdminPassword"
                             },
-                            "connectionBroker" : "[concat('broker.',parameters('domainName'))]",
-                            "webAccessServer" : "[concat('gateway.',parameters('domainName'))]",
                             "externalfqdn" : "[reference(variables('publicIpRef')).dnsSettings.fqdn]",
                             "gridName" : "[variables('ecGridname')]",
                             "sqlserver" : "[variables('sqlserver')]",
@@ -837,7 +835,8 @@
                             "sqlCreds" : { 
                                 "UserName" : "[variables('sqluser')]",
                                 "Password" : "PrivateSettingsRef:SqlPassword"
-                                        }
+                             },
+                             "softwareBaseLocation": "[variables('softwareBaseLocation')]"
                         }
                     },
                     "protectedSettings" : { 
