@@ -12,21 +12,18 @@
         },
         "location": {
             "type": "string",
-            "defaultValue": "West US",
+            "defaultValue": "eastus",
             "allowedValues": [
-                "West US",
-                "East US",
-              "East US 2",
-              "Central US",
-              "South Central US",
-              "North Central US",
-              "North Europe",
-                "West Europe",
-                "East Asia",
-              "Southeast Asia",
-              "Japan East",
-              "Japan West",
-                "Southeast Asia"
+               "westus",
+               "eastus",
+               "northeurope", 
+               "westeurope",
+               "southeastasia",
+               "centralus", 
+               "eastus2",
+               "japaneast", 
+               "japanwest",
+               "australiaeast"
             ],
             "metadata": {
                 "description": "Location to deploy to"
