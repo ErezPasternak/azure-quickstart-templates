@@ -443,13 +443,13 @@ Function Start-HTTPListener {
         [String]$WebsitePath,
 
         [Parameter()]
-        [System.Net.AuthenticationSchemes] $Auth = [System.Net.AuthenticationSchemes]::IntegratedWindowsAuthentication
+        [System.Net.AuthenticationSchemes] $Auth = [System.Net.AuthenticationSchemes]::Anonymous
         )
 
     Process {
      #   $ErrorActionPreference = "Stop"
-        PopulateAD
-        PopulateConnect
+        #PopulateAD
+        #PopulateConnect
         $CurrentPrincipal = New-Object Security.Principal.WindowsPrincipal( [Security.Principal.WindowsIdentity]::GetCurrent())
         if ( -not ($currentPrincipal.IsInRole( [Security.Principal.WindowsBuiltInRole]::Administrator ))) {
             Write-Error "This script must be executed from an elevated PowerShell session" 
@@ -473,133 +473,149 @@ Function Start-HTTPListener {
                 $context = $listener.GetContext()
                 $request = $context.Request
 
-                if (!$request.IsAuthenticated) {
-                    Write-Warning "Rejected request as user was not authenticated"
-                    $statusCode = 403
-                    $commandOutput = "Unauthorized"
-                } else {
+                if ($request.Url -ne "") {
                     $identity = $context.User.Identity
                     Write-Verbose "Received request $(get-date) from $($identity.Name):"
                     $request | fl * | Out-String | Write-Verbose
-                
-                    # only allow requests that are the same identity as the one who started the listener
-                    if ($identity.Name -ne $CurrentPrincipal.Identity.Name) {
-                        Write-Warning "Rejected request as user doesn't match current security principal of listener"Ne
-                        $statusCode = 403
-                        $commandOutput = "Unauthorized"
+
+                    $checkExistingPath = "";
+
+                    #Write-Warning $request.Url.AbsolutePath
+                    #Write-Warning $request.Url.AbsoluteUri
+                    #Write-Warning $request.Url.Host
+                    #Write-Warning $request.Url.Port
+                    #Write-Warning $request.Url.LocalPath
+                    #Write-Warning $request.Url.PathAndQuery
+                    #Write-Warning $request.Url.Query
+                        
+                    if (-not $request.Url.Query.StartsWith("?command")) {
+                        Write-Warning "Non-command Request"
+                        $commandOutput = "SYNTAX: command=<string> format=[JSON|TEXT|XML|NONE|CLIXML]"
+                        $Format = "BINARY"
+                        $reqFile = $request.Url.LocalPath.ToString();
+
+                        $currentPath =  $WebsitePath;
+                        $checkExistingPath = Join-Path -Path $currentPath -ChildPath ("$reqFile")
                     } else {
-                        if (-not $request.QueryString.HasKeys()) {
-                                $commandOutput = "SYNTAX: command=<string> format=[JSON|TEXT|XML|NONE|CLIXML]"
+                        Write-Warning "Command Request"
+                        $command = $request.QueryString.Item("command")
 
-                                $Format = "TEXT"
-                                $File = $request.Url.Query.Substring(1);
-                                $currentPath =  $WebsitePath;
-                                $resourceDir = "files"
-                                $checkExistingPath = Join-Path -Path $currentPath -ChildPath ("$resourceDir\$File")
-                                if (Test-Path $checkExistingPath) {
-                                    $commandOutput = Get-Content $checkExistingPath
-                                } else {
-                                    $commandOutput = "SYNTAX: command=<string> format=[JSON|TEXT|XML|NONE|CLIXML]"
-                                }                                
-                            } else {
-                             
-                            $command = $request.QueryString.Item("command")
-
-
-                            switch ($command) {
-                                "exit" {
-                                    Write-Verbose "Received command to exit listener"
-                                    return
-                                }
-                                "Send-Mail" {
-                                    Write-Verbose "Received command to send email"
-                                    $to = $request.QueryString.Item("to");
-                                    $command = "SendMailTo -To $to"
-                                }
-                                "Create-User"{
-									# Create an AD User using a powershell function
-                                    Write-Verbose "Received command to create user"
-                                    $username = $request.QueryString.Item("username");
-                                    $email = $request.QueryString.Item("email");
-                                    $command = "Create-User -Username $username -Email $email"
-                                }
-                                "Assign-User"{
-                                #variables: user, adgroup
-                                    Write-Verbose "Received command to assign user to organizational unit"
-                                    $username = $request.QueryString.Item("username");
-                                    $group = $request.QueryString.Item("group");
-                                    $command = "Assign-User -Username $username -Template $group"
-                                }
-                                "Get-AppList"{
-                                #return list of apps and icons
-                                    Write-Verbose "Received command to retrieve application list from Ericom Connect"
-                                    $command = "Get-AppList -adminUser $EC_AdminUser -adminPassword $EC_AdminPass"
-                                }
-                                "PublishAppsToUser"{
-                                #variables: user, list of apps
-                                }
-                                "Get-AllAppList" {
-                                    Write-Verbose "Received command to retrieve application list from all hosts"
-                                    $command = "Get-AllAppList"
-                                }
-                                "Create-RemoteHostsGroup"{
-                                    Write-Verbose "Received command to create Remote Hosts Group"
-                                    $command = "Create-RemoteHostsGroup"
-                                }
-                                "List-AllApps"{
-                                    Write-Verbose "Received command to list all apps"
-                                    $command = "List-AllApps"
-                                }
-                                default{
+                        switch ($command) {
+                            "exit" {
+                                Write-Verbose "Received command to exit listener"
+                                return
+                            }
+                            "Send-Mail" {
+                                Write-Verbose "Received command to send email"
+                                $to = $request.QueryString.Item("to");
+                                $command = "SendMailTo -To $to"
+                            }
+                            "Create-User"{
+								# Create an AD User using a powershell function
+                                Write-Verbose "Received command to create user"
+                                $username = $request.QueryString.Item("username");
+                                $email = $request.QueryString.Item("email");
+                                $command = "Create-User -Username $username -Email $email"
+                            }
+                            "Assign-User"{
+                            #variables: user, adgroup
+                                Write-Verbose "Received command to assign user to organizational unit"
+                                $username = $request.QueryString.Item("username");
+                                $group = $request.QueryString.Item("group");
+                                $command = "Assign-User -Username $username -Template $group"
+                            }
+                            "Get-AppList"{
+                            #return list of apps and icons
+                                Write-Verbose "Received command to retrieve application list from Ericom Connect"
+                                $command = "Get-AppList -adminUser $EC_AdminUser -adminPassword $EC_AdminPass"
+                            }
+                            "PublishAppsToUser"{
+                            #variables: user, list of apps
+                            }
+                            "Get-AllAppList" {
+                                Write-Verbose "Received command to retrieve application list from all hosts"
+                                $command = "Get-AllAppList"
+                            }
+                            "Create-RemoteHostsGroup"{
+                                Write-Verbose "Received command to create Remote Hosts Group"
+                                $command = "Create-RemoteHostsGroup"
+                            }
+                            "List-AllApps"{
+                                Write-Verbose "Received command to list all apps"
+                                $command = "List-AllApps"
+                            }
+                            default{
                                   
-                                }
+                            }
                                 
-                            }
+                        }
 							
-                            $Format = $request.QueryString.Item("format")
-                            if ($Format -eq $Null) {
-                                $Format = "JSON"
-                            }
-                            Write-Verbose "*******************"
-                            Write-Verbose "Request = $request"
-                            Write-Verbose "Command = $command"
-                            Write-Verbose "Format = $Format"
-                            
-                          #  $Decode = [System.Web.HttpUtility]::UrlDecode($command) 
-                          #  Write-Verbose "Request $command changed to $($Decode)"
-                          #  Write-Verbose "*******************"
+                        $Format = $request.QueryString.Item("format")
+                        if ($Format -eq $Null) {
+                            $Format = "JSON"
+                        }
+                        Write-Verbose "*******************"
+                        Write-Verbose "Request = $request"
+                        Write-Verbose "Command = $command"
+                        Write-Verbose "Format = $Format"
 
-                            try {
-                                $script = $ExecutionContext.InvokeCommand.NewScriptBlock($command)                        
-                                $commandOutput = & $script
-                            } catch {
-                                $commandOutput = $_ | ConvertTo-HashTable
-                                $statusCode = 500
-                            }
+                        try {
+                            $script = $ExecutionContext.InvokeCommand.NewScriptBlock($command)                        
+                            $commandOutput = & $script
+                        } catch {
+                            $commandOutput = $_ | ConvertTo-HashTable
+                            $statusCode = 500
                         }
-                        $commandOutput = switch ($Format) {
-                            TEXT    { $commandOutput | Out-String ; break } 
-                            JSON    { $commandOutput | ConvertTo-JSON -Compress; break }
-                            XML     { $commandOutput | ConvertTo-XML -As String; break }
-                            CLIXML  { [System.Management.Automation.PSSerializer]::Serialize($commandOutput) ; break }
-                            default { "Invalid output format selected, valid choices are TEXT, JSON, XML, and CLIXML"; $statusCode = 501; break }
-                        }
+                    }
+
+                    $commandOutput = switch ($Format) {
+                        BINARY  {  }
+                        TEXT    { $commandOutput | Out-String ; break } 
+                        JSON    { $commandOutput | ConvertTo-JSON -Compress; break }
+                        XML     { $commandOutput | ConvertTo-XML -As String; break }
+                        CLIXML  { [System.Management.Automation.PSSerializer]::Serialize($commandOutput) ; break }
+                        default { "Invalid output format selected, valid choices are TEXT, JSON, XML, and CLIXML"; $statusCode = 501; break }
                     }
                 }
 
-                Write-Verbose "Response:"
+                #Write-Verbose "Response:"
                 if (!$commandOutput) {
                     $commandOutput = [string]::Empty
                 }
-                Write-Verbose $commandOutput
+                #Write-Verbose $commandOutput
 
                 $response = $context.Response
                 $response.StatusCode = $statusCode
-                $buffer = [System.Text.Encoding]::UTF8.GetBytes($commandOutput)
-
-                $response.ContentLength64 = $buffer.Length
                 $output = $response.OutputStream
-                $output.Write($buffer, 0, ($buffer.Length))
+                if ($Format -ne "BINARY") {
+                    $buffer = [System.Text.Encoding]::UTF8.GetBytes($commandOutput)
+                    $response.ContentLength64 = $buffer.Length
+                    $output.Write($buffer, 0, ($buffer.Length))
+                } else {
+                    Write-Warning $checkExistingPath
+                    try {
+                        if(Test-Path $checkExistingPath) {
+                            $commandOutput = New-Object System.IO.BinaryReader([System.IO.File]::Open($checkExistingPath, [System.IO.FileMode]::Open, [System.IO.FileAccess]::Read, [System.IO.FileShare]::ReadWrite))
+                            $response.ContentLength64 = $commandOutput.BaseStream.Length;
+                            $buffer = $commandOutput.ReadBytes($commandOutput.BaseStream.Length)
+                            $output.Write($buffer, 0, ($buffer.Length))
+                        } else {
+                            $commandOutput = "SYNTAX: command=<string> format=[JSON|TEXT|XML|NONE|CLIXML]"
+                            if($request.Url.LocalPath -eq "/") {
+                                $response.RedirectLocation = "/index.html"
+                            }
+                        }
+                    } catch {
+                        $commandOutput = "SYNTAX: command=<string> format=[JSON|TEXT|XML|NONE|CLIXML]"
+                        if($request.Url.LocalPath -eq "/") {
+                            $response.StatusCode = 301
+                            $response.RedirectLocation = ($request.Url.AbsoluteUri + "index.html")
+                            Write-Error ($request.Url.AbsoluteUri + "index.html")
+                        }
+                    }
+
+                }
+                $output.Flush()
                 $output.Close()
 
                 #$sw = New-Object IO.StreamWriter $output

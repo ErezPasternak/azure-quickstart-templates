@@ -1,6 +1,6 @@
 ﻿param(
-    [Parameter(Mandatory)][String]$EC_AdminUser,
-    [Parameter(Mandatory)][String]$EC_AdminPass,
+    [Parameter()][String]$EC_AdminUser = "ericom@ericom.local",
+    [Parameter()][String]$EC_AdminPass = "Ericom123$",
     [Parameter()][String]$WebsitePath = "C:\Website"
 )
 
@@ -9,6 +9,7 @@ function Get-ScriptDirectory
   $Invocation = (Get-Variable MyInvocation -Scope 1).Value
   Split-Path $Invocation.MyCommand.Path
 }
+
 
 $modulePath = "$env:ProgramFiles\WindowsPowerShell\Modules";
 $moduleName = "HTTPListener"
