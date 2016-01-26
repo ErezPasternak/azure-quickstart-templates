@@ -96,7 +96,7 @@ configuration GatewaySetup
                 Test-Path "C:\EricomConnectDataGrid_x64_WT.msi"
             }
             SetScript ={
-                $_softwareBaseLocation = "$using:softwareBaseLocation"
+                $_softwareBaseLocation = "$Using:softwareBaseLocation"
                 $source = ($_softwareBaseLocation + "EricomConnectDataGrid_x64_WT.msi")
                 $dest = "C:\EricomConnectDataGrid_x64_WT.msi"
                 Invoke-WebRequest $source -OutFile $dest
@@ -143,8 +143,8 @@ configuration GatewaySetup
                 
         Package vcRedist 
         { 
-            $_softwareBaseLocation = "$using:softwareBaseLocation"
-            Path = ($_softwareBaseLocation+"vcredist_x64.exe" )
+
+            Path = ($softwareBaseLocation+"vcredist_x64.exe" )
             ProductId = "{DA5E371C-6333-3D8A-93A4-6FD5B20BCC6E}" 
             Name = "Microsoft Visual C++ 2010 x64 Redistributable - 10.0.30319" 
             Arguments = "/install /passive /norestart"
@@ -291,6 +291,7 @@ configuration DesktopHost
         
         [Parameter(Mandatory)]
         [String]$softwareBaseLocation
+        
     ) 
 
     $_adminUser = $adminCreds.UserName
@@ -326,7 +327,7 @@ configuration DesktopHost
                 Test-Path "C:\EricomConnectDataGrid_x64.msi"
             }
             SetScript ={
-                $_softwareBaseLocation = "$using:softwareBaseLocation"
+                $_softwareBaseLocation = "$Using:softwareBaseLocation"
                 $source = ($_softwareBaseLocation + "EricomConnectDataGrid_x64.msi")
                 $dest = "C:\EricomConnectDataGrid_x64.msi"
                 Invoke-WebRequest $source -OutFile $dest
@@ -352,7 +353,7 @@ configuration DesktopHost
                 Test-Path "C:\EricomConnectRemoteAgentClient_x64.msi"
             }
             SetScript ={
-                $_softwareBaseLocation = "$using:softwareBaseLocation"
+                $_softwareBaseLocation = "$Using:softwareBaseLocation"
                 $source = ($_softwareBaseLocation + "EricomConnectRemoteAgentClient_x64.msi")
                 $dest = "C:\EricomConnectRemoteAgentClient_x64.msi"
                 Invoke-WebRequest $source -OutFile $dest
@@ -378,7 +379,7 @@ configuration DesktopHost
                 Test-Path "c:\EricomAccessServer64.msi"
             }
             SetScript ={
-                $_softwareBaseLocation = "$using:softwareBaseLocation"
+                $_softwareBaseLocation = "$Using:softwareBaseLocation"
                 $source = ($_softwareBaseLocation + "EricomAccessServer64.msi")
                 $dest = "C:\EricomAccessServer64.msi"
                 Invoke-WebRequest $source -OutFile $dest
@@ -400,8 +401,7 @@ configuration DesktopHost
 
 	    Package vcRedist 
         { 
-            $_softwareBaseLocation = "$using:softwareBaseLocation"
-            Path = ($_softwareBaseLocation + "vcredist_x64.exe") 
+            Path = ($softwareBaseLocation + "vcredist_x64.exe") 
             ProductId = "{DA5E371C-6333-3D8A-93A4-6FD5B20BCC6E}" 
             Name = "Microsoft Visual C++ 2010 x64 Redistributable - 10.0.30319" 
             Arguments = "/install /passive /norestart" 
@@ -471,13 +471,13 @@ configuration DesktopHost
             GetScript = {@{Result = "JoinGridRemoteAgent"}}      
         }
         
-	    Script DownloadAccessPadMSI
+	Script DownloadAccessPadMSI
         {
             TestScript = {
                 Test-Path "C:\EricomAccessPadClient64.msi"
             }
             SetScript ={
-                $_softwareBaseLocation = "$using:softwareBaseLocation"
+                $_softwareBaseLocation = "$Using:softwareBaseLocation"
                 $source = ($_softwareBaseLocation + "EricomAccessPadClient64.msi") 
                 $dest = "C:\EricomAccessPadClient64.msi"
                 Invoke-WebRequest $source -OutFile $dest
@@ -567,13 +567,13 @@ configuration ApplicationHost
             Name = "RDS-RD-Server"
         }
 
-	    Script DownloadGridMSI
+	Script DownloadGridMSI
         {
             TestScript = {
                 Test-Path "C:\EricomConnectDataGrid_x64.msi"
             }
             SetScript ={
-                $_softwareBaseLocation = "$using:softwareBaseLocation"
+                $_softwareBaseLocation = "$Using:softwareBaseLocation"
                 $source = ($_softwareBaseLocation + "EricomConnectDataGrid_x64.msi")
                 $dest = "C:\EricomConnectDataGrid_x64.msi"
                 Invoke-WebRequest $source -OutFile $dest
@@ -593,13 +593,13 @@ configuration ApplicationHost
             DependsOn = "[Script]DownloadGridMSI"
         }
         
-	    Script DownloadRemoteAgentMSI
+	Script DownloadRemoteAgentMSI
         {
             TestScript = {
                 Test-Path "C:\EricomConnectRemoteAgentClient_x64.msi"
             }
             SetScript ={
-                $_softwareBaseLocation = "$using:softwareBaseLocation"
+                $_softwareBaseLocation = "$Using:softwareBaseLocation"
                 $source = ($_softwareBaseLocation + "EricomConnectRemoteAgentClient_x64.msi")
                 $dest = "C:\EricomConnectRemoteAgentClient_x64.msi"
                 Invoke-WebRequest $source -OutFile $dest
@@ -619,13 +619,13 @@ configuration ApplicationHost
             DependsOn = "[Script]DownloadRemoteAgentMSI"
         }
 
-	    Script DownloadAccessServerMSI
+	Script DownloadAccessServerMSI
         {
             TestScript = {
                 Test-Path "c:\EricomAccessServer64.msi"
             }
             SetScript ={
-                $_softwareBaseLocation = "$using:softwareBaseLocation"
+                $_softwareBaseLocation = "$Using:softwareBaseLocation"
                 $source = ($_softwareBaseLocation + "EricomAccessServer64.msi")
                 $dest = "C:\EricomAccessServer64.msi"
                 Invoke-WebRequest $source -OutFile $dest
@@ -645,10 +645,9 @@ configuration ApplicationHost
             DependsOn = "[Script]DownloadAccessServerMSI"
         }
 
-	    Package vcRedist 
+	Package vcRedist 
         { 
-            $_softwareBaseLocation = "$using:softwareBaseLocation"
-            Path = ($_softwareBaseLocation + "vcredist_x64.exe") 
+            Path = ($softwareBaseLocation + "vcredist_x64.exe") 
             ProductId = "{DA5E371C-6333-3D8A-93A4-6FD5B20BCC6E}" 
             Name = "Microsoft Visual C++ 2010 x64 Redistributable - 10.0.30319" 
             Arguments = "/install /passive /norestart" 
@@ -722,7 +721,6 @@ configuration ApplicationHost
 
 }
 
-
 configuration EricomConnectServerSetup
 {
    param 
@@ -788,7 +786,7 @@ configuration EricomConnectServerSetup
                 Test-Path "C:\SQLEXPR_x64_ENU.exe"
             }
             SetScript ={
-                $_softwareBaseLocation = "$using:softwareBaseLocation"
+                $_softwareBaseLocation = "$Using:softwareBaseLocation"
                 $source = ($_softwareBaseLocation+ "SQLEXPR_x64_ENU.exe")
                 $dest = "C:\SQLEXPR_x64_ENU.exe"
                 Invoke-WebRequest $source -OutFile $dest
@@ -824,13 +822,13 @@ configuration EricomConnectServerSetup
             SqlAdministratorCredential = $sqlCreds
         }
 
-	    Script DownloadGridMSI
+	Script DownloadGridMSI
         {
             TestScript = {
                 Test-Path "C:\EricomConnectDataGrid_x64_WT.msi"
             }
             SetScript ={
-                $_softwareBaseLocation = "$using:softwareBaseLocation"
+                $_softwareBaseLocation = "$Using:softwareBaseLocation"
                 $source = ($_softwareBaseLocation + "EricomConnectDataGrid_x64_WT.msi")
                 $dest = "C:\EricomConnectDataGrid_x64_WT.msi"
                 Invoke-WebRequest $source -OutFile $dest
@@ -850,13 +848,13 @@ configuration EricomConnectServerSetup
             DependsOn = "[Script]DownloadGridMSI"
         }
 	
-	    Script DownloadProcessingUnitServerMSI
+	Script DownloadProcessingUnitServerMSI
         {
             TestScript = {
                 Test-Path "C:\EricomConnectProcessingUnitServer.msi"
             }
             SetScript ={
-                $_softwareBaseLocation = "$using:softwareBaseLocation"
+                $_softwareBaseLocation = "$Using:softwareBaseLocation"
                 $source = ($_softwareBaseLocation + "EricomConnectProcessingUnitServer.msi")
                 $dest = "C:\EricomConnectProcessingUnitServer.msi"
                 Invoke-WebRequest $source -OutFile $dest
@@ -877,13 +875,13 @@ configuration EricomConnectServerSetup
         }
 
 
-	    Script DownloadAdminWebServiceMSI
+	Script DownloadAdminWebServiceMSI
         {
             TestScript = {
                 Test-Path "C:\EricomConnectAdminWebService.msi"
             }
             SetScript ={
-                $_softwareBaseLocation = "$using:softwareBaseLocation"
+                $_softwareBaseLocation = "$Using:softwareBaseLocation"
                 $source = ($_softwareBaseLocation + "EricomConnectAdminWebService.msi")
                 $dest = "C:\EricomConnectAdminWebService.msi"
                 Invoke-WebRequest $source -OutFile $dest
@@ -903,13 +901,13 @@ configuration EricomConnectServerSetup
             DependsOn = "[Script]DownloadAdminWebServiceMSI"
         }
 
-	    Script DownloadClientWebServiceMSI
+	Script DownloadClientWebServiceMSI
         {
             TestScript = {
                 Test-Path "C:\EricomConnectClientWebService.msi"
             }
             SetScript ={
-                $_softwareBaseLocation = "$using:softwareBaseLocation"
+                $_softwareBaseLocation = "$Using:softwareBaseLocation"
                 $source = ($_softwareBaseLocation + "EricomConnectClientWebService.msi")
                 $dest = "C:\EricomConnectClientWebService.msi"
                 Invoke-WebRequest $source -OutFile $dest

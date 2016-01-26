@@ -337,8 +337,8 @@
                             "ModulesUrl": "[concat(variables('customScriptLocation'),'CreateADPDC.zip')]",
                             "ConfigurationFunction": "CreateADPDC.ps1\\CreateADPDC",
                             "Properties": {
-                                "DomainName": "[parameters('domainName')]",
-                                "AdminCreds": {
+                                "domainName": "[parameters('domainName')]",
+                                "adminCreds": {
                                     "UserName": "[parameters('adminUsername')]",
                                     "Password": "PrivateSettingsRef:AdminPassword"
                                 },
@@ -565,13 +565,13 @@
                              "ModulesUrl": "[concat(variables('customScriptLocation'),'Configuration.zip')]",		
                              "ConfigurationFunction": "Configuration.ps1\\GatewaySetup",		
                              "Properties": {		
-                                 "DomainName": "[parameters('domainName')]",		
-                                 "AdminCreds": {		
+                                 "domainName": "[parameters('domainName')]",		
+                                 "adminCreds": {		
                                      "UserName": "[parameters('adminUsername')]",		
                                      "Password": "PrivateSettingsRef:AdminPassword"
                                  },		
    				      "gridName": "[variables('ecGridname')]",		
-                                "LUS": "[concat('broker.',variables('domainName'))]",		
+                                "LUS": "[concat('broker.',parameters('domainName'))]",		
  				      "tenant": "root",
  				      "externalfqdn" : "[reference(variables('publicIpRef')).dnsSettings.fqdn]",
                                 "emailAddress" : "[parameters('emailAddress')]",
@@ -739,16 +739,15 @@
                             "ModulesUrl": "[concat(variables('customScriptLocation'),'Configuration.zip')]",
                             "ConfigurationFunction": "Configuration.ps1\\ApplicationHost",
                             "Properties": {
-                                "DomainName": "[parameters('domainName')]",
-                                "AdminCreds": {
+                                "domainName": "[parameters('domainName')]",
+                                "adminCreds": {
                                     "UserName": "[parameters('adminUsername')]",
                                     "Password": "PrivateSettingsRef:AdminPassword"
                                 },
  				        "gridName": "[variables('ecGridname')]",
-				            "LUS": "[concat('broker.',variables('domainName'))]",
+                                "LUS": "[concat('broker.',parameters('domainName'))]",
 				            "tenant": "root",
                             "softwareBaseLocation": "[variables('softwareBaseLocation')]"
-
                             }
                         },
                         "protectedSettings": {
@@ -772,7 +771,7 @@
             ],
             "properties": {
                 "hardwareProfile": {
-                    "vmSize": "Standard_A3"
+                    "vmSize": "Standard_D3"
                 },
                 "availabilitySet": {
                     "id": "[resourceId('Microsoft.Compute/availabilitySets', 'availabilityset')]"
