@@ -196,7 +196,7 @@
         "typeHandlerVersion": "1.2",
         "settings": {
           "fileUris": [
-            "https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/apache2-on-ubuntu-vm/install_apache.sh"
+            "https://raw.githubusercontent.com/ErezPasternak/azure-quickstart-templates/EricomConnect/apache2-on-ubuntu-vm/install_apache.sh"
           ],
           "commandToExecute": "sh install_apache.sh"
         }
