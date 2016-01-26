@@ -4,10 +4,10 @@
   "parameters": {
    
     "adminUsername": {
-      "value": "userName"
+      "value": "Ericom"
     },
     "adminPassword": {
-      "value": "password"
+      "value": "Ericom123$"
     },
     "dnsNameForPublicIP": {
       "value": "uniqueDNS"
