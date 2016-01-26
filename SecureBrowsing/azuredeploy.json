@@ -1,7 +1,9 @@
 {
   "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
   "contentVersion": "1.0.0.0",
+
   "parameters": {
+
     "dnsLabelPrefix": {
       "type": "string",
       "metadata": {
@@ -10,21 +12,18 @@
     },
     "location": {
       "type": "string",
-      "defaultValue": "West US",
+            "defaultValue": "eastus",
       "allowedValues": [
-        "West US",
-        "East US",
-        "East US 2",
-        "Central US",
-        "South Central US",
-        "North Central US",
-        "North Europe",
-        "West Europe",
-        "East Asia",
-        "Southeast Asia",
-        "Japan East",
-        "Japan West",
-        "Southeast Asia"
+               "westus",
+               "eastus",
+               "northeurope", 
+               "westeurope",
+               "southeastasia",
+               "centralus", 
+               "eastus2",
+               "japaneast", 
+               "japanwest",
+               "australiaeast"
       ],
       "metadata": {
         "description": "Location to deploy to"
@@ -64,7 +63,9 @@
     "sqlpassword": "P@55w0rd",
     "apiVersion": "2015-06-15"
   },
+ 
   "resources": [
+
     {
       "apiVersion": "[variables('apiVersion')]",
       "type": "Microsoft.Network/publicIPAddresses",
@@ -92,6 +93,7 @@
       "name": "availabilityset",
       "location": "[resourceGroup().location]"
     },
+
     {
       "apiVersion": "[variables('apiVersion')]",
       "type": "Microsoft.Network/virtualNetworks",
@@ -113,6 +115,7 @@
         ]
       }
     },
+
     {
       "apiVersion": "[variables('apiVersion')]",
       "type": "Microsoft.Network/loadBalancers",
@@ -165,6 +168,7 @@
         ]
       }
     },
+
     {
       "apiVersion": "[variables('apiVersion')]",
       "type": "Microsoft.Network/networkInterfaces",
@@ -188,6 +192,7 @@
         ]
       }
     },
+
     {
       "apiVersion": "[variables('apiVersion')]",
       "type": "Microsoft.Compute/virtualMachines",
@@ -276,6 +281,7 @@
         }
       ]
     },
+ 
     {
       "apiVersion": "2015-01-01",
       "type": "Microsoft.Resources/deployments",
@@ -303,13 +309,12 @@
             "value": "[variables('subnetAddressRange')]"
           },
           "DNSServerAddress": {
-            "value": [
-              "[variables('dnsServerPrivateIp')]"
-            ]
+            "value": [ "[variables('dnsServerPrivateIp')]" ]
           }
         }
       }
     },
+
     {
       "apiVersion": "[variables('apiVersion')]",
       "type": "Microsoft.Network/networkInterfaces",
@@ -346,6 +351,7 @@
         ]
       }
     },
+
     {
       "apiVersion": "[variables('apiVersion')]",
       "type": "Microsoft.Network/networkInterfaces",
@@ -416,6 +422,7 @@
         ]
       }
     },
+
     {
       "apiVersion": "[variables('apiVersion')]",
       "type": "Microsoft.Compute/virtualMachines",
@@ -489,7 +496,8 @@
                 "LUS": "[concat('broker.',variables('domainName'))]",
                 "tenant": "root",
                 "externalfqdn": "[reference(variables('publicIpRef')).dnsSettings.fqdn]",
-                "emailAddress": "[parameters('emailAddress')]"
+                "emailAddress": "[parameters('emailAddress')]",
+                "softwareBaseLocation": "[variables('softwareBaseLocation')]"
               }
             },
             "protectedSettings": {
@@ -500,7 +508,9 @@
           }
         }
       ]
+            
     },
+
     {
       "apiVersion": "[variables('apiVersion')]",
       "type": "Microsoft.Compute/virtualMachines",
@@ -513,6 +523,7 @@
       "dependsOn": [
         "[concat('Microsoft.Storage/storageAccounts/', variables('StorageAccountName'))]",
         "[concat('Microsoft.Network/networkInterfaces/', 'rdsh-', copyindex(), '-nif')]"
+
       ],
       "properties": {
         "hardwareProfile": {
@@ -572,7 +583,8 @@
                 },
                 "gridName": "[variables('ecGridname')]",
                 "LUS": "[concat('broker.',variables('domainName'))]",
-                "tenant": "root"
+                "tenant": "root",
+                "softwareBaseLocation": "[variables('softwareBaseLocation')]"
               }
             },
             "protectedSettings": {
@@ -659,7 +671,8 @@
                 "sqlCreds": {
                   "UserName": "[variables('sqluser')]",
                   "Password": "PrivateSettingsRef:SqlPassword"
-                }
+                },
+                "softwareBaseLocation": "[variables('softwareBaseLocation')]"
               }
             },
             "protectedSettings": {
