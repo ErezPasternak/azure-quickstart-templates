@@ -604,11 +604,10 @@
                                     "UserName": "[parameters('adminUsername')]",
                                     "Password": "PrivateSettingsRef:AdminPassword"
                                 },
- 				            "gridName": "[variables('ecGridname')]",
-				            "LUS": "[concat('broker.',variables('domainName'))]",
-				            "tenant": "root",
-                            "softwareBaseLocation": "[variables('softwareBaseLocation')]"
-
+                                "gridName": "[variables('ecGridname')]",
+                                "LUS": "[concat('broker.',parameters('domainName'))]",
+                                "tenant": "root",
+                                "softwareBaseLocation": "[variables('softwareBaseLocation')]"
                             }
                         },
                         "protectedSettings": {
