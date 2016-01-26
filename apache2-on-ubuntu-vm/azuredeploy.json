@@ -1,8 +1,15 @@
 {
   "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
   "contentVersion": "1.0.0.0",
+
   "parameters": {
-   
+  
+          "dnsLabelPrefix": {
+            "type": "string",
+	     "metadata": {
+                "description": "Unique public DNS prefix for the deployment. The fqdn will look something like '<dnsname>.westus.cloudapp.azure.com'. Up to 62 chars, digits or dashes, lowercase, should start with a letter: must conform to '^[a-z][a-z0-9-]{1,61}[a-z0-9]$'."
+            }
+        },
     "location": {
       "type": "string",
       "defaultValue": "West US",
@@ -27,12 +34,6 @@
       "type": "securestring",
       "metadata": {
         "description": "Password for the Virtual Machine."
-      }
-    },
-    "dnsNameForPublicIP": {
-      "type": "string",
-      "metadata": {
-        "description": "Unique DNS Name for the Public IP used to access the Virtual Machine."
       }
     },
     "ubuntuOSVersion": {

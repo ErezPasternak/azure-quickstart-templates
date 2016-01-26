@@ -2,7 +2,7 @@
 
 [![Deploy to Azure](http://azuredeploy.net/deploybutton.png)](https://azuredeploy.net/)
 
-[![Visualize](http://armviz.io/visualizebutton.png "Visualize")](http://armviz.io/#/?load=https://raw.githubusercontent.com/ErezPasternak/azure-quickstart-templates/EricomConnect/Fapache2-on-ubuntu-vm/azuredeploy.json)
+[![Visualize](http://armviz.io/visualizebutton.png "Visualize")](http://armviz.io/#/?load=https://raw.githubusercontent.com/ErezPasternak/azure-quickstart-templates/EricomConnect/apache2-on-ubuntu-vm/azuredeploy.json)
 
 
 

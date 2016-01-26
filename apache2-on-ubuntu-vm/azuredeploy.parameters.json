@@ -2,15 +2,16 @@
   "$schema": "http://schema.management.azure.com/schemas/2015-05-01/deploymentParameters.json#",
   "contentVersion": "1.0.0.0",
   "parameters": {
-   
+   "adminPassword": {
+      "value": "Ericom123$"
+    },
+    
     "adminUsername": {
       "value": "Ericom"
     },
-    "adminPassword": {
-      "value": "Ericom123$"
-    },
-    "dnsNameForPublicIP": {
-      "value": "uniqueDNS"
+    
+    "dnsLabelPrefix": {
+      "value": "GEN-UNIQUE"
     }
   }
 }
