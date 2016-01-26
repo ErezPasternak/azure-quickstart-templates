@@ -308,8 +308,8 @@
                             "ModulesUrl": "[concat(variables('customScriptLocation'),'CreateADPDC.zip')]",
                             "ConfigurationFunction": "CreateADPDC.ps1\\CreateADPDC",
                             "Properties": {
-                                "DomainName": "[parameters('domainName')]",
-                                "AdminCreds": {
+                                "domainName": "[parameters('domainName')]",
+                                "adminCreds": {
                                     "UserName": "[parameters('adminUsername')]",
                                     "Password": "PrivateSettingsRef:AdminPassword"
                                 },
@@ -510,8 +510,8 @@
                              "ModulesUrl": "[concat(variables('customScriptLocation'),'Configuration.zip')]",		
                              "ConfigurationFunction": "Configuration.ps1\\GatewaySetup",		
                              "Properties": {		
-                                 "DomainName": "[parameters('domainName')]",		
-                                 "AdminCreds": {		
+                                 "domainName": "[parameters('domainName')]",		
+                                 "adminCreds": {		
                                      "UserName": "[parameters('adminUsername')]",		
                                      "Password": "PrivateSettingsRef:AdminPassword"
                                  },		
@@ -599,8 +599,8 @@
                             "ModulesUrl": "[concat(variables('customScriptLocation'),'Configuration.zip')]",
                             "ConfigurationFunction": "Configuration.ps1\\ApplicationHost",
                             "Properties": {
-                                "DomainName": "[parameters('domainName')]",
-                                "AdminCreds": {
+                                "domainName": "[parameters('domainName')]",
+                                "adminCreds": {
                                     "UserName": "[parameters('adminUsername')]",
                                     "Password": "PrivateSettingsRef:AdminPassword"
                                 },
