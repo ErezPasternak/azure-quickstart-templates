@@ -143,8 +143,8 @@ configuration GatewaySetup
         
         Package vcRedist 
         { 
-            $_softwareBaseLocation = "$using:softwareBaseLocation"
-            Path = ($_softwareBaseLocation+"vcredist_x64.exe" )
+
+            Path = ($softwareBaseLocation+"vcredist_x64.exe" )
             ProductId = "{DA5E371C-6333-3D8A-93A4-6FD5B20BCC6E}" 
             Name = "Microsoft Visual C++ 2010 x64 Redistributable - 10.0.30319" 
             Arguments = "/install /passive /norestart"
@@ -400,8 +400,7 @@ configuration ApplicationHost
 
 	    Package vcRedist 
         { 
-            $_softwareBaseLocation = "$using:softwareBaseLocation"
-            Path = ($_softwareBaseLocation + "vcredist_x64.exe") 
+            Path = ($softwareBaseLocation + "vcredist_x64.exe") 
             ProductId = "{DA5E371C-6333-3D8A-93A4-6FD5B20BCC6E}" 
             Name = "Microsoft Visual C++ 2010 x64 Redistributable - 10.0.30319" 
             Arguments = "/install /passive /norestart" 
