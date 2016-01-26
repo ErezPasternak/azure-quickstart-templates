@@ -661,7 +661,8 @@
                                 },
  				            "gridName": "[variables('ecGridname')]",
 				            "LUS": "broker.DaaS.local",
-				            "tenant": "root"
+				            "tenant": "root",
+                            "softwareBaseLocation": "[variables('softwareBaseLocation')]"
 
                             }
                         },
