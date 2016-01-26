@@ -96,7 +96,7 @@ configuration GatewaySetup
                 Test-Path "C:\EricomConnectDataGrid_x64_WT.msi"
             }
             SetScript ={
-                $_softwareBaseLocation = "$using:softwareBaseLocation"
+                $_softwareBaseLocation = "$Using:softwareBaseLocation"
                 $source = ($_softwareBaseLocation + "EricomConnectDataGrid_x64_WT.msi")
                 $dest = "C:\EricomConnectDataGrid_x64_WT.msi"
                 Invoke-WebRequest $source -OutFile $dest
@@ -283,10 +283,10 @@ configuration ApplicationHost
         [Parameter(Mandatory)]
         [String]$gridName,
 		
-	[Parameter(Mandatory)]
+        [Parameter(Mandatory)]
         [String]$LUS,
-		
-	[Parameter(Mandatory)]
+            
+        [Parameter(Mandatory)]
         [String]$tenant,
         
         [Parameter(Mandatory)]
@@ -326,7 +326,7 @@ configuration ApplicationHost
                 Test-Path "C:\EricomConnectDataGrid_x64.msi"
             }
             SetScript ={
-                $_softwareBaseLocation = "$using:softwareBaseLocation"
+                $_softwareBaseLocation = "$Using:softwareBaseLocation"
                 $source = ($_softwareBaseLocation + "EricomConnectDataGrid_x64.msi")
                 $dest = "C:\EricomConnectDataGrid_x64.msi"
                 Invoke-WebRequest $source -OutFile $dest
@@ -352,7 +352,7 @@ configuration ApplicationHost
                 Test-Path "C:\EricomConnectRemoteAgentClient_x64.msi"
             }
             SetScript ={
-                $_softwareBaseLocation = "$using:softwareBaseLocation"
+                $_softwareBaseLocation = "$Using:softwareBaseLocation"
                 $source = ($_softwareBaseLocation + "EricomConnectRemoteAgentClient_x64.msi")
                 $dest = "C:\EricomConnectRemoteAgentClient_x64.msi"
                 Invoke-WebRequest $source -OutFile $dest
@@ -378,7 +378,7 @@ configuration ApplicationHost
                 Test-Path "c:\EricomAccessServer64.msi"
             }
             SetScript ={
-                $_softwareBaseLocation = "$using:softwareBaseLocation"
+                $_softwareBaseLocation = "$Using:softwareBaseLocation"
                 $source = ($_softwareBaseLocation + "EricomAccessServer64.msi")
                 $dest = "C:\EricomAccessServer64.msi"
                 Invoke-WebRequest $source -OutFile $dest
@@ -539,7 +539,7 @@ configuration EricomConnectServerSetup
                 Test-Path "C:\SQLEXPR_x64_ENU.exe"
             }
             SetScript ={
-                $_softwareBaseLocation = "$using:softwareBaseLocation"
+                $_softwareBaseLocation = "$Using:softwareBaseLocation"
                 $source = ($_softwareBaseLocation+ "SQLEXPR_x64_ENU.exe")
                 $dest = "C:\SQLEXPR_x64_ENU.exe"
                 Invoke-WebRequest $source -OutFile $dest
@@ -581,7 +581,7 @@ configuration EricomConnectServerSetup
                 Test-Path "C:\EricomConnectDataGrid_x64_WT.msi"
             }
             SetScript ={
-                $_softwareBaseLocation = "$using:softwareBaseLocation"
+                $_softwareBaseLocation = "$Using:softwareBaseLocation"
                 $source = ($_softwareBaseLocation + "EricomConnectDataGrid_x64_WT.msi")
                 $dest = "C:\EricomConnectDataGrid_x64_WT.msi"
                 Invoke-WebRequest $source -OutFile $dest
@@ -607,7 +607,7 @@ configuration EricomConnectServerSetup
                 Test-Path "C:\EricomConnectProcessingUnitServer.msi"
             }
             SetScript ={
-                $_softwareBaseLocation = "$using:softwareBaseLocation"
+                $_softwareBaseLocation = "$Using:softwareBaseLocation"
                 $source = ($_softwareBaseLocation + "EricomConnectProcessingUnitServer.msi")
                 $dest = "C:\EricomConnectProcessingUnitServer.msi"
                 Invoke-WebRequest $source -OutFile $dest
@@ -634,7 +634,7 @@ configuration EricomConnectServerSetup
                 Test-Path "C:\EricomConnectAdminWebService.msi"
             }
             SetScript ={
-                $_softwareBaseLocation = "$using:softwareBaseLocation"
+                $_softwareBaseLocation = "$Using:softwareBaseLocation"
                 $source = ($_softwareBaseLocation + "EricomConnectAdminWebService.msi")
                 $dest = "C:\EricomConnectAdminWebService.msi"
                 Invoke-WebRequest $source -OutFile $dest
@@ -660,7 +660,7 @@ configuration EricomConnectServerSetup
                 Test-Path "C:\EricomConnectClientWebService.msi"
             }
             SetScript ={
-                $_softwareBaseLocation = "$using:softwareBaseLocation"
+                $_softwareBaseLocation = "$Using:softwareBaseLocation"
                 $source = ($_softwareBaseLocation + "EricomConnectClientWebService.msi")
                 $dest = "C:\EricomConnectClientWebService.msi"
                 Invoke-WebRequest $source -OutFile $dest
