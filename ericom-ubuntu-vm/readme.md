@@ -1,6 +1,6 @@
 ![Ericom::Access Done Right](http://www.ericom.com/imgs/home/EricomLogo2.jpg "Ericom Logo") 
 
-### Create an Ubuntu ** Enviroment using Ericom Access Server and RemoteAgent ** on a Virtual Machine
+### Create an Ubuntu **Enviroment using Ericom Access Server and RemoteAgent** on a Virtual Machine
 
 [![Deploy to Azure](http://azuredeploy.net/deploybutton.png)](https://azuredeploy.net/)
 
