@@ -13,7 +13,7 @@ $pathStartServer = Join-Path $ServerPath -ChildPath $startServer;
 # Check if Server is Running
 $isRunning = $false;
 try {
-    $HTTP_Request = [System.Net.WebRequest]::Create('http://localhost:1232/index.html')
+    $HTTP_Request = [System.Net.WebRequest]::Create('http://localhost:2222/index.html')
     # We then get a response from the site.
     $HTTP_Response = $HTTP_Request.GetResponse()
     # We then get the HTTP code as an integer.

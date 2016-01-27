@@ -30,7 +30,7 @@ angular.module(['Authentication'])
                    AuthenticationService.SetCredentials($scope.username, $scope.password, $scope.email);
                    $location.path("/");
                } else {
-                   $scope.error = "Something went wrong. Please try again later."
+                   $scope.error = response.message;
                    $scope.dataLoading = false;
                }
             });
