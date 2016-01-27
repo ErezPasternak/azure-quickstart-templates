@@ -43,7 +43,7 @@ angular.module(['Authentication'])
                 image:'layout/slide-1.jpg',
                 id: 0
             },{
-                image:'layout/slide-1.jpg',
+                image:'layout/slide-2.jpg',
                 id: 1
             }
         ];
@@ -92,7 +92,7 @@ angular.module(['Authentication'])
                 image:'layout/slide-1.jpg',
                 id: 0
             },{
-                image:'layout/slide-1.jpg',
+                image:'layout/slide-2.jpg',
                 id: 1
             }
         ];

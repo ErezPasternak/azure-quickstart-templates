@@ -130,7 +130,11 @@
                                                                 <img ng-src="{{:: imagePath + d.icon}}" alt="{{:: d.title}}" />
                                                             </div>
                                                             <div class="pd-col">
-                                                                {{:: d.title}}. <strong>${{:: d.price}}</strong><span class="weight-light">/month</span>
+                                                                {{:: d.title}}. 
+                                                                <any ng-if=":: d.price > 0"><strong>${{:: d.price}}</strong><span class="weight-light">/month</span></any>
+                                                                <any ng-if=":: d.price === 0">
+                                                                    <span class="weight-light">(free)</span>
+                                                                </any>
                                                             </div>
                                                         </div>
                                                     </div>

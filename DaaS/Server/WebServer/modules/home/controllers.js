@@ -171,19 +171,19 @@ angular.module('Desk', [])
                 'title':'Value Package',
                 'description':'1 vCPU, 4 GB RAM, 50 GB Storage',
                 id:1,
-                'price':19,
+                'price':15,
                 'isRequired':true
             },{
                 'title':'Standard Package',
                 'description':'2 vCPU, 8  GB RAM, 200 GB Storage',
                 id:2,
-                'price':32,
+                'price':21,
                 'isRequired':true
             },{
                 'title':'Advanced Package',
                 'description':'4 vCPU, 16 GB RAM, 500 GB Storage',
                 id:3,
-                'price':45,
+                'price':29,
                 'isRequired':true
             }]
         },
@@ -191,13 +191,17 @@ angular.module('Desk', [])
             'title':'Operating System',
             'options':[{
                 'title':'Windows 7',
-                'price':2,
+                'price':0,
             },{
                 'title':'Windows 8',
-                'price':10,
+                'price':0,
             },{
                 'title':'Ubuntu 14',
-                'price':1500,
+                'price':0,
+                'isDisable':'true',
+            },{
+                'title':'Windows 10',
+                'price':0,
                 'isDisable':'true',
             }]
         },
@@ -205,13 +209,13 @@ angular.module('Desk', [])
             'title':'Services',
             'options':[{
                 'title':'Security',
-                'price':7
+                'price':1
             },{
                 'title':'Backup & Restore',
-                'price':7
+                'price':1
             },{
                 'title':'Web Filtering',
-                'price':7,
+                'price':1,
             }]
         },
         apps: {
@@ -222,54 +226,85 @@ angular.module('Desk', [])
                     options :[{
                         title :'Microsoft Office 2013',
                         icon :'mc-office.svg',
-                        price :  1
+                        price :  9
                     },{
-                        title :'Word 2013',
-                        icon :'mc-word.svg',
-                        price : 10
-                    },{
-                        title :'Outlook 2013',
+                        title :'Outlook',
                         icon :'outlook.svg',
-                        price : 10
+                        price : 2
                     },{
-                        title :'Exel 2013',
-                        icon :'exel.svg',
-                        price : 10
+                        title :'Word',
+                        icon :'mc-word.svg',
+                        price : 2
                     },{
-                        title :'PPT 2013',
+                        title :'PowerPoint',
                         icon :'powepoint.svg',
-                        price : 10
+                        price : 2
                     },{
-                        title :'NXl 2013',
+                        title :'Excel',
+                        icon :'exel.svg',
+                        price : 2
+                    },{
+                        title :'OneNote',
                         icon :'nvc.svg',
-                        price : 10
+                        price : 2
                     },{
-                        title :'Access 2013',
+                        title :'Access',
                         icon :'access.svg',
-                        price : 10
-                    },{
-                        title :'Access 2013',
-                        icon :'access.svg',
-                        price : 10,
-                        isDisable: true,
+                        price : 2
                     }]
                 },{
                     title : 'Intenet',
                     options :[{
-                        title :'Microsoft Office 2015',
-                        icon :'mc-office.svg',
-                        price :2
+                        title :'Internet Explorer',
+                        icon :'internet_explorer.png',
+                        price :0
+                    },{
+                        title :'Google Chrome',
+                        icon :'chrome.png',
+                        price :0
+                    },{
+                        title :'Mozilla Firefox',
+                        icon :'firefox.png',
+                        price :0
+                    },{
+                        title :'Acrobat Reader',
+                        icon :'acrobat.png',
+                        price :0
+                    },{
+                        title :'7-zip',
+                        icon :'7zip.png',
+                        price :0
+                    },{
+                        title :'ESET Antivirus',
+                        icon :'eset.png',
+                        price :3
                     }]
                 },{
                     title : 'Multimedia',
                     options :[{
-                        title :'Whatever',
-                        icon :'mc-office.svg',
-                        price :2
+                        title :'MovieMaker',
+                        icon :'moviemaker.png',
+                        price :0
                     },{
-                        title :'test',
-                        icon :'mc-office.svg',
-                        price :2
+                        title :'VLC Media Player',
+                        icon :'vlc.png',
+                        price :0
+                    },{
+                        title :'KODI ',
+                        icon :'kodi.png',
+                        price :0
+                    },{
+                        title :'Picasa',
+                        icon :'picasa.png',
+                        price :0
+                    },{
+                        title :'Paint',
+                        icon :'paint.png',
+                        price :0
+                    },{
+                        title :'Camtasia Studio',
+                        icon :'camtasia.png',
+                        price :8
                     }]
                 }
             ],
