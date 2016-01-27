@@ -63,7 +63,7 @@
     "vmName": "MyUbuntuVM",
     "vmSize": "Standard_D2",
     "virtualNetworkName": "VNET",
-    "apiVersion": "2015-06-15"
+    "apiVersion": "2015-06-15",
     "vnetID": "[resourceId('Microsoft.Network/virtualNetworks',variables('virtualNetworkName'))]",
     "subnetRef": "[concat(variables('vnetID'),'/subnets/',variables('subnetName'))]"
   },
