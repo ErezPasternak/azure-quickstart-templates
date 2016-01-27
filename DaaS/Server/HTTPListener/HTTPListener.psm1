@@ -487,8 +487,19 @@ Function Start-HTTPListener {
                     #Write-Warning $request.Url.LocalPath
                     #Write-Warning $request.Url.PathAndQuery
                     #Write-Warning $request.Url.Query
+                    $body = $context.Request.InputStream
+                    $encoding = $context.Request.ContentEncoding
+                    $reader = [System.IO.StreamReader]::new($body, $encoding);
+                    $postdata = $reader.ReadToEnd();
+                    $nameValuePair = ($postdata | Out-String | ConvertFrom-Json);
+
+                    $isApi = $false
+
+                    if ($request.Url.Query.StartsWith("?command") -or $nameValuePair.Command -ne $null) {
+                        $isApi = $true
+                    }
                         
-                    if (-not $request.Url.Query.StartsWith("?command")) {
+                    if ($isApi -eq $false) {
                         Write-Warning "Non-command Request"
                         $commandOutput = "SYNTAX: command=<string> format=[JSON|TEXT|XML|NONE|CLIXML]"
                         $Format = "BINARY"
@@ -498,7 +509,11 @@ Function Start-HTTPListener {
                         $checkExistingPath = Join-Path -Path $currentPath -ChildPath ("$reqFile")
                     } else {
                         Write-Warning "Command Request"
-                        $command = $request.QueryString.Item("command")
+                        if ($request.HttpMethod -eq "POST") {
+                            $command = $nameValuePair.command;
+                        } else {
+                            $command = $request.QueryString.Item("command")
+                        }
 
                         switch ($command) {
                             "exit" {
@@ -513,6 +528,15 @@ Function Start-HTTPListener {
                             "Create-User"{
 								# Create an AD User using a powershell function
                                 Write-Verbose "Received command to create user"
+                                if ($request.HttpMethod -eq "POST") {
+                                    $username = $nameValuePair.name;
+                                    $password = $nameValuePair.password;
+                                    $email = $nameValuePair.email;
+                                } else {
+                                    $username = $request.QueryString.Item("username");
+                                    $password = $request.QueryString.Item("password");
+                                    $email = $request.QueryString.Item("email");
+                                }
                                 $username = $request.QueryString.Item("username");
                                 $email = $request.QueryString.Item("email");
                                 $command = "Create-User -Username $username -Email $email"

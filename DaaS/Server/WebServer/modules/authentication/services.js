@@ -47,6 +47,47 @@ angular.module('Authentication')
             }); 
            
         };
+        
+        service.Register = function (username, password, email, callback) {
+
+            /* Dummy authentication for testing, uses $timeout to simulate api call
+             ----------------------------------------------*/
+            /*
+            $timeout(function () {
+                var response = { success: username === 'daas' && password === 'daas' };
+                if (!response.success) {
+                    response.message = 'Username or password is incorrect';
+                }
+                callback(response);
+            }, 1000);
+                        
+*/
+             
+            /* Use this for real authentication
+             ----------------------------------------------*/
+            /* */
+            var data = {
+            command: 'Create-User',
+            username:username,
+            password:password,
+            email:email
+            };
+            var config = {
+                headers : {
+                    'Content-Type': 'application/json'
+                }
+            }
+            
+            $http.post('api', data, config)
+             .then(function successCallback(response) {
+               callback(response.data);  
+            }, function errorCallback(response) {
+                // error
+                callback(response.data);
+
+            }); 
+           
+        };
 
         service.SetCredentials = function (username, password, email) {
             var authdata = Base64.encode(username + ':' + password);

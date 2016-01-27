@@ -22,6 +22,19 @@ angular.module(['Authentication'])
                 }
             });
         };
+        
+        $scope.register = function() {
+            $scope.dataLoading = true;
+            AuthenticationService.Register($scope.username, $scope.password, $scope.email, function(response){
+               if (response.success) {
+                   AuthenticationService.SetCredentials($scope.username, $scope.password, $scope.email);
+                   $location.path("/");
+               } else {
+                   $scope.error = "Something went wrong. Please try again later."
+                   $scope.dataLoading = false;
+               }
+            });
+        }
     //caurusel
       $scope.myInterval = 8500;
       $scope.noWrapSlides = false;
