@@ -4,6 +4,7 @@
 # do sudo bash ConnectPrerequisites.sh
 
 # define variable of applicaiton to launch in the desktop.  can use xfce4-session or firefox for example
+apt-get -y update
 XRDP_APP=xfce4-session
 
 # domain to join
