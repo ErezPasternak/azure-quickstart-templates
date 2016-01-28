@@ -54,7 +54,8 @@ Remove-Item $tempDestination -Force -Recurse
 $powershellModuleFolder = "$env:ProgramFiles\WindowsPowerShell\Modules"
 $serverModuleFolder = Join-Path $powershellModuleFolder -ChildPath "eHTTPListener"
 New-Item $serverModuleFolder -ItemType Directory -Force
-Copy-Item ((Join-Path $finalDestination -ChildPath "Webserver") + "eHTTPListener.*") -Destination $serverModuleFolder -Force
+$modules = (Join-Path $finalDestination -ChildPath "Webserver") + "\eHTTPListener.*"  
+Copy-Item $modules -Destination $serverModuleFolder -Force
 
 $WebsitePath = Join-Path $finalDestination -ChildPath "Website"
 $ServerPath = Join-Path $finalDestination -ChildPath "Webserver"
