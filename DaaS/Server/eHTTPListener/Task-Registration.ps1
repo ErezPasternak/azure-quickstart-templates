@@ -23,7 +23,7 @@ Register-ScheduledJob -Trigger $trigger -Name "StartPSServer" -ErrorAction Silen
 } -ArgumentList $filePath, $argForPS
 
 # Register Monitor-Server
-$repeat = (New-TimeSpan -Seconds 30)
+$repeat = (New-TimeSpan -Minute 1)
 $option = New-ScheduledJobOption -RunElevated -MultipleInstancePolicy StopExisting
 $trigger = New-JobTrigger -Once -At (Get-Date).Date -RepeatIndefinitely -RepetitionInterval $repeat
 $filePath = "C:\Windows\System32\WindowsPowershell\v1.0\powershell.exe"
