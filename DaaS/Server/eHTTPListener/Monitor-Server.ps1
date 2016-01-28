@@ -3,7 +3,8 @@ param(
     [Parameter()][String]$EC_AdminUser = "ericom@ericom.local",
     [Parameter()][String]$EC_AdminPass = "Ericom123$",
     [Parameter()][String]$WebsitePath = "C:\Website",
-    [Parameter()][String]$ServerPath = "C:\Server"
+    [Parameter()][String]$ServerPath = "C:\Server",
+    [Parameter()][String]$ServerPort = "2222"
 )
 
 $startServer = "Start-Server.ps1"
@@ -13,7 +14,7 @@ $pathStartServer = Join-Path $ServerPath -ChildPath $startServer;
 # Check if Server is Running
 $isRunning = $false;
 try {
-    $HTTP_Request = [System.Net.WebRequest]::Create('http://localhost:2222/index.html')
+    $HTTP_Request = [System.Net.WebRequest]::Create("http://localhost:$ServerPort/index.html")
     # We then get a response from the site.
     $HTTP_Response = $HTTP_Request.GetResponse()
     # We then get the HTTP code as an integer.
@@ -34,7 +35,7 @@ try {
 }
 
 $powershellBinary = "C:\Windows\System32\WindowsPowershell\v1.0\powershell.exe"
-$argumentsList = "-executionPolicy bypass -noexit -file `"$pathStartServer`" -EC_AdminUser `"$EC_AdminUser`" -EC_AdminPass `"$EC_AdminPass`" -WebsitePath `"$WebsitePath`""
+$argumentsList = "-executionPolicy bypass -noexit -file `"$pathStartServer`" -EC_AdminUser `"$EC_AdminUser`" -EC_AdminPass `"$EC_AdminPass`" -WebsitePath `"$WebsitePath`" -ServerPort `"$ServerPort`" "
 # If not, then start server manually
 if ($isRunning -eq $false) {
     Start-Process -Filepath $powershellBinary -ArgumentList $argumentsList -Passthru
