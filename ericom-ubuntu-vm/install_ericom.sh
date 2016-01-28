@@ -11,6 +11,10 @@ XRDP_APP=xfce4-session
 DOMAIN=cloudconnect.local
 DOMAIN_ADMIN=ccadmin
 DOMAIN_PWD=******
+RAWSaddress=sss
+RemoteAgentAddress=dddd.ddd
+TenantInfo=root
+
 
 sudo apt-get -y install openssh-server
 
@@ -41,7 +45,6 @@ then
   wget http://de.archive.ubuntu.com/ubuntu/pool/universe/l/likewise-open/likewise-open-gui_6.1.0.406-0ubuntu5.1_amd64.deb 
 fi
 
-sudo dpkg -l
 sudo dpkg -i likewise-open_6.1.0.406-0ubuntu5.1_amd64.deb
 sudo dpkg -i libglade2-0_2.6.4-2_amd64.deb
 sudo dpkg -i likewise-open-gui_6.1.0.406-0ubuntu5.1_amd64.deb
@@ -58,5 +61,23 @@ sudo sed -i '$ a\greeter-show-manual-login=true' /usr/share/lightdm/lightdm.conf
 # domainjoin-cli join $DOMAIN $DOMAIN_ADMIN $DOMAIN_PWD
 
 ifconfig | grep -i "inet addr"
+
+#download Ericom AccessServer and Remote Agent
+if [ ! -f ericom-connect-remote-host_x64.deb ]
+then
+    wget http://<ericom_web_site/ericom-connect-remote-host_x64.deb
+fi
+
+if [ ! -f libglade2-0_2.6.4-2_amd64.deb ]
+then    
+    wget http://http://<ericom_web_site//likewise-open_6.1.0.406-0ubuntu5.1_amd64.deb
+fi
+
+sudo dpkg –i ericom-connect-remote-host_x64.deb
+sudo service ericom-access-server start
+
+#configure the remote agent 
+sudo /opt/ericom/ericom-connect-remote-agent/ericom-connect-remote-agent connect -server-url https://<$RAWSaddress>:8044 [-host-name $RemoteAgentAddress] [-tenant-info $TenantInfo]
+
 
 echo REBOOT computer now with 'sudo reboot'
