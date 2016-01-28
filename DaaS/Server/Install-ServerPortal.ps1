@@ -3,6 +3,20 @@ $EC_AdminUser = "admin@test.local"
 $EC_AdminPass = "admin"
 $ServerPort = "2222"
 
+# Remove previous installation
+try {
+    Invoke-WebRequest "http://localhost:$ServerPort/api?exit"
+} catch {  }
+try {
+    Unregister-ScheduledJob -Name StartPSServer -Force -ErrorAction SilentlyContinue
+} catch {  }
+try {
+    Unregister-ScheduledJob -Name MonitorPSServer -Force -ErrorAction SilentlyContinue
+} catch {  }
+Remove-Item "C:\DaaS-Portal" -Recurse -Force
+
+Start-Sleep -Seconds 5
+
 $siteUrl = "https://github.com/ErezPasternak/azure-quickstart-templates/raw/EricomConnect/DaaS/Server/Website.zip"
 $serverUrl = "https://github.com/ErezPasternak/azure-quickstart-templates/raw/EricomConnect/DaaS/Server/eHTTPListener.zip"
 
@@ -25,6 +39,8 @@ $serverDestination = Join-Path $tempDestination -ChildPath $serverResource
 Invoke-WebRequest $serverSource -OutFile $serverDestination
 Unblock-File $serverDestination
 
+Start-Sleep -Seconds 5
+
 # Step 3: unpack resources
 $shellSite = new-object -com shell.application
 $zipSite = $shellSite.NameSpace($siteDestination)
@@ -34,7 +50,8 @@ foreach($item in $zipSite.items())
 {
     $shellSite.Namespace($siteTempDestination).copyhere($item)
 }
-Move-Item $siteTempDestination -Destination $finalDestination
+Start-Sleep -Seconds 5
+Copy-Item $siteTempDestination -Destination $finalDestination -Force -Recurse
 
 $shellServer = new-object -com shell.application
 $zipServer = $shellServer.NameSpace($serverDestination)
@@ -44,7 +61,8 @@ foreach($item in $zipServer.items())
 {
     $shellServer.Namespace($serverTempDestination).copyhere($item)
 }
-Move-Item $serverTempDestination -Destination $finalDestination
+Start-Sleep -Seconds 5
+Copy-Item $serverTempDestination -Destination $finalDestination -Force -Recurse
 
 # Clean up: delete Temporary Files
 Remove-Item $tempDestination -Force -Recurse
@@ -62,3 +80,6 @@ $ServerPath = Join-Path $finalDestination -ChildPath "Webserver"
 cd (Join-Path $finalDestination -ChildPath "Webserver")
 $registerServer = ".\Task-Registration.ps1 -EC_AdminUser `"$EC_AdminUser`" -EC_AdminPass `"$EC_AdminPass`" -WebsitePath `"$WebsitePath`" -ServerPath `"$ServerPath`" -ServerPort `"$ServerPort`" "
 Invoke-Expression $registerServer
+
+$url = "http://localhost:$ServerPort/";
+Start-Process -FilePath $url
