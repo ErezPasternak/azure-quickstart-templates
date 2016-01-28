@@ -55,7 +55,7 @@ $powershellModuleFolder = "$env:ProgramFiles\WindowsPowerShell\Modules"
 $serverModuleFolder = Join-Path $powershellModuleFolder -ChildPath "eHTTPListener"
 New-Item $serverModuleFolder -ItemType Directory -Force
 $modules = (Join-Path $finalDestination -ChildPath "Webserver") + "\eHTTPListener.*"  
-Copy-Item $modules -Destination $serverModuleFolder -Force
+Move-Item $modules -Destination $serverModuleFolder -Force
 
 $WebsitePath = Join-Path $finalDestination -ChildPath "Website"
 $ServerPath = Join-Path $finalDestination -ChildPath "Webserver"

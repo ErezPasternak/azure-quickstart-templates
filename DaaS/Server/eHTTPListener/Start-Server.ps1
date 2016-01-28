@@ -12,4 +12,4 @@ function Get-ScriptDirectory
 }
 
 Import-Module eHTTPListener -Force
-Start-HTTPListener -verbose -port ([convert]::ToInt32($ServerPort)) -AdminUser $EC_AdminUser -AdminPass -$EC_AdminPass -WebsitePath $WebsitePath
+Start-HTTPListener -verbose -Port ([convert]::ToInt32($ServerPort)) -AdminUser $EC_AdminUser -AdminPass -$EC_AdminPass -WebsitePath $WebsitePath
