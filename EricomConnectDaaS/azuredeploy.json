@@ -63,6 +63,13 @@
                 "description": "Number of Desktop instances"
             }
         },
+        "numberOf2008DesktopHostInstances": {
+            "type": "int",
+            "defaultValue": 1,
+            "metadata": {
+                "description": "Number of Desktop instances"
+            }
+        },
         "numberOfApplicationHostInstances": {
             "type": "int",
             "defaultValue": 1,
@@ -127,7 +134,7 @@
         "subnetName": "Subnet",
         "subnet-id": "[concat(resourceId('Microsoft.Network/virtualNetworks','VNET'),'/subnets/',variables('subnetName'))]",
 	    "customScriptLocation": "https://raw.githubusercontent.com/ErezPasternak/azure-quickstart-templates/EricomConnect/EricomConnectDaaS/",
-	"softwareBaseLocation": "http://tswc.ericom.com:501/erez/73/",
+	    "softwareBaseLocation": "http://tswc.ericom.com:501/erez/73/",
         "publicIpRef": "publicIp",
 	    "ecGridname" : "ecgrid",
 	    "sqlserver" : "localhost",
