@@ -67,7 +67,7 @@
             "type": "int",
             "defaultValue": 1,
             "metadata": {
-                "description": "Number of Desktop instances"
+                "description": "Number of 2008 Desktop instances"
             }
         },
         "numberOfApplicationHostInstances": {
@@ -488,7 +488,7 @@
             "location": "[resourceGroup().location]",
             "copy": {
                 "name": "rdshD8-nif-loop",
-                "count": "[parameters('numberOfDesktopHostInstances')]"
+                "count": "[parameters('numberOf2008DesktopHostInstances')]"
             },
             "dependsOn": [
                 "Microsoft.Resources/deployments/updatevnetdns"
@@ -735,7 +735,7 @@
                     "imageReference": {
                         "publisher": "[variables('imagePublisher')]",
                         "offer": "[variables('imageOffer')]",
-                        "sku": "[variables('2008-R2-SP1')]",
+                        "sku": "2008-R2-SP1",
                         "version": "latest"
                     },
                     "osDisk": {
