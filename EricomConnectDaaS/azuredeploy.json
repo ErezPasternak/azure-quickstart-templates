@@ -481,6 +481,32 @@
                 ]
             }
         },
+         {
+            "apiVersion": "[variables('apiVersion')]",
+            "type": "Microsoft.Network/networkInterfaces",
+            "name": "[concat('rdshD8-', copyindex(), '-nif')]",
+            "location": "[resourceGroup().location]",
+            "copy": {
+                "name": "rdshD8-nif-loop",
+                "count": "[parameters('numberOf2008DesktopHostInstances')]"
+            },
+            "dependsOn": [
+                "Microsoft.Resources/deployments/updatevnetdns"
+            ],
+            "properties": {
+                "ipConfigurations": [
+                    {
+                        "name": "ipconfig",
+                        "properties": {
+                            "privateIPAllocationMethod": "Dynamic",
+                            "subnet": {
+                                "id": "[variables('subnet-id')]"
+                            }
+                        }
+                    }
+                ]
+            }
+        },
         {
             "apiVersion": "[variables('apiVersion')]",
             "type": "Microsoft.Network/networkInterfaces",
@@ -651,6 +677,92 @@
                     "location": "[resourceGroup().location]",
                     "dependsOn": [
                         "[resourceId('Microsoft.Compute/virtualMachines', concat('rdshD-', copyindex()))]",
+                        "Microsoft.Compute/virtualMachines/cb-vm/extensions/EricomConnectServerSetup"
+                    ],
+                    "properties": {
+                        "publisher": "Microsoft.Powershell",
+                        "type": "DSC",
+                        "typeHandlerVersion": "2.8",
+                        "settings": {
+                            "ModulesUrl": "[concat(variables('customScriptLocation'),'Configuration.zip')]",
+                            "ConfigurationFunction": "Configuration.ps1\\DesktopHost",
+                            "Properties": {
+                                "DomainName": "[parameters('domainName')]",
+                                "AdminCreds": {
+                                    "UserName": "[parameters('adminUsername')]",
+                                    "Password": "PrivateSettingsRef:AdminPassword"
+                                },
+ 				            "gridName": "[variables('ecGridname')]",
+				            "LUS": "broker.DaaS.local",
+				            "tenant": "root",
+                            "softwareBaseLocation": "[variables('softwareBaseLocation')]"
+
+                            }
+                        },
+                        "protectedSettings": {
+                            "Items": {
+                                "AdminPassword": "[parameters('adminPassword')]"
+                            }
+                        }
+                    }
+                } 
+             ]
+        },
+        {
+            "apiVersion": "[variables('apiVersion')]",
+            "type": "Microsoft.Compute/virtualMachines",
+            "name": "[concat('rdshD8-', copyindex())]",
+            "location": "[resourceGroup().location]",
+            "copy": {
+                "name": "rdshD8-vm-loop",
+                "count": "[parameters('numberOfDesktopHostInstances')]"
+            },
+            "dependsOn": [
+                "[concat('Microsoft.Storage/storageAccounts/', variables('StorageAccountName'))]",
+                "[concat('Microsoft.Network/networkInterfaces/', 'rdshD8-', copyindex(), '-nif')]"
+
+            ],
+            "properties": {
+                "hardwareProfile": {
+                    "vmSize": "[parameters('DesktopVmSize')]"
+                },
+                "osProfile": {
+                    "computerName": "[concat('rdshD8-', copyIndex())]",
+                    "adminUsername": "[parameters('adminUsername')]",
+                    "adminPassword": "[parameters('adminPassword')]"
+                },
+                "storageProfile": {
+                    "imageReference": {
+                        "publisher": "[variables('imagePublisher')]",
+                        "offer": "[variables('imageOffer')]",
+                        "sku": "[variables('2008-R2-SP1')]",
+                        "version": "latest"
+                    },
+                    "osDisk": {
+                        "name": "osdisk",
+                        "vhd": {
+                            "uri": "[concat('http://',variables('StorageAccountName'),'.blob.core.windows.net/vhds/rdshD8-',copyindex(),'-osdisk.vhd')]"
+                        },
+                        "caching": "ReadWrite",
+                        "createOption": "FromImage"
+                    }
+                },
+                "networkProfile": {
+                    "networkInterfaces": [
+                        {
+                            "id": "[resourceId('Microsoft.Network/networkInterfaces',concat('rdshD8-', copyindex(), '-nif'))]"
+                        }
+                    ]
+                }
+            },
+             "resources": [
+                        {
+                    "apiVersion": "[variables('apiVersion')]",
+                    "type": "Microsoft.Compute/virtualMachines/extensions",
+                    "name": "[concat('rdshD8-', copyindex(),'/DesktopHost')]",
+                    "location": "[resourceGroup().location]",
+                    "dependsOn": [
+                        "[resourceId('Microsoft.Compute/virtualMachines', concat('rdshD8-', copyindex()))]",
                         "Microsoft.Compute/virtualMachines/cb-vm/extensions/EricomConnectServerSetup"
                     ],
                     "properties": {
