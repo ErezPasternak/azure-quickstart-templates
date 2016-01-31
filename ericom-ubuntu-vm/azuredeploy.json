@@ -64,7 +64,15 @@
     "virtualNetworkName": "VNET",
     "apiVersion": "2015-06-15",
     "vnetID": "[resourceId('Microsoft.Network/virtualNetworks',variables('virtualNetworkName'))]",
-    "subnetRef": "[concat(variables('vnetID'),'/subnets/',variables('subnetName'))]"
+    "subnetRef": "[concat(variables('vnetID'),'/subnets/',variables('subnetName'))]",
+    "domain" : "cloudconnect.local",
+    "domainAdmin" : "ccadmin",
+    "domainPwd" : "password",
+    "rAWSaddress" : "RAWSaddress",
+    "remoteAgentAddress" :"RemoteAgentAddress",
+    "tenantInfo" : "tenantInfo",
+    "command" : "[concat('bash install_ericom.sh ', variables('domain'),' ', variables('domainAdmin'),' ', variables('domainPwd'),' ', variables('rAWSaddress'),' ', variables('remoteAgentAddress'),' ', variables('tenantInfo'))]"
+    
   },
   "resources": [
     {
@@ -194,7 +202,8 @@
           "fileUris": [
             "https://raw.githubusercontent.com/ErezPasternak/azure-quickstart-templates/EricomConnect/ericom-ubuntu-vm/install_ericom.sh"
           ],
-          "commandToExecute": "bash install_ericom.sh"
+          "commandToExecute": "[variables('command')]"
+
         }
       }
     }
