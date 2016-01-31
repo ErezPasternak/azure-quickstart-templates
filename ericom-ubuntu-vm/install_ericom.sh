@@ -74,7 +74,6 @@ then
 fi
 
 sudo dpkg –i ericom-connect-remote-host_x64.deb
-sudo service ericom-access-server start
 
 #configure the remote agent 
 sudo /opt/ericom/ericom-connect-remote-agent/ericom-connect-remote-agent connect -server-url https://<$RAWSaddress>:8044 [-host-name $RemoteAgentAddress] [-tenant-info $TenantInfo]
