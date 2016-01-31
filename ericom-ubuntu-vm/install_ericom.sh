@@ -65,7 +65,7 @@ ifconfig | grep -i "inet addr"
 #download Ericom AccessServer and Remote Agent
 if [ ! -f ericom-connect-remote-host_x64.deb ]
 then
-    wget http://tswc.ericom.com:501/erez/75/ericom-connect-remote-host_x64.deb
+    wget http://tswc.ericom.com:501/erez/73/ericom-connect-remote-host_x64.deb
     
 fi
 
