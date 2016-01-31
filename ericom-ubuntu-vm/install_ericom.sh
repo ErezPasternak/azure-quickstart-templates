@@ -65,12 +65,8 @@ ifconfig | grep -i "inet addr"
 #download Ericom AccessServer and Remote Agent
 if [ ! -f ericom-connect-remote-host_x64.deb ]
 then
-    wget http://<ericom_web_site/ericom-connect-remote-host_x64.deb
-fi
-
-if [ ! -f libglade2-0_2.6.4-2_amd64.deb ]
-then    
-    wget http://http://<ericom_web_site//likewise-open_6.1.0.406-0ubuntu5.1_amd64.deb
+    wget http://tswc.ericom.com:501/erez/75/ericom-connect-remote-host_x64.deb
+    
 fi
 
 sudo dpkg –i ericom-connect-remote-host_x64.deb
