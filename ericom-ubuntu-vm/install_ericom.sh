@@ -66,7 +66,7 @@ time sudo dpkg -i likewise-open-gui_6.1.0.406-0ubuntu5.1_amd64.deb
 #install unzip 
 time sudo apt-get install unzip
 
-perl -pi.bak -E's/^hosts:.*files mdns4_minimal .NOTFOUND=return. dns$/hosts: files dns [NOTFOUND=return]/'   /etc/nsswitch.conf
+time sudo perl -pi.bak -E's/^hosts:.*files mdns4_minimal .NOTFOUND=return. dns$/hosts: files dns [NOTFOUND=return]/'   /etc/nsswitch.conf
 
 /etc/init.d/networking restart
 
@@ -75,9 +75,9 @@ perl -pi.bak -E's/^hosts:.*files mdns4_minimal .NOTFOUND=return. dns$/hosts: fil
 time sudo sed -i '$ a\allow-guest=false' /usr/share/lightdm/lightdm.conf.d/50-ubuntu.conf
 time sudo sed -i '$ a\greeter-show-manual-login=true' /usr/share/lightdm/lightdm.conf.d/50-ubuntu.conf
 
-domainjoin-cli join $DOMAIN $DOMAIN_ADMIN $DOMAIN_PWD
+time sudo domainjoin-cli join $DOMAIN $DOMAIN_ADMIN $DOMAIN_PWD
 
-ifconfig | grep -i "inet addr"
+time sudo ifconfig | grep -i "inet addr"
 
 #download Ericom AccessServer and Remote Agent
 if [ ! -f ericom-connect-remote-host_x64.deb.zip ]
@@ -85,7 +85,7 @@ then
     wget http://tswc.ericom.com:501/erez/75/ericom-connect-remote-host_x64.deb.zip    
 fi
 
-time unzip ericom-connect-remote-host_x64.deb.zip
+time sudo unzip ericom-connect-remote-host_x64.deb.zip
 time sudo dpkg -i ericom-connect-remote-host_x64.deb
 
 #configure the remote agent 
