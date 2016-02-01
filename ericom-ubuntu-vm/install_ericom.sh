@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# copy this to the ubunto machine to install necessary pre-requisites
+time sudo apt-get -y update
 
 # domain to join
 DOMAIN=%1
@@ -18,18 +18,19 @@ echo "RAWSaddress: $RAWSaddress"
 echo "RemoteAgentAddress: $RemoteAgentAddress"
 echo "TenantInfo: $TenantInfo"
 
-sudo apt-get install language-pack-UTF-8
+time sudo apt-get -y install language-pack-UTF-8
+
 # define variable of applicaiton to launch in the desktop.  can use xfce4-session or firefox for example
-time sudo apt-get -y update
 XRDP_APP=xfce4-session
+
 # install QT
-time sudo apt-get install qt5-default
+time sudo apt-get -y install qt5-default
 
 # install Openssh server
 time sudo apt-get -y install openssh-server
 
 # install firefix, 
-sudo apt-get -y install firefox
+time sudo apt-get -y install firefox
 
 # install chrome,
 # time wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
@@ -68,7 +69,7 @@ time sudo dpkg -i libglade2-0_2.6.4-2_amd64.deb
 time sudo dpkg -i likewise-open-gui_6.1.0.406-0ubuntu5.1_amd64.deb
 
 #install unzip 
-time sudo apt-get install unzip
+time sudo apt-get -y install unzip
 
 time sudo perl -pi.bak -E's/^hosts:.*files mdns4_minimal .NOTFOUND=return. dns$/hosts: files dns [NOTFOUND=return]/'   /etc/nsswitch.conf
 
