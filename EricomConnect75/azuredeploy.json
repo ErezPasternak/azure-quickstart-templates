@@ -741,10 +741,10 @@
                 }
             },
              "resources": [
-                        {
+                {
                     "apiVersion": "[variables('apiVersion')]",
                     "type": "Microsoft.Compute/virtualMachines/extensions",
-                    "name": "[concat('lnx-', copyindex())]",
+                    "name": "[concat('lnx-', copyindex(),'/script')]",
                     "location": "[resourceGroup().location]",
                     "dependsOn": [
                         "[resourceId('Microsoft.Compute/virtualMachines', concat('lnx-', copyindex()))]",
