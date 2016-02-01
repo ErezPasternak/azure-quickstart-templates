@@ -21,7 +21,10 @@ echo "TenantInfo: $TenantInfo"
 # define variable of applicaiton to launch in the desktop.  can use xfce4-session or firefox for example
 time sudo apt-get -y update
 XRDP_APP=xfce4-session
+# install QT
+time sudo apt-get install qt5-default
 
+# install Openssh server
 time sudo apt-get -y install openssh-server
 
 # install firefix, 
@@ -60,11 +63,8 @@ time sudo dpkg -i likewise-open_6.1.0.406-0ubuntu5.1_amd64.deb
 time sudo dpkg -i libglade2-0_2.6.4-2_amd64.deb
 time sudo dpkg -i likewise-open-gui_6.1.0.406-0ubuntu5.1_amd64.deb
 
-# install QT
-time sudo apt-get install qt5-default
-
 #install unzip 
-time apt-get install unzip
+time sudo apt-get install unzip
 
 perl -pi.bak -E's/^hosts:.*files mdns4_minimal .NOTFOUND=return. dns$/hosts: files dns [NOTFOUND=return]/'   /etc/nsswitch.conf
 
