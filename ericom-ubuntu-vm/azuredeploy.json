@@ -36,6 +36,18 @@
         "description": "Password for the Virtual Machine."
       }
     },
+    "rAWSaddress": {
+      "type": "string",
+      "value": "aaa"
+    },
+    "remoteAgentAddress": {
+      "type": "string",
+      "value": "Ericom"
+    },
+    "tenantInfo": {
+      "type": "string",
+      "value": "root"
+    },
     "ubuntuOSVersion": {
       "type": "string",
       "defaultValue": "14.04.2-LTS",
