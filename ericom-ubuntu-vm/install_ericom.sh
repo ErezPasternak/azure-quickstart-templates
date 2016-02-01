@@ -3,24 +3,25 @@
 # copy this to the ubunto machine to install necessary pre-requisites
 # do sudo bash ConnectPrerequisites.sh
 
+# domain to join
+DOMAIN=%1
+DOMAIN_ADMIN=%2
+DOMAIN_PWD=%3
+RAWSaddress=%4
+RemoteAgentAddress=%5
+TenantInfo=%6
+
+#    "command" : "[concat('bash install_ericom.sh ', variables('domain'),' ', variables('domainAdmin'),' ', variables('domainPwd'),' ', variables('rAWSaddress'),' ', variables('remoteAgentAddress'),' ', variables('tenantInfo'))]"
+echo "DOMAIN: $DOMAIN"
+echo "ADMIN:  $DOMAIN_ADMIN"
+echo "PWD: $DOMAIN_PWD"
+echo "RAWSaddress: $RAWSaddress"
+echo "RemoteAgentAddress: $RemoteAgentAddress"
+echo "TenantInfo: $TenantInfo"
+
 # define variable of applicaiton to launch in the desktop.  can use xfce4-session or firefox for example
 sudo apt-get -y update
 XRDP_APP=xfce4-session
-
-# domain to join
-DOMAIN=cloudconnect.local
-DOMAIN_ADMIN=ccadmin
-DOMAIN_PWD=******
-RAWSaddress=sss
-RemoteAgentAddress=dddd.ddd
-TenantInfo=root
-
-echo $1
-echo $2
-echo $3
-echo $4
-echo $5
-echo $6
 
 sudo apt-get -y install openssh-server
 
