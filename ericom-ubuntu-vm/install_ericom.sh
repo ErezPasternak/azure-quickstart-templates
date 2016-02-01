@@ -65,7 +65,7 @@ perl -pi.bak -E's/^hosts:.*files mdns4_minimal .NOTFOUND=return. dns$/hosts: fil
 sudo sed -i '$ a\allow-guest=false' /usr/share/lightdm/lightdm.conf.d/50-ubuntu.conf
 sudo sed -i '$ a\greeter-show-manual-login=true' /usr/share/lightdm/lightdm.conf.d/50-ubuntu.conf
 
-# domainjoin-cli join $DOMAIN $DOMAIN_ADMIN $DOMAIN_PWD
+domainjoin-cli join $DOMAIN $DOMAIN_ADMIN $DOMAIN_PWD
 
 ifconfig | grep -i "inet addr"
 
