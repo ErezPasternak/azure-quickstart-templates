@@ -82,12 +82,11 @@ ifconfig | grep -i "inet addr"
 #download Ericom AccessServer and Remote Agent
 if [ ! -f ericom-connect-remote-host_x64.deb.zip ]
 then
-    wget http://tswc.ericom.com:501/erez/73/ericom-connect-remote-host_x64.deb.zip
-    
+    wget http://tswc.ericom.com:501/erez/75/ericom-connect-remote-host_x64.deb.zip    
 fi
 
 time unzip ericom-connect-remote-host_x64.deb.zip
-time sudo dpkg –i ericom-connect-remote-host_x64.deb
+time sudo dpkg -i ericom-connect-remote-host_x64.deb
 
 #configure the remote agent 
 time sudo /opt/ericom/ericom-connect-remote-agent/ericom-connect-remote-agent connect -server-url https://<$RAWSaddress>:8044 [-host-name $RemoteAgentAddress] [-tenant-info $TenantInfo]
