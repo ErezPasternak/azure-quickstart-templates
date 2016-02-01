@@ -15,6 +15,7 @@
     ) 
     
     Import-DscResource -ModuleName xActiveDirectory, xDisk, xNetworking, xPendingReboot, cDisk
+    $adminUsername = $Admincreds.UserName
     [System.Management.Automation.PSCredential ]$DomainCreds = New-Object System.Management.Automation.PSCredential ("${DomainName}\$($Admincreds.UserName)", $Admincreds.Password)
 
     Node localhost
@@ -126,7 +127,7 @@
             TestScript = { Test-Path "C:\aduserscreated" }
             SetScript = {
                 $domainSuffix = "@" + $Using:DomainName;
-                $templateUser = "ericom"
+                $templateUser = "$Using:adminUsername"
                 $user = "demouser"
                 $pass = "P@55w0rd"
                 
