@@ -25,6 +25,9 @@ XRDP_APP=xfce4-session
 
 sudo apt-get -y install openssh-server
 
+# install firefix, 
+sudo apt-get -y install firefox
+
 # install and editor, for example emacs
 sudo apt-get -y install emacs
 
