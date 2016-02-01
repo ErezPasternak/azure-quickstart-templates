@@ -744,7 +744,7 @@
                         {
                     "apiVersion": "[variables('apiVersion')]",
                     "type": "Microsoft.Compute/virtualMachines/extensions",
-                    "name": "[concat('lnx-', copyindex(),'/newuserscript')]",
+                    "name": "[concat('lnx-', copyindex())]",
                     "location": "[resourceGroup().location]",
                     "dependsOn": [
                         "[resourceId('Microsoft.Compute/virtualMachines', concat('lnx-', copyindex()))]",
