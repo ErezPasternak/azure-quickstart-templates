@@ -31,9 +31,9 @@ time sudo apt-get -y install openssh-server
 sudo apt-get -y install firefox
 
 # install chrome,
-time wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
-time sudo dpkg -i google-chrome-stable_current_amd64.deb
-time sudo apt-get -y --force-yes install -f
+# time wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
+# time sudo dpkg -i google-chrome-stable_current_amd64.deb
+# time sudo apt-get -y --force-yes install -f
 
 # install xfce window manager
 time sudo apt-get -y install xfce4 xfce4-goodies
