@@ -71,7 +71,7 @@
     "rAWSaddress" : "RAWSaddress",
     "remoteAgentAddress" :"RemoteAgentAddress",
     "tenantInfo" : "tenantInfo",
-    "command" : "[concat('touch activity.log && bash install_ericom.sh ', variables('domain'),' ', variables('domainAdmin'),' ', variables('domainPwd'),' ', variables('rAWSaddress'),' ', variables('remoteAgentAddress'),' ', variables('tenantInfo'),' > activity.log ')]"
+    "command" : "[concat('bash install_ericom.sh ', variables('domain'),' ', variables('domainAdmin'),' ', variables('domainPwd'),' ', variables('rAWSaddress'),' ', variables('remoteAgentAddress'),' ', variables('tenantInfo'))]"
     
   },
   "resources": [

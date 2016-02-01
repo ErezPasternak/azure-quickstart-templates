@@ -18,6 +18,7 @@ echo "RAWSaddress: $RAWSaddress"
 echo "RemoteAgentAddress: $RemoteAgentAddress"
 echo "TenantInfo: $TenantInfo"
 
+sudo apt-get install language-pack-UTF-8
 # define variable of applicaiton to launch in the desktop.  can use xfce4-session or firefox for example
 time sudo apt-get -y update
 XRDP_APP=xfce4-session
@@ -58,6 +59,9 @@ if [ ! -f likewise-open-gui_6.1.0.406-0ubuntu5.1_amd64.deb ]
 then
   wget http://de.archive.ubuntu.com/ubuntu/pool/universe/l/likewise-open/likewise-open-gui_6.1.0.406-0ubuntu5.1_amd64.deb 
 fi
+
+# might help the likewise 
+time sudo apt-get -f install 
 
 time sudo dpkg -i likewise-open_6.1.0.406-0ubuntu5.1_amd64.deb
 time sudo dpkg -i libglade2-0_2.6.4-2_amd64.deb
