@@ -21,6 +21,9 @@
     "numberOfRdshInstances": {
       "value": 1
     },
+    "numberOflnxInstances": {
+      "value": 1
+    },
     "dnsLabelPrefix": {
       "value": "GEN-UNIQUE"
     }

@@ -63,6 +63,14 @@
                 "description": "Number of RDSH instances"
             }
         },
+        "numberOflnxInstances": {
+            "type": "int",
+            "defaultValue": 1,
+            "metadata": {
+                "description": "Number of Linux instances"
+            }
+        },
+        
         "rdshVmSize": {
             "type": "string",
             "defaultValue": "Standard_D2",
@@ -84,7 +92,40 @@
             "metadata": {
                 "description": "The size of the RDSH VMs"
             }
-        }
+        },
+        "LinuxVmSize": {
+            "type": "string",
+            "defaultValue": "Standard_D2",
+            "allowedValues": [
+                "Standard_D2",
+                "Standard_D3",
+                "Standard_DS3",
+                "Standard_D4",
+                "Standard_DS4",
+                "Standard_D11",
+                "Standard_DS11",
+                "Standard_D12",
+                "Standard_DS12",
+                "Standard_D13",
+                "Standard_DS13",
+                "Standard_D14",
+                "Standard_DS14"
+                ],
+            "metadata": {
+                "description": "The size of the RDSH VMs"
+            }
+        },    
+      "ubuntuOSVersion": {
+        "type": "string",
+        "defaultValue": "14.04.2-LTS",
+        "allowedValues": [
+           "14.04.2-LTS",
+           "15.04"
+        ],
+        "metadata": {
+           "description": "The Ubuntu version for the VM. This will pick a fully patched image of this given Ubuntu version. Allowed values: 12.04.5-LTS, 14.04.2-LTS, 15.04."
+       }
+     }
     },
 
     "variables": {
@@ -105,7 +146,13 @@
         "sqldatabase" : "ERICOMCONNECTDB",
 	    "sqluser"  : "sa",
 	    "sqlpassword" : "P@55w0rd",
-        "apiVersion": "2015-06-15"
+        "apiVersion": "2015-06-15",
+        "linuxImagePublisher": "Canonical",
+        "linuxImageOffer": "UbuntuServer",
+        "tenantInfo" : "root",
+        
+        "command" : "[concat('bash install_ericom.sh ', parameters('domainName'),' ', parameters('adminUsername'),' ', parameters('adminPassword'),' broker.',parameters('domainName'),' broker.', parameters('domainName'),' ', variables('tenantInfo'))]"
+ 
     },
  
     "resources": [
@@ -448,6 +495,33 @@
 
         {
             "apiVersion": "[variables('apiVersion')]",
+            "type": "Microsoft.Network/networkInterfaces",
+            "name": "[concat('lnx-', copyindex(), '-nif')]",
+            "location": "[resourceGroup().location]",
+            "copy": {
+                "name": "lnx-nif-loop",
+                "count": "[parameters('numberOflnxInstances')]"
+            },
+            "dependsOn": [
+                "Microsoft.Resources/deployments/updatevnetdns"
+            ],
+            "properties": {
+                "ipConfigurations": [
+                    {
+                        "name": "ipconfig",
+                        "properties": {
+                            "privateIPAllocationMethod": "Dynamic",
+                            "subnet": {
+                                "id": "[variables('subnet-id')]"
+                            }
+                        }
+                    }
+                ]
+            }
+        },
+
+        {
+            "apiVersion": "[variables('apiVersion')]",
             "type": "Microsoft.Compute/virtualMachines",
             "name": "gw-vm",
             "location": "[resourceGroup().location]",
@@ -618,7 +692,80 @@
             }
                 } 
              ]
+        },        
+        {
+            "apiVersion": "[variables('apiVersion')]",
+            "type": "Microsoft.Compute/virtualMachines",
+            "name": "[concat('lnx-', copyindex())]",
+            "location": "[resourceGroup().location]",
+            "copy": {
+                "name": "lnx-vm-loop",
+                "count": "[parameters('numberOflnxInstances')]"
+            },
+            "dependsOn": [
+                "[concat('Microsoft.Storage/storageAccounts/', variables('StorageAccountName'))]",
+                "[concat('Microsoft.Network/networkInterfaces/', 'lnx-', copyindex(), '-nif')]"
+
+            ],
+            "properties": {
+                "hardwareProfile": {
+                    "vmSize": "[parameters('LinuxVmSize')]"
+                },
+                "osProfile": {
+                    "computerName": "[concat('lnx-', copyIndex())]",
+                    "adminUsername": "[parameters('adminUsername')]",
+                    "adminPassword": "[parameters('adminPassword')]"
+                },
+                "storageProfile": {
+                    "imageReference": {
+                         "publisher": "[variables('linuxImagePublisher')]",
+                        "offer": "[variables('linuxImageOffer')]",
+                        "sku": "[parameters('ubuntuOSVersion')]",
+                        "version": "latest"
+                    },
+                    "osDisk": {
+                        "name": "osdisk",
+                        "vhd": {
+                            "uri": "[concat('http://',variables('StorageAccountName'),'.blob.core.windows.net/vhds/lnx-',copyindex(),'-osdisk.vhd')]"
+                        },
+                        "caching": "ReadWrite",
+                        "createOption": "FromImage"
+                    }
+                },
+                "networkProfile": {
+                    "networkInterfaces": [
+                        {
+                            "id": "[resourceId('Microsoft.Network/networkInterfaces',concat('lnx-', copyindex(), '-nif'))]"
+                        }
+                    ]
+                }
+            },
+             "resources": [
+                        {
+                    "apiVersion": "[variables('apiVersion')]",
+                    "type": "Microsoft.Compute/virtualMachines/extensions",
+                    "name": "[concat('lnx-', copyindex()),'/newuserscript')]",
+                    "location": "[resourceGroup().location]",
+                    "dependsOn": [
+                        "[resourceId('Microsoft.Compute/virtualMachines', concat('lnx-', copyindex()))]",
+                        "Microsoft.Compute/virtualMachines/cb-vm/extensions/EricomConnectServerSetup"
+                    ],
+                    "properties": {
+                    "publisher": "Microsoft.OSTCExtensions",
+                    "type": "CustomScriptForLinux",
+                    "typeHandlerVersion": "1.2",
+                    "settings": {
+                    "fileUris": [
+                    "https://raw.githubusercontent.com/ErezPasternak/azure-quickstart-templates/EricomConnect/EricomConnect75/install_ericom.sh"
+                    ],
+                    "commandToExecute": "[variables('command')]"
+                    }
+                    }
+   
+                } 
+             ]
         },
+        
         {
             "apiVersion": "[variables('apiVersion')]",
             "type": "Microsoft.Compute/virtualMachines",
