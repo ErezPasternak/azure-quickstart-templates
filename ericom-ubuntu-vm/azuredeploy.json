@@ -65,12 +65,12 @@
     "apiVersion": "2015-06-15",
     "vnetID": "[resourceId('Microsoft.Network/virtualNetworks',variables('virtualNetworkName'))]",
     "subnetRef": "[concat(variables('vnetID'),'/subnets/',variables('subnetName'))]",
-    "domain" : "cloudconnect.local",
-    "domainAdmin" : "ccadmin",
-    "domainPwd" : "password",
-    "rAWSaddress" : "RAWSaddress",
-    "remoteAgentAddress" :"RemoteAgentAddress",
-    "tenantInfo" : "tenantInfo",
+    "domain" : "[parameters('domain')]",
+    "domainAdmin" : "[parameters('adminUsername')]",
+    "domainPwd" : "[parameters('adminPassword')]",
+    "rAWSaddress" : "[parameters('rAWSaddress')]",
+    "remoteAgentAddress" : "[parameters('remoteAgentAddress')]",
+    "tenantInfo" : "[parameters('tenantInfo')]" ,
     "command" : "[concat('bash install_ericom.sh ', variables('domain'),' ', variables('domainAdmin'),' ', variables('domainPwd'),' ', variables('rAWSaddress'),' ', variables('remoteAgentAddress'),' ', variables('tenantInfo'))]"
     
   },

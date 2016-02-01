@@ -9,7 +9,18 @@
     "adminUsername": {
       "value": "Ericom"
     },
-    
+    "domain": {
+      "value": "test.local"
+    },
+    "rAWSaddress": {
+      "value": "aaa"
+    },
+    "remoteAgentAddress": {
+      "value": "Ericom"
+    },
+    "tenantInfo": {
+      "value": "root"
+    },
     "dnsLabelPrefix": {
       "value": "GEN-UNIQUE"
     }
