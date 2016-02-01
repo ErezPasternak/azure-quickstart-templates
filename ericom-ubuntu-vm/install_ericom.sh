@@ -59,6 +59,12 @@ sudo dpkg -i likewise-open_6.1.0.406-0ubuntu5.1_amd64.deb
 sudo dpkg -i libglade2-0_2.6.4-2_amd64.deb
 sudo dpkg -i likewise-open-gui_6.1.0.406-0ubuntu5.1_amd64.deb
 
+# install QT
+sudo apt-get install qt5-default
+
+#install unzip 
+apt-get install unzip
+
 perl -pi.bak -E's/^hosts:.*files mdns4_minimal .NOTFOUND=return. dns$/hosts: files dns [NOTFOUND=return]/'   /etc/nsswitch.conf
 
 /etc/init.d/networking restart
@@ -73,12 +79,13 @@ domainjoin-cli join $DOMAIN $DOMAIN_ADMIN $DOMAIN_PWD
 ifconfig | grep -i "inet addr"
 
 #download Ericom AccessServer and Remote Agent
-if [ ! -f ericom-connect-remote-host_x64.deb ]
+if [ ! -f ericom-connect-remote-host_x64.deb.zip ]
 then
     wget http://tswc.ericom.com:501/erez/73/ericom-connect-remote-host_x64.deb.zip
-    unzip ericom-connect-remote-host_x64.deb.zip
+    
 fi
 
+unzip ericom-connect-remote-host_x64.deb.zip
 sudo dpkg –i ericom-connect-remote-host_x64.deb
 
 #configure the remote agent 
