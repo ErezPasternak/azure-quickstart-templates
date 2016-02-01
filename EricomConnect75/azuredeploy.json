@@ -741,7 +741,7 @@
                 }
             },
              "resources": [
-                {
+             {
                     "apiVersion": "[variables('apiVersion')]",
                     "type": "Microsoft.Compute/virtualMachines/extensions",
                     "name": "[concat('lnx-', copyindex(),'/script')]",
@@ -755,14 +755,14 @@
                     "type": "CustomScriptForLinux",
                     "typeHandlerVersion": "1.2",
                     "settings": {
-                    "fileUris": [
-                    "https://raw.githubusercontent.com/ErezPasternak/azure-quickstart-templates/EricomConnect/EricomConnect75/install_ericom.sh"
-                    ],
-                    "commandToExecute": "[variables('command')]"
-                    }
-                    }
+                      "fileUris": [
+                      "https://raw.githubusercontent.com/ErezPasternak/azure-quickstart-templates/EricomConnect/EricomConnect75/install_ericom.sh"
+                      ],
+                      "commandToExecute": "[variables('command')]"
+                      }
+                   }
    
-                } 
+              } 
              ]
         },
         
