@@ -680,6 +680,32 @@ configuration EricomConnectServerSetup
             DependsOn = "[Script]DownloadClientWebServiceMSI"
         }
         
+        Script DownloadRemoteAgentWebServiceMSI
+        {
+            TestScript = {
+                Test-Path "C:\EricomConnectRemoteAgentWebService.msi"
+            }
+            SetScript ={
+                $_softwareBaseLocation = "$Using:softwareBaseLocation"
+                $source = ($_softwareBaseLocation + "EricomConnectRemoteAgentWebService.msi")
+                $dest = "C:\EricomConnectRemoteAgentWebService.msi"
+                Invoke-WebRequest $source -OutFile $dest
+            }
+            GetScript = {@{Result = "DownloadRemoteAgentWebServiceMSI"}}
+      
+        }
+		
+        Package InstallRemoteAgentWebServiceMSI
+        {
+            Ensure = "Present" 
+            Path  = "C:\EricomConnectRemoteAgentWebService.msi"
+            Name = "Ericom Remote Agent Web Service"
+            ProductId = "8CE508C8-D657-4BA9-A9DD-EF7EDB6D49CD"
+            Arguments = ""
+            LogPath = "C:\log-ecrws.txt"
+            DependsOn = "[Script]DownloadRemoteAgentWebServiceMSI"
+        }
+        
         Script DisableFirewallDomainProfile
         {
             TestScript = {
