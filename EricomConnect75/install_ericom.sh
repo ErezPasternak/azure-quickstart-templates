@@ -3,12 +3,12 @@
 time sudo apt-get -y update
 
 # domain to join
-DOMAIN=%1
-DOMAIN_ADMIN=%2
-DOMAIN_PWD=%3
-RAWSaddress=%4
-TenantInfo=%5
-RemoteAgentAddress=%6
+DOMAIN=$1
+DOMAIN_ADMIN=$2
+DOMAIN_PWD=$3
+RAWSaddress=$4
+TenantInfo=$5
+RemoteAgentAddress=$6
 
 #    "command" : "[concat('bash install_ericom.sh ', variables('domain'),' ', variables('domainAdmin'),' ', variables('domainPwd'),' ', variables('rAWSaddress'),' ', variables('remoteAgentAddress'),' ', variables('tenantInfo'))]"
 echo "DOMAIN: $DOMAIN"
@@ -82,7 +82,7 @@ time sudo sed -i '$ a\greeter-show-manual-login=true' /usr/share/lightdm/lightdm
 
 time sudo domainjoin-cli join $DOMAIN $DOMAIN_ADMIN $DOMAIN_PWD
 
-time sudo ifconfig | grep -i "inet addr"
+# time sudo ifconfig | grep -i "inet addr"
 
 #download Ericom AccessServer and Remote Agent
 if [ ! -f ericom-connect-remote-host_x64.deb.zip ]
@@ -95,6 +95,7 @@ time sudo su
 time dpkg -i ericom-connect-remote-host_x64.deb
 
 #configure the remote agent 
-time sudo /opt/ericom/ericom-connect-remote-agent/ericom-connect-remote-agent connect -server-url https://$RAWSaddress:8044 -host-name $RemoteAgentAddress -tenant-info $TenantInfo
+time sudo /opt/ericom/ericom-connect-remote-agent/ericom-connect-remote-agent connect -server-url https://$RAWSaddress:8044 
+# -host-name $RemoteAgentAddress -tenant-info $TenantInfo
 
 echo REBOOT computer now with 'sudo reboot'
