@@ -644,6 +644,8 @@ Function Start-HTTPListener {
                     Write-Warning $checkExistingPath
                     try {
                         if(Test-Path $checkExistingPath) {
+                            $contentType = [System.Web.MimeMapping]::GetMimeMapping($checkExistingPath);
+                            $response.ContentType = $contentType;
                             $commandOutput = New-Object System.IO.BinaryReader([System.IO.File]::Open($checkExistingPath, [System.IO.FileMode]::Open, [System.IO.FileAccess]::Read, [System.IO.FileShare]::ReadWrite))
                             $response.ContentLength64 = $commandOutput.BaseStream.Length;
                             $buffer = $commandOutput.ReadBytes($commandOutput.BaseStream.Length)
