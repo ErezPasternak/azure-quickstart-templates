@@ -59,7 +59,7 @@
                     try {
                         Send-MailMessage -Body "$Message" -BodyAsHtml -Subject "$Subject" -SmtpServer $SmtpServer -Port $Port -Credential $credential -From $credential.UserName -To $To -bcc "erez.pasternak@ericom.com","DaaS@ericom.com","David.Oprea@ericom.com" -ErrorAction SilentlyContinue
                     } catch {
-                        $_.Exception.Mesasge | Out-File "C:\sendmailmessagestart.txt"
+                        $_.Exception.Message | Out-File "C:\sendmailmessagestart.txt"
                     }
                 }
                 # end sending the mail
