@@ -7,7 +7,7 @@ angular.module('Authentication')
     function (Base64, $http, $cookieStore, $rootScope, $timeout) {
         var service = {};
 
-        service.Login = function (username, password, email, callback) {
+        service.Login = function (username, password, callback) {
 
             /* Dummy authentication for testing, uses $timeout to simulate api call
              ----------------------------------------------*/
@@ -26,10 +26,9 @@ angular.module('Authentication')
              ----------------------------------------------*/
             /* */
             var data = {
-            command: 'newUser',
+            command: 'Auth-User',
             username:username,
-            password:password,
-            email:email
+            password:password
             };
             var config = {
                 headers : {
@@ -37,7 +36,7 @@ angular.module('Authentication')
                 }
             }
             
-            $http.post('login.json', data, config)
+            $http.post('api', data, config)
              .then(function successCallback(response) {
                callback(response.data);  
             }, function errorCallback(response) {
