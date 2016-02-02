@@ -18,24 +18,24 @@ angular.module('Desk', [])
     $scope.sendDesk = function () {
         $scope.dataLoading = true;
         var data = {
-            command: 'newUser',
+            command: 'Assign-User',
             username:$rootScope.globals.currentUser.username,
-            config:$scope.selectedDesktop
+            config:$scope.selectedDesktop.id
         };
         var config = {
             headers : {
                 'Content-Type': 'application/json'
             }
         }
-        $http.post('api.json', data, config)
+        $http.post('api', data, config)
             .then(function successCallback(response) {
             $rootScope.isAccessDesk =true;
             // set data to access page
             $rootScope.accessData = {
-                username: 'XXX',
-                password: 'XXX',
-                email: 'XXX@XXX.com',
-                url: 'https://www.blender.org/',
+                username: $rootScope.globals.currentUser.username,
+                password: '******',
+                email: $rootScope.globals.currentUser.email,
+                url: response.url,
             };
             $location.path('/access');
         }, function errorCallback(response) {
