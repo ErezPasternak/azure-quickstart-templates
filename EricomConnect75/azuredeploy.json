@@ -150,8 +150,7 @@
         "linuxImagePublisher": "Canonical",
         "linuxImageOffer": "UbuntuServer",
         "tenantInfo" : "root",
-        
-        "command" : "[concat('bash install_ericom.sh ', parameters('domainName'),' ', parameters('adminUsername'),' ', parameters('adminPassword'),' broker.',parameters('domainName'),' broker.', parameters('domainName'),' ', variables('tenantInfo'))]"
+        "command" : "[concat('bash install_ericom.sh ', parameters('domainName'),' ', parameters('adminUsername'),' ', parameters('adminPassword'),' broker.',parameters('domainName'),' ', variables('tenantInfo'))]"
  
     },
  
@@ -758,7 +757,7 @@
                       "fileUris": [
                       "https://raw.githubusercontent.com/ErezPasternak/azure-quickstart-templates/EricomConnect/EricomConnect75/install_ericom.sh"
                       ],
-                      "commandToExecute": "[variables('command')]"
+                      "commandToExecute": "[concat([variables('command'), ' ' ,'lnx-', copyindex(),'.',parameters('domainName'))]"
                       }
                    }
    
