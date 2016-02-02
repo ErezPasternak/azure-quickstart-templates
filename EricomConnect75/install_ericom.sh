@@ -91,9 +91,10 @@ then
 fi
 
 time sudo unzip ericom-connect-remote-host_x64.deb.zip
-time sudo dpkg -i ericom-connect-remote-host_x64.deb
+time sudo su 
+time dpkg -i ericom-connect-remote-host_x64.deb
 
 #configure the remote agent 
-time sudo /opt/ericom/ericom-connect-remote-agent/ericom-connect-remote-agent connect -server-url https://<$RAWSaddress>:8044 -host-name $RemoteAgentAddress -tenant-info $TenantInfo
+time sudo /opt/ericom/ericom-connect-remote-agent/ericom-connect-remote-agent connect -server-url https://$RAWSaddress:8044 -host-name $RemoteAgentAddress -tenant-info $TenantInfo
 
 echo REBOOT computer now with 'sudo reboot'
