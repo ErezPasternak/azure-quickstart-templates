@@ -47,8 +47,7 @@ time sudo perl -pi.bak -E"s/^.*Xsession$/$XRDP_APP/"   /etc/xrdp/startwm.sh
 # install likewise for AD support
 if [ ! -f likewise-open_6.1.0.406-0ubuntu5.1_amd64.deb ]
 then
-
-       wget http://de.archive.ubuntu.com/ubuntu/pool/main/l/likewise-open/likewise-open_6.1.0.406-0ubuntu5.1_amd64.deb
+      wget http://de.archive.ubuntu.com/ubuntu/pool/main/l/likewise-open/likewise-open_6.1.0.406-0ubuntu5.1_amd64.deb
 fi
 
 if [ ! -f libglade2-0_2.6.4-2_amd64.deb ]
@@ -83,9 +82,9 @@ time sudo sed -i '$ a\greeter-show-manual-login=true' /usr/share/lightdm/lightdm
 time sudo domainjoin-cli join $DOMAIN $DOMAIN_ADMIN $DOMAIN_PWD
 
 # register this machine in the DNS
-new_ip_address=$(ifconfig eth0 | grep ‘inet addr:’ | cut -d: -f2 | awk ‘{ print $1}’)
+new_ip_address=$(ifconfig eth0 | grep "inet addr:" | cut -d: -f2 | awk ‘{ print $1}’)
 
-time sudo nsupdatecmds=/var/tmp/nsupdatecmds
+time nsupdatecmds=/var/tmp/nsupdatecmds
 time sudo echo "update delete $RemoteAgentAddress.$DOMAIN a" > $nsupdatecmds
 time sudo echo "update add $RemoteAgentAddress.$DOMAIN 3600 a $new_ip_address" >> $nsupdatecmds
 time sudo echo "send" >> $nsupdatecmds
