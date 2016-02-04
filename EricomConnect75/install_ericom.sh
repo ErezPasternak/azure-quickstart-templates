@@ -26,9 +26,6 @@ XRDP_APP=xfce4-session
 # install QT
 time sudo apt-get -y install qt5-default
 
-# install Openssh server
-time sudo apt-get -y install openssh-server
-
 # install firefix, 
 time sudo apt-get -y install firefox
 
@@ -70,9 +67,9 @@ time sudo dpkg -i likewise-open-gui_6.1.0.406-0ubuntu5.1_amd64.deb
 #install unzip 
 time sudo apt-get -y install unzip
 
-time sudo perl -pi.bak -E's/^hosts:.*files mdns4_minimal .NOTFOUND=return. dns$/hosts: files dns [NOTFOUND=return]/'   /etc/nsswitch.conf
+# time sudo perl -pi.bak -E's/^hosts:.*files mdns4_minimal .NOTFOUND=return. dns$/hosts: files dns [NOTFOUND=return]/'   /etc/nsswitch.conf
 
-/etc/init.d/networking restart
+# /etc/init.d/networking restart
 
 # append w/o using redirection
 
