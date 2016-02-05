@@ -23,26 +23,11 @@
     "adminPassword": {
       "value": "GEN-PASSWORD"
     },
-    "webdeploypkg": {
+    "appsdeploypkg": {
         "value": "https://raw.githubusercontent.com/ErezPasternak/azure-quickstart-templates/EricomConnect/ApplicationServer/WebApplication3.zip"
     },
     "configurationFunction": {
       "value": "ConfigureWebServer.ps1\\Main"
-    },
-    "DatabaseServerName": {
-      "value": "GEN-UNIQUE"
-    },
-    "DatabaseServerLocation": {
-      "value": "westus"
-    },
-    "databaseServerAdminLogin": {
-      "value": "dbuser"
-    },
-    "databaseServerAdminLoginPassword": {
-      "value": "GEN-PASSWORD"
-    },
-    "databaseName": {
-      "value": "cawadb07"
     },
     "modulesUrl": {
       "value": "https://raw.githubusercontent.com/ErezPasternak/azure-quickstart-templates/EricomConnect/ApplicationServer/ConfigureWebServer.ps1.zip"

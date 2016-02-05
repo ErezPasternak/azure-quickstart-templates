@@ -79,64 +79,13 @@
         "description": "This is the link to the Web Deploy package to be deployed to the Virtual Machine. It is a github URL in this example."
       }
     },
-    "DatabaseServerName": {
-      "type": "string",
-      "metadata": {
-        "description": "This is database server name"
-      }
-    },
-    "DatabaseServerLocation": {
-      "type": "string",
-      "metadata": {
-        "description": "This is database server location"
-      }
-    },
-    "databaseServerAdminLogin": {
-      "type": "string",
-      "metadata": {
-        "description": "This is database server administrator login name"
-      }
-    },
-    "databaseServerAdminLoginPassword": {
-      "type": "securestring",
-      "metadata": {
-        "description": "This is database server administrator login password"
-      }
-    },
-    "databaseName": {
-      "type": "string",
-      "metadata": {
-        "description": "This is name of the database hosted in the database server"
-      }
-    },
-    "databaseCollation": {
-      "type": "string",
-      "defaultValue": "SQL_Latin1_General_CP1_CI_AS",
-      "metadata": {
-        "description": "This is database collation - rule for comparing the encodings in the database"
-      }
-    },
-    "databaseEdition": {
-      "type": "string",
-      "defaultValue": "Web",
-      "allowedValues": [
-        "Basic",
-        "Business",
-        "Premium",
-        "Standard",
-        "Web"
-      ],
-      "metadata": {
-        "description": "This is database edition"
-      }
-    },
     "modulesUrl": {
       "type": "string",
       "metadata": {
         "description": "This is the URL for downloading the PowerShell DSC module. In this case it should be the link to a zip file hosted under an Azure storage container"
       }
     },
-    "webdeploypkg": {
+    "appsdeploypkg": {
       "type": "string",
       "metadata": {
         "description": "This is the link to the Web Deploy package for the website that's going to be deployed to the Virtual Machine"
@@ -156,7 +105,8 @@
     "subnet2Prefix": "10.0.1.0/24",
     "subnet1Ref": "[concat(variables('vnetID'),'/subnets/',variables('subnet1Name'))]",
     "publicIPAddressName": "[concat(parameters('vmName'), '-PublicIP-VM')]",
-    "storageAccountType": "Standard_LRS"
+    "storageAccountType": "Standard_LRS",
+    "AppsList" : "Excel,Winzip,Chrome"
   },
   "resources": [
     {
@@ -292,7 +242,7 @@
       },
       "resources": [
         {
-          "name": "DSCExt1",
+          "name": "DeployApps",
           "type": "extensions",
           "location": "[parameters('vmLocation')]",
           "apiVersion": "2015-05-01-preview",
@@ -300,7 +250,7 @@
             "[concat('Microsoft.Compute/virtualMachines/', parameters('vmName'))]"
           ],
           "tags": {
-            "displayName": "DSCExt1"
+            "displayName": "DeployApps"
           },
           "properties": {
             "publisher": "Microsoft.Powershell",
@@ -308,68 +258,20 @@
             "typeHandlerVersion": "2.8",
             "settings": {
               "modulesUrl": "[parameters('modulesUrl')]",
-              "configurationFunction": "ConfigureWebServer.ps1\\Main",
+              "configurationFunction": "DeplyApps.ps1\\Main",
               "properties": {
                 "MachineName": "[parameters('vmName')]",
                 "WebDeployPackagePath": "[parameters('webdeploypkg')]",
                 "UserName": "[parameters('adminUserName')]",
                 "Password": "[parameters('adminPassword')]",
-                "DbServerName": "[parameters('DatabaseServerName')]",
-                "DbName": "[parameters('databaseName')]",
-                "DbUserName": "[parameters('databaseServerAdminLogin')]",
-                "DbPassword": "[parameters('databaseServerAdminLoginPassword')]"
+                "AppsList": "[variables('AppsList')]"
               }
             },
             "protectedSettings": {}
           }
         }
       ]
-    },
-    {
-      "name": "[parameters('DatabaseServerName')]",
-      "type": "Microsoft.Sql/servers",
-      "location": "[parameters('DatabaseServerLocation')]",
-      "apiVersion": "2014-04-01-preview",
-      "dependsOn": [],
-      "tags": {
-        "displayName": "[parameters('DatabaseServerName')]"
-      },
-      "properties": {
-        "administratorLogin": "[parameters('databaseServerAdminLogin')]",
-        "administratorLoginPassword": "[parameters('databaseServerAdminLoginPassword')]"
-      },
-      "resources": [
-        {
-          "name": "AllowAllWindowsAzureIps",
-          "type": "firewallrules",
-          "location": "[parameters('DatabaseServerLocation')]",
-          "apiVersion": "2014-04-01-preview",
-          "dependsOn": [
-            "[concat('Microsoft.Sql/servers/', parameters('DatabaseServerName'))]"
-          ],
-          "properties": {
-            "startIpAddress": "0.0.0.0",
-            "endIpAddress": "0.0.0.0"
-          }
-        },
-        {
-          "name": "[parameters('databaseName')]",
-          "type": "databases",
-          "location": "[parameters('DatabaseServerLocation')]",
-          "apiVersion": "2014-04-01-preview",
-          "dependsOn": [
-            "[parameters('DatabaseServerName')]"
-          ],
-          "tags": {
-            "displayName": "cawadb1"
-          },
-          "properties": {
-            "collation": "[parameters('databaseCollation')]",
-            "edition": "[parameters('databaseEdition')]",
-            "maxSizeBytes": "1073741824"
-          }
-        }
-      ]
     }
+ 
   ]
 }
