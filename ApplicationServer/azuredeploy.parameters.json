@@ -1,0 +1,36 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01-preview/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "newStorageAccountName": {
+      "value": "GEN-UNIQUE"
+    },
+    "vmLocation": {
+      "value": "West US"
+    },
+    "vmName": {
+      "value": "cawadscvm07"
+    },
+    "adminUserName": {
+      "value": "yourusername"
+    },
+    "dnsName": {
+      "value": "GEN-UNIQUE"
+    },
+    "vmSize": {
+      "value": "Standard_A3"
+    },
+    "adminPassword": {
+      "value": "GEN-PASSWORD"
+    },
+    "appsdeploypkg": {
+        "value": "https://raw.githubusercontent.com/ErezPasternak/azure-quickstart-templates/EricomConnect/ApplicationServer/WebApplication3.zip"
+    },
+    "configurationFunction": {
+      "value": "ConfigureWebServer.ps1\\Main"
+    },
+    "modulesUrl": {
+      "value": "https://raw.githubusercontent.com/ErezPasternak/azure-quickstart-templates/EricomConnect/ApplicationServer/ConfigureWebServer.ps1.zip"
+    }
+  }
+}
