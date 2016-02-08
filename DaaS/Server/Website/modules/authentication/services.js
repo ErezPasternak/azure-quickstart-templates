@@ -8,23 +8,6 @@ angular.module('Authentication')
         var service = {};
 
         service.Login = function (username, password, callback) {
-
-            /* Dummy authentication for testing, uses $timeout to simulate api call
-             ----------------------------------------------*/
-            /*
-            $timeout(function () {
-                var response = { success: username === 'daas' && password === 'daas' };
-                if (!response.success) {
-                    response.message = 'Username or password is incorrect';
-                }
-                callback(response);
-            }, 1000);
-                        
-*/
-             
-            /* Use this for real authentication
-             ----------------------------------------------*/
-            /* */
             var data = {
             command: 'Auth-User',
             username:username,
@@ -111,7 +94,72 @@ angular.module('Authentication')
 
         return service;
     }])
-
+.factory('ApplicationService', 
+	['Base64', '$http', '$cookieStore', '$rootScope', '$timeout',
+	function(Base64, $http, $cookieStore, $rootScope, $timeout){
+		var service = {};
+		
+		service.GetAllApplications = function (groups, callback) {
+            var data = {
+				command: 'Get-AppList',
+				groups:groups
+            };
+            var config = {
+                headers : {
+                    'Content-Type': 'application/json'
+                }
+            }
+            
+            $http.post('api', data, config)
+             .then(function successCallback(response) {
+               callback(response.data);  
+            }, function errorCallback(response) {
+                // error
+                callback(response.data);
+            });            
+        };
+		
+		service.GetDefaultApplications = function (callback) {
+            var data = {
+				command: 'Get-AppList',
+				groups: "TaskWorkers,KnowledgeWorkers,MobileWorkers"
+            };
+            var config = {
+                headers : {
+                    'Content-Type': 'application/json'
+                }
+            }
+            
+            $http.post('api', data, config)
+             .then(function successCallback(response) {
+               callback(response.data);  
+            }, function errorCallback(response) {
+                // error
+                callback(response.data);
+            });            
+        };
+		
+		service.GetCustomApplications = function (callback) {
+            var data = {
+				command: 'Get-AppList',
+				groups: "Office,Internet,Multimedia"
+            };
+            var config = {
+                headers : {
+                    'Content-Type': 'application/json'
+                }
+            }
+            
+            $http.post('api', data, config)
+             .then(function successCallback(response) {
+               callback(response.data);  
+            }, function errorCallback(response) {
+                // error
+                callback(response.data);
+            });            
+        };
+		return service;
+	}])
 .factory('Base64', function () {
     /* jshint ignore:start */
 

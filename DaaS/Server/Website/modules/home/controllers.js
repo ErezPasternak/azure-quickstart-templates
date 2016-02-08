@@ -2,7 +2,8 @@
 
 angular.module('Desk', [])
 
-    .controller('selectDeskController', function ($scope,Page, $rootScope, $location, $http, ConfigDesk) {
+.controller('selectDeskController', function ($scope,Page, $rootScope, $location, $http, ConfigDesk, ApplicationService) {
+
     $rootScope.compactWidthPage =false;
     Page.setTitle('Select Your Desktop Profile or Build Your Own');
     $scope.configDesk = ConfigDesk;
@@ -11,8 +12,9 @@ angular.module('Desk', [])
 
     $rootScope.isAccessDesk =false;
     $scope.selectedDesktop = {};
-
-
+	
+	
+	
     /* Use this for real 
     ----------------------------------------------*/
     $scope.sendDesk = function () {
@@ -45,7 +47,7 @@ angular.module('Desk', [])
     };
 })
 
-    .controller('buildDeskController', function ($scope, Page, $rootScope, $location, $http, ConfigDesk) {
+.controller('buildDeskController', function ($scope, Page, $rootScope, $location, $http, ConfigDesk, ApplicationService) {
     $rootScope.compactWidthPage =false;
     Page.setTitle('Customize your Desktop, Applications and Services');
 
@@ -65,13 +67,14 @@ angular.module('Desk', [])
         });
         return  el;
     };
+	
 
     /* Use this for real 
     ----------------------------------------------*/
     $scope.sendDesk = function () {
         $scope.dataLoading = true;
         var data = {
-            command: 'newUser',
+            command: 'Custom-Desk',
             username:$rootScope.globals.currentUser.username,
             config:$scope.selectedConfig
         };
@@ -80,7 +83,7 @@ angular.module('Desk', [])
                 'Content-Type': 'application/json'
             }
         }
-        $http.post('api.json', data, config)
+        $http.post('api', data, config)
             .then(function successCallback(response) {
             $rootScope.isAccessDesk =true;
             // set data to access page
@@ -98,7 +101,7 @@ angular.module('Desk', [])
     };
 
 })
-    .controller('accessDeskController', function ($scope, Page, $rootScope, $location, $http, $window) {
+.controller('accessDeskController', function ($scope, Page, $rootScope, $location, $http, $window) {
     $rootScope.compactWidthPage =true;
     Page.setTitle('Your Personal Desktop is Ready');
     
@@ -111,7 +114,29 @@ angular.module('Desk', [])
 
 })
 
-    .factory('ConfigDesk', function($route,$location,$rootScope){
+.factory('ConfigDesk', function($route,$location,$rootScope, ApplicationService){
+	if (!('DefaultApplications' in $rootScope)) {
+		$rootScope.DefaultApplications = {};
+		ApplicationService.GetDefaultApplications(function(response){
+			if(!!response && 'TaskWorkers' in response) {
+				$rootScope.DefaultApplications = response;
+			} else {
+				$rootScope.DefaultApplications = null;
+			}
+		});
+	}
+	if(!('AllApplications' in $rootScope)) {
+		$rootScope.AllApplications = {};
+		ApplicationService.GetCustomApplications(function(response){
+			if(!!response && 'Office' in response) {
+				$rootScope.AllApplications = response;
+			} else {
+				$rootScope.AllApplications = null;
+			}
+		});	
+	}
+	
+	
     var selectDesk = [{
         id:1,
         title:'Task Workers',   
@@ -120,13 +145,7 @@ angular.module('Desk', [])
         price_term:'month',   
         icon:'d-ic-1.png' , 
         hardware:['1 vCPU','4  GB RAM','50 GB Storage'],  
-        apps:[{
-            title:'Chrome', icon:'chrome.png' 
-        },{
-            title:'Acrobat Reader', icon:'acrobat.png' 
-        },{
-            title:'Outlook 2013', icon:'outlook.svg' 
-        }]  
+        apps:$rootScope.DefaultApplications['TaskWorkers']  
     },{
         id:2,
         title:'Knowledge Workers',   
@@ -135,15 +154,7 @@ angular.module('Desk', [])
         price_term:'month',   
         icon:'d-ic-2.png' , 
         hardware:['2 vCPU','8 GB RAM','200 GB Storage'],  
-        apps:[{
-            title:'Chrome', icon:'chrome.png' 
-        },{
-            title:'Acrobat Reader', icon:'acrobat.png' 
-        },{
-            title:'MC Office 2013', icon:'mc-office.svg' 
-        },{
-            title:'SAP', icon:'sap.png' 
-        }]  
+        apps:$rootScope.DefaultApplications['KnowledgeWorkers'] 
     },{
         id:3,
         title:'Mobile Workers',   
@@ -152,18 +163,38 @@ angular.module('Desk', [])
         price_term:'month',   
         icon:'d-ic-3.png' , 
         hardware:['4 vCPU','16 GB RAM','500 GB Storage'],  
-        apps:[{
-            title:'Chrome', icon:'chrome.png' 
-        },{
-            title:'Acrobat Reader', icon:'acrobat.png' 
-        },{
-            title:'MC Office 2013', icon:'mc-office.svg' 
-        },{
-            title:'Salesforce', icon:'salesfors.png' 
-        },{
-            title:'SAP', icon:'sap.png' 
-        }]  
+        apps:$rootScope.DefaultApplications['MobileWorkers']
     }];
+	var getAppPrice = function(appName) {
+		var defaultPrice = 2;
+		var price = defaultPrice;
+		var apps = {
+			"Internet Explorer": 3,
+			"Command Prompt": 5
+		}
+		if (appName in apps) {
+			price = apps[appName]
+		} else price = defaultPrice;
+		return price;
+	}
+	var getTabbedApps = function() {
+		var apps = [];
+		var tab = {};
+		for(var elem in $rootScope.AllApplications){
+			tab = {};
+			tab.title = elem;
+			tab.options = [];
+			for(var item in $rootScope.AllApplications[elem]) {
+				tab.options.push({
+					title: $rootScope.AllApplications[elem][item].title,
+					icon: $rootScope.AllApplications[elem][item].icon,
+					price: getAppPrice($rootScope.AllApplications[elem][item].title)
+				})
+			}
+			apps.push(tab);			
+		}
+		return apps;
+	}
     var config = {
         hardware: {
             'title':'Virtual Hardware',
@@ -220,97 +251,11 @@ angular.module('Desk', [])
         },
         apps: {
             'title':'Applications',
-            'tabs':[
-                {
-                    title : 'Office',
-                    options :[{
-                        title :'Microsoft Office 2013',
-                        icon :'mc-office.svg',
-                        price :  9
-                    },{
-                        title :'Outlook',
-                        icon :'outlook.svg',
-                        price : 2
-                    },{
-                        title :'Word',
-                        icon :'mc-word.svg',
-                        price : 2
-                    },{
-                        title :'PowerPoint',
-                        icon :'powepoint.svg',
-                        price : 2
-                    },{
-                        title :'Excel',
-                        icon :'exel.svg',
-                        price : 2
-                    },{
-                        title :'OneNote',
-                        icon :'nvc.svg',
-                        price : 2
-                    },{
-                        title :'Access',
-                        icon :'access.svg',
-                        price : 2
-                    }]
-                },{
-                    title : 'Intenet',
-                    options :[{
-                        title :'Internet Explorer',
-                        icon :'internet_explorer.png',
-                        price :0
-                    },{
-                        title :'Google Chrome',
-                        icon :'chrome.png',
-                        price :0
-                    },{
-                        title :'Mozilla Firefox',
-                        icon :'firefox.png',
-                        price :0
-                    },{
-                        title :'Acrobat Reader',
-                        icon :'acrobat.png',
-                        price :0
-                    },{
-                        title :'7-zip',
-                        icon :'7zip.png',
-                        price :0
-                    },{
-                        title :'ESET Antivirus',
-                        icon :'eset.png',
-                        price :3
-                    }]
-                },{
-                    title : 'Multimedia',
-                    options :[{
-                        title :'MovieMaker',
-                        icon :'moviemaker.png',
-                        price :0
-                    },{
-                        title :'VLC Media Player',
-                        icon :'vlc.png',
-                        price :0
-                    },{
-                        title :'KODI ',
-                        icon :'kodi.png',
-                        price :0
-                    },{
-                        title :'Picasa',
-                        icon :'picasa.png',
-                        price :0
-                    },{
-                        title :'Paint',
-                        icon :'paint.png',
-                        price :0
-                    },{
-                        title :'Camtasia Studio',
-                        icon :'camtasia.png',
-                        price :8
-                    }]
-                }
-            ],
+            'tabs': getTabbedApps(),
 
         }
     };
+
     var imagePath = 'layout/icons/';
     return {
         getSelectDesk: function() { return selectDesk;},

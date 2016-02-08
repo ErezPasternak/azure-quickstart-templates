@@ -1,7 +1,7 @@
 ﻿param(
-    [Parameter()][String]$EC_AdminUser = "ericom@ericom.local",
-    [Parameter()][String]$EC_AdminPass = "Ericom123$",
-    [Parameter()][String]$WebsitePath = "C:\Website",
+    [Parameter()][String]$EC_AdminUser = "admin@test.local",
+    [Parameter()][String]$EC_AdminPass = "admin",
+    [Parameter()][String]$WebsitePath = "C:\Users\admin\Documents\Website",
     [Parameter()][String]$ServerPort = "2222"
 )
 
