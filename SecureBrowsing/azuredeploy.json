@@ -69,7 +69,7 @@
       "sqluser":"sa",
       "sqlpassword":"P@55w0rd",
       "apiVersion":"2015-06-15",
-      "command":"[concat('bash install_ericom.sh ', parameters('domainName'),' ', parameters('adminUsername'),' ', parameters('adminPassword'),' broker.',parameters('domainName'),' ', variables('tenantInfo'))]"
+      "command":"[concat('bash install_ericom.sh ', variables('domainName'),' ', variables('adminUsername'),' ', variables('adminPassword'),' broker.',variables('domainName'),' ', variables('tenantInfo'))]"
    },
    "resources":[
       {
