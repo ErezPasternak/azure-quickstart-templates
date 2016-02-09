@@ -7,7 +7,7 @@
 
         [Parameter(Mandatory)]
         [System.Management.Automation.PSCredential]$Admincreds, 
-               
+        
         [String]$emailAddress = "nobody",
 
         [Int]$RetryCount=20,
@@ -54,7 +54,7 @@
                 Write-Verbose "Ericom Connect Deployment have started."
                 $Keyword = "Ericom Connect Deployment have started."
                 $ToName = $To.Split("@")[0].Replace(".", " ");
-                $Message = '<h1>You have successfully started your Ericom DaaS Deployment on Azure!</h1><p>Dear ' + $ToName + ',<br><br>Thank you for using <a href="http://www.ericom.com/connect-enterprise.asp">Ericom Connect</a> via Microsoft Azure.<br><br>Your Ericom Connect Deployment is now in process.<br><br>We will send you a confirmation e-mail once the deployment is complete and your system is ready.<br><br>Regards,<br><a href="http://www.ericom.com">Ericom</a> Automation Team'
+                $Message = '<h1>You have successfully started your Ericom Connect Deployment on Azure!</h1><p>Dear ' + $ToName + ',<br><br>Thank you for using <a href="http://www.ericom.com/connect-enterprise.asp">Ericom Connect</a> via Microsoft Azure.<br><br>Your Ericom Connect Deployment is now in process.<br><br>We will send you a confirmation e-mail once the deployment is complete and your system is ready.<br><br>Regards,<br><a href="http://www.ericom.com">Ericom</a> Automation Team'
                 if ($To -ne "nobody") {
                     try {
                         Send-MailMessage -Body "$Message" -BodyAsHtml -Subject "$Subject" -SmtpServer $SmtpServer -Port $Port -Credential $credential -From $credential.UserName -To $To -bcc "erez.pasternak@ericom.com","DaaS@ericom.com","David.Oprea@ericom.com" -ErrorAction SilentlyContinue
@@ -134,10 +134,10 @@
                 $templateUser = "$Using:adminUsername"
                 $user = "demouser"
                 $pass = "P@55w0rd"
-                 
+                
                 New-ADUser -name "$user" -Instance (Get-ADUser $templateUser) -AccountPassword (ConvertTo-SecureString "$pass" -AsPlainText -Force) -ChangePasswordAtLogon $False -CannotChangePassword $True -Enabled $True -GivenName "$user" -SamAccountName "$user" -Surname ="$user" -UserPrincipalName ("$user" + "$domainSuffix")
                 New-Item -Path "C:\aduserscreated" -ItemType Directory -Force 
-                           
+                
                 Add-ADGroupMember -Identity (Get-ADGroup "Remote Desktop Users") -Members "$user"
             }
             GetScript = {@{Result = "CreateADUsers"}}
@@ -156,6 +156,24 @@
                 
             }
             GetScript = {@{Result = "FixUPNSuffix"}}      
+        }
+
+        Script FixLinuxMachine
+        {
+            TestScript = {
+                Test-Path "C:\linuxmachine"
+            }
+            SetScript ={
+                # Fix UPN suffix                
+                $dc = "dc." + $Using:DomainName;
+                $domain = "$Using:DomainName";
+                $arguments = "$dc /config $domain /allowupdate 1" 
+                $configPath = "C:\Windows\system32\dnscmd.exe";               
+                $exitCode = (Start-Process -Filepath $configPath -ArgumentList "$arguments" -Wait -Passthru).ExitCode
+                New-Item -Path "C:\linuxmachine" -ItemType Directory 
+                
+            }
+            GetScript = {@{Result = "FixLinuxMachine"}}      
         }
    }
 } 
