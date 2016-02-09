@@ -12,21 +12,29 @@
         },
         "location": {
             "type": "string",
-            "defaultValue": "eastus",
+            "defaultValue": "West US",
             "allowedValues": [
-               "westus",
-               "eastus",
-               "northeurope", 
-               "westeurope",
-               "southeastasia",
-               "centralus", 
-               "eastus2",
-               "japaneast", 
-               "japanwest",
-               "australiaeast"
+                "West US",
+                "East US",
+                "East US 2",
+                "Central US",
+                "South Central US",
+                "North Central US",
+                "North Europe",
+                "West Europe",
+                "East Asia",
+                "Southeast Asia",
+                "Japan East",
+                "Japan West",
+                "Brazil South",
+                "Australia East",
+                "Australia Southeast",
+                "Central India",
+                "South India",
+                "West India"
             ],
-            "metadata": {
-                "description": "Location to deploy to"
+        "metadata": {
+            "description": "The region to deploy the resources into"
             }
         },
         "domainName": {
@@ -150,7 +158,7 @@
             "apiVersion": "[variables('apiVersion')]",
             "type": "Microsoft.Network/publicIPAddresses",
             "name": "[variables('publicIpRef')]",
-            "location": "[resourceGroup().location]",
+            "location": "[parameters('location')]",
             "properties": {
                 "publicIPAllocationMethod": "Dynamic",
                 "dnsSettings": {
@@ -162,7 +170,7 @@
             "apiVersion": "[variables('apiVersion')]",
             "type": "Microsoft.Storage/storageAccounts",
             "name": "[variables('StorageAccountName')]",
-            "location": "[resourceGroup().location]",
+            "location": "[parameters('location')]",
             "properties": {
                 "accountType": "Standard_LRS"
             }
@@ -171,14 +179,14 @@
             "apiVersion": "[variables('apiVersion')]",
             "type": "Microsoft.Compute/availabilitySets",
             "name": "availabilityset",
-            "location": "[resourceGroup().location]"
+            "location": "[parameters('location')]"
         },
 
         {
             "apiVersion": "[variables('apiVersion')]",
             "type": "Microsoft.Network/virtualNetworks",
             "name": "vnet",
-            "location": "[resourceGroup().location]",
+            "location": "[parameters('location')]",
             "properties": {
                 "addressSpace": {
                     "addressPrefixes": [
@@ -200,7 +208,7 @@
             "apiVersion": "[variables('apiVersion')]",
             "type": "Microsoft.Network/loadBalancers",
             "name": "loadBalancer",
-            "location": "[resourceGroup().location]",
+            "location": "[parameters('location')]",
             "dependsOn": [
                 "[concat('Microsoft.Network/publicIPAddresses/',variables('publicIpRef'))]"
             ],
@@ -253,7 +261,7 @@
             "apiVersion": "[variables('apiVersion')]",
             "type": "Microsoft.Network/networkInterfaces",
             "name": "dc-nif",
-            "location": "[resourceGroup().location]",
+            "location": "[parameters('location')]",
             "dependsOn": [
                 "Microsoft.Network/virtualNetworks/vnet"
             ],
@@ -277,7 +285,7 @@
             "apiVersion": "[variables('apiVersion')]",
             "type": "Microsoft.Compute/virtualMachines",
             "name": "dc-vm",
-            "location": "[resourceGroup().location]",
+            "location": "[parameters('location')]",
             "dependsOn": [
                 "[resourceId('Microsoft.Storage/storageAccounts',variables('StorageAccountName'))]",
                 "[resourceId('Microsoft.Network/networkInterfaces','dc-nif')]"
@@ -332,7 +340,7 @@
                     "type": "Microsoft.Compute/virtualMachines/extensions",
                     "name": "dc-vm/createadforest",
                     "apiVersion": "[variables('apiVersion')]",
-                    "location": "[resourceGroup().location]",
+                    "location": "[parameters('location')]",
                     "dependsOn": [
                         "[resourceId('Microsoft.Compute/virtualMachines', 'dc-vm')]"
                     ],
@@ -399,7 +407,7 @@
             "apiVersion": "[variables('apiVersion')]",
             "type": "Microsoft.Network/networkInterfaces",
             "name": "gw-nif",
-            "location": "[resourceGroup().location]",
+            "location": "[parameters('location')]",
             "dependsOn": [
                 "Microsoft.Network/loadBalancers/loadBalancer",
                 "Microsoft.Resources/deployments/updatevnetdns"
@@ -436,7 +444,7 @@
             "apiVersion": "[variables('apiVersion')]",
             "type": "Microsoft.Network/networkInterfaces",
             "name": "cb-nif",
-            "location": "[resourceGroup().location]",
+            "location": "[parameters('location')]",
             "dependsOn": [
                 "Microsoft.Resources/deployments/updatevnetdns"
             ],
@@ -459,7 +467,7 @@
             "apiVersion": "[variables('apiVersion')]",
             "type": "Microsoft.Network/networkInterfaces",
             "name": "[concat('rdshD-', copyindex(), '-nif')]",
-            "location": "[resourceGroup().location]",
+            "location": "[parameters('location')]",
             "copy": {
                 "name": "rdshD-nif-loop",
                 "count": "[parameters('numberOfDesktopHostInstances')]"
@@ -485,7 +493,7 @@
             "apiVersion": "[variables('apiVersion')]",
             "type": "Microsoft.Network/networkInterfaces",
             "name": "[concat('rdshD8-', copyindex(), '-nif')]",
-            "location": "[resourceGroup().location]",
+            "location": "[parameters('location')]",
             "copy": {
                 "name": "rdshD8-nif-loop",
                 "count": "[parameters('numberOf2008DesktopHostInstances')]"
@@ -511,7 +519,7 @@
             "apiVersion": "[variables('apiVersion')]",
             "type": "Microsoft.Network/networkInterfaces",
             "name": "[concat('rdshA-', copyindex(), '-nif')]",
-            "location": "[resourceGroup().location]",
+            "location": "[parameters('location')]",
             "copy": {
                 "name": "rdshA-nif-loop",
                 "count": "[parameters('numberOfApplicationHostInstances')]"
@@ -538,7 +546,7 @@
             "apiVersion": "[variables('apiVersion')]",
             "type": "Microsoft.Compute/virtualMachines",
             "name": "gw-vm",
-            "location": "[resourceGroup().location]",
+            "location": "[parameters('location')]",
             "dependsOn": [
                 "[concat('Microsoft.Storage/storageAccounts/', variables('StorageAccountName'))]",
                 "[resourceId('Microsoft.Compute/availabilitySets', 'availabilityset')]",
@@ -586,7 +594,7 @@
                      "apiVersion": "2015-05-01-preview",		
                      "type": "Microsoft.Compute/virtualMachines/extensions",		
                      "name": "gw-vm/GatewaySetup",		
-                     "location": "[resourceGroup().location]",		
+                     "location": "[parameters('location')]",		
                      "dependsOn": [		
                          "[resourceId('Microsoft.Compute/virtualMachines', 'gw-vm')]"		
                      ],		
@@ -626,7 +634,7 @@
             "apiVersion": "[variables('apiVersion')]",
             "type": "Microsoft.Compute/virtualMachines",
             "name": "[concat('rdshD-', copyindex())]",
-            "location": "[resourceGroup().location]",
+            "location": "[parameters('location')]",
             "copy": {
                 "name": "rdshD-vm-loop",
                 "count": "[parameters('numberOfDesktopHostInstances')]"
@@ -674,7 +682,7 @@
                     "apiVersion": "[variables('apiVersion')]",
                     "type": "Microsoft.Compute/virtualMachines/extensions",
                     "name": "[concat('rdshD-', copyindex(),'/DesktopHost')]",
-                    "location": "[resourceGroup().location]",
+                    "location": "[parameters('location')]",
                     "dependsOn": [
                         "[resourceId('Microsoft.Compute/virtualMachines', concat('rdshD-', copyindex()))]",
                         "Microsoft.Compute/virtualMachines/cb-vm/extensions/EricomConnectServerSetup"
@@ -712,7 +720,7 @@
             "apiVersion": "[variables('apiVersion')]",
             "type": "Microsoft.Compute/virtualMachines",
             "name": "[concat('rdshD8-', copyindex())]",
-            "location": "[resourceGroup().location]",
+            "location": "[parameters('location')]",
             "copy": {
                 "name": "rdshD8-vm-loop",
                 "count": "[parameters('numberOfDesktopHostInstances')]"
@@ -760,7 +768,7 @@
                     "apiVersion": "[variables('apiVersion')]",
                     "type": "Microsoft.Compute/virtualMachines/extensions",
                     "name": "[concat('rdshD8-', copyindex(),'/DesktopHost')]",
-                    "location": "[resourceGroup().location]",
+                    "location": "[parameters('location')]",
                     "dependsOn": [
                         "[resourceId('Microsoft.Compute/virtualMachines', concat('rdshD8-', copyindex()))]",
                         "Microsoft.Compute/virtualMachines/cb-vm/extensions/EricomConnectServerSetup"
@@ -798,7 +806,7 @@
             "apiVersion": "[variables('apiVersion')]",
             "type": "Microsoft.Compute/virtualMachines",
             "name": "[concat('rdshA-', copyindex())]",
-            "location": "[resourceGroup().location]",
+            "location": "[parameters('location')]",
             "copy": {
                 "name": "rdshA-vm-loop",
                 "count": "[parameters('numberOfApplicationHostInstances')]"
@@ -846,7 +854,7 @@
                     "apiVersion": "[variables('apiVersion')]",
                     "type": "Microsoft.Compute/virtualMachines/extensions",
                     "name": "[concat('rdshA-', copyindex(),'/ApplicationHost')]",
-                    "location": "[resourceGroup().location]",
+                    "location": "[parameters('location')]",
                     "dependsOn": [
                         "[resourceId('Microsoft.Compute/virtualMachines', concat('rdshA-', copyindex()))]",
                         "Microsoft.Compute/virtualMachines/cb-vm/extensions/EricomConnectServerSetup"
@@ -883,7 +891,7 @@
             "apiVersion": "[variables('apiVersion')]",
             "type": "Microsoft.Compute/virtualMachines",
             "name": "cb-vm",
-            "location": "[resourceGroup().location]",
+            "location": "[parameters('location')]",
             "dependsOn": [
                 "[concat('Microsoft.Storage/storageAccounts/', variables('StorageAccountName'))]",
                 "[resourceId('Microsoft.Compute/availabilitySets', 'availabilityset')]",
@@ -930,7 +938,7 @@
                     "type": "Microsoft.Compute/virtualMachines/extensions",
                     "name": "cb-vm/EricomConnectServerSetup",
                     "apiVersion": "[variables('apiVersion')]",
-                    "location": "[resourceGroup().location]",
+                    "location": "[parameters('location')]",
                     "dependsOn": [
                         "[resourceId('Microsoft.Compute/virtualMachines', 'cb-vm')]"
                     ],
