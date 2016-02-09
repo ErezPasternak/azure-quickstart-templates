@@ -94,7 +94,7 @@
       }
    },
    "variables":{
-      "storageAccountName":"[concat(uniquestring(resourceGroup().id), 'RDS', 'Storage')]",
+      "storageAccountName":"[substring(concat(uniquestring(resourceGroup().id), 'RDS', 'Storage'),0,31)]",
       "virtualNetworkName":"[concat(parameters('vmName'), '-VNET')]",
       "vnetID":"[resourceId('Microsoft.Network/virtualNetworks',variables('virtualNetworkName'))]",
       "OSDiskName":"osdiskforwindowssimple",
