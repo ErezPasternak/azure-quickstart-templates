@@ -59,6 +59,7 @@
       },
       "emailAddress":{
          "type":"string",
+         "defaultValue":"Erez.Pasternak@erico.com",
          "metadata":{
             "description":"The email address to send the test message to."
          }
@@ -724,18 +725,18 @@
          ],
          "properties":{
             "hardwareProfile":{
-               "vmSize":"[parameters('LinuxVmSize')]"
+               "vmSize":"[variables('LinuxVmSize')]"
             },
             "osProfile":{
                "computerName":"[concat('lnx-', copyIndex())]",
-               "adminUsername":"[parameters('adminUsername')]",
-               "adminPassword":"[parameters('adminPassword')]"
+               "adminUsername":"[variables('adminUsername')]",
+               "adminPassword":"[variables('adminPassword')]"
             },
             "storageProfile":{
                "imageReference":{
                   "publisher":"[variables('imagePublisherLinux')]",
                   "offer":"[variables('imageOfferLinux')]",
-                  "sku":"[parameters('imageSKULinux')]",
+                  "sku":"[variables('imageSKULinux')]",
                   "version":"latest"
                },
                "osDisk":{
