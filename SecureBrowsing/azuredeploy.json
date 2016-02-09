@@ -47,6 +47,7 @@
       "domainName":"esb.local",
       "adminUsername":"ericom",
       "adminPassword":"Ericom123$",
+      "tenantInfo" : "root",
       "numberOfRdshInstances":1,
       "numberOflnxInstances":1,
       "rdshVmSize":"Standard_D2",
