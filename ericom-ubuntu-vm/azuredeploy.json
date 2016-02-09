@@ -42,15 +42,15 @@
     },
     "rAWSaddress": {
       "type": "string",
-      "value": "aaa"
+      "defaultValue": "aaa"
     },
     "remoteAgentAddress": {
       "type": "string",
-      "value": "Ericom"
+      "defaultValue": "Ericom"
     },
     "tenantInfo": {
       "type": "string",
-      "value": "root"
+      "defaultValue": "root"
     },
     "ubuntuOSVersion": {
       "type": "string",
