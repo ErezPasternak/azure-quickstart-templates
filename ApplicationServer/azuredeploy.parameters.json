@@ -19,7 +19,7 @@
       "value": "GEN-PASSWORD"
     },
     "appsdeploypkg": {
-        "value": "https://raw.githubusercontent.com/ErezPasternak/azure-quickstart-templates/EricomConnect/ApplicationServer/WebApplication3.zip"
+        "value": "https://raw.githubusercontent.com/ErezPasternak/azure-quickstart-templates/EricomConnect/ApplicationServer/Application.zip"
     },
     "configurationFunction": {
       "value": "ConfigureWebServer.ps1\\Main"

@@ -87,6 +87,14 @@
       },
       "appsdeploypkg":{
          "type":"string",
+         "defaultValue":"https://raw.githubusercontent.com/ErezPasternak/azure-quickstart-templates/EricomConnect/ApplicationServer/Application.zip",
+         "metadata":{
+            "description":"This is the link to the Web Deploy package for the website that's going to be deployed to the Virtual Machine"
+         }
+      }
+      ,
+      "appsdeployList":{
+         "type":"string",
          "defaultValue":"Excel,Winzip,Chrome",
          "metadata":{
             "description":"This is the link to the Web Deploy package for the website that's going to be deployed to the Virtual Machine"
@@ -94,7 +102,7 @@
       }
    },
    "variables":{
-      "storageAccountName":"[substring(concat(uniquestring(resourceGroup().id), 'RDS', 'Storage'),0,31)]",
+      "storageAccountName":"[substring(concat(uniquestring(resourceGroup().id), 'RDS', 'Storage'),0,24)]",
       "virtualNetworkName":"[concat(parameters('vmName'), '-VNET')]",
       "vnetID":"[resourceId('Microsoft.Network/virtualNetworks',variables('virtualNetworkName'))]",
       "OSDiskName":"osdiskforwindowssimple",
@@ -262,10 +270,10 @@
                      "configurationFunction":"DeplyApps.ps1\\Main",
                      "properties":{
                         "MachineName":"[parameters('vmName')]",
-                        "WebDeployPackagePath":"[parameters('appsdeploypkg')]",
+                        "DeployPackagePath":"[parameters('appsdeploypkg')]",
                         "UserName":"[parameters('adminUserName')]",
                         "Password":"[parameters('adminPassword')]",
-                        "AppsList":"[variables('AppsList')]"
+                        "AppsList":"[parameters('appsdeploypkg')]"
                      }
                   },
                   "protectedSettings":{
