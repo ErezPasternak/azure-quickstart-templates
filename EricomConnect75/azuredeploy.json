@@ -134,7 +134,7 @@
       }
    },
    "variables":{
-      "storageAccountName":"[substring(concat(uniquestring(resourceGroup().id), 'RDS', 'Storage'),0,31))]",
+      "storageAccountName":"[concat(uniquestring(resourceGroup().id), 'RDS', 'Storage')]",
       "imagePublisher":"MicrosoftWindowsServer",
       "imageOffer":"WindowsServer",
       "imageSKU":"2012-R2-Datacenter",
