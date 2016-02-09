@@ -10,7 +10,7 @@
                 "description": "Unique public DNS prefix for the deployment. The fqdn will look something like '<dnsname>.westus.cloudapp.azure.com'. Up to 62 chars, digits or dashes, lowercase, should start with a letter: must conform to '^[a-z][a-z0-9-]{1,61}[a-z0-9]$'."
             }
         },
-        "location": {
+        "siteLocation": {
             "type": "string",
             "defaultValue": "West US",
             "allowedValues": [
@@ -158,7 +158,7 @@
             "apiVersion": "[variables('apiVersion')]",
             "type": "Microsoft.Network/publicIPAddresses",
             "name": "[variables('publicIpRef')]",
-            "location": "[parameters('location')]",
+            "location": "[parameters('siteLocation')]",
             "properties": {
                 "publicIPAllocationMethod": "Dynamic",
                 "dnsSettings": {
@@ -170,7 +170,7 @@
             "apiVersion": "[variables('apiVersion')]",
             "type": "Microsoft.Storage/storageAccounts",
             "name": "[variables('StorageAccountName')]",
-            "location": "[parameters('location')]",
+            "location": "[parameters('siteLocation')]",
             "properties": {
                 "accountType": "Standard_LRS"
             }
@@ -179,14 +179,14 @@
             "apiVersion": "[variables('apiVersion')]",
             "type": "Microsoft.Compute/availabilitySets",
             "name": "availabilityset",
-            "location": "[parameters('location')]"
+            "location": "[parameters('siteLocation')]"
         },
 
         {
             "apiVersion": "[variables('apiVersion')]",
             "type": "Microsoft.Network/virtualNetworks",
             "name": "vnet",
-            "location": "[parameters('location')]",
+            "location": "[parameters('siteLocation')]",
             "properties": {
                 "addressSpace": {
                     "addressPrefixes": [
@@ -208,7 +208,7 @@
             "apiVersion": "[variables('apiVersion')]",
             "type": "Microsoft.Network/loadBalancers",
             "name": "loadBalancer",
-            "location": "[parameters('location')]",
+            "location": "[parameters('siteLocation')]",
             "dependsOn": [
                 "[concat('Microsoft.Network/publicIPAddresses/',variables('publicIpRef'))]"
             ],
@@ -261,7 +261,7 @@
             "apiVersion": "[variables('apiVersion')]",
             "type": "Microsoft.Network/networkInterfaces",
             "name": "dc-nif",
-            "location": "[parameters('location')]",
+            "location": "[parameters('siteLocation')]",
             "dependsOn": [
                 "Microsoft.Network/virtualNetworks/vnet"
             ],
@@ -285,7 +285,7 @@
             "apiVersion": "[variables('apiVersion')]",
             "type": "Microsoft.Compute/virtualMachines",
             "name": "dc-vm",
-            "location": "[parameters('location')]",
+            "location": "[parameters('siteLocation')]",
             "dependsOn": [
                 "[resourceId('Microsoft.Storage/storageAccounts',variables('StorageAccountName'))]",
                 "[resourceId('Microsoft.Network/networkInterfaces','dc-nif')]"
@@ -340,7 +340,7 @@
                     "type": "Microsoft.Compute/virtualMachines/extensions",
                     "name": "dc-vm/createadforest",
                     "apiVersion": "[variables('apiVersion')]",
-                    "location": "[parameters('location')]",
+                    "location": "[parameters('siteLocation')]",
                     "dependsOn": [
                         "[resourceId('Microsoft.Compute/virtualMachines', 'dc-vm')]"
                     ],
@@ -407,7 +407,7 @@
             "apiVersion": "[variables('apiVersion')]",
             "type": "Microsoft.Network/networkInterfaces",
             "name": "gw-nif",
-            "location": "[parameters('location')]",
+            "location": "[parameters('siteLocation')]",
             "dependsOn": [
                 "Microsoft.Network/loadBalancers/loadBalancer",
                 "Microsoft.Resources/deployments/updatevnetdns"
@@ -444,7 +444,7 @@
             "apiVersion": "[variables('apiVersion')]",
             "type": "Microsoft.Network/networkInterfaces",
             "name": "cb-nif",
-            "location": "[parameters('location')]",
+            "location": "[parameters('siteLocation')]",
             "dependsOn": [
                 "Microsoft.Resources/deployments/updatevnetdns"
             ],
@@ -467,7 +467,7 @@
             "apiVersion": "[variables('apiVersion')]",
             "type": "Microsoft.Network/networkInterfaces",
             "name": "[concat('rdshD-', copyindex(), '-nif')]",
-            "location": "[parameters('location')]",
+            "location": "[parameters('siteLocation')]",
             "copy": {
                 "name": "rdshD-nif-loop",
                 "count": "[parameters('numberOfDesktopHostInstances')]"
@@ -493,7 +493,7 @@
             "apiVersion": "[variables('apiVersion')]",
             "type": "Microsoft.Network/networkInterfaces",
             "name": "[concat('rdshD8-', copyindex(), '-nif')]",
-            "location": "[parameters('location')]",
+            "location": "[parameters('siteLocation')]",
             "copy": {
                 "name": "rdshD8-nif-loop",
                 "count": "[parameters('numberOf2008DesktopHostInstances')]"
@@ -519,7 +519,7 @@
             "apiVersion": "[variables('apiVersion')]",
             "type": "Microsoft.Network/networkInterfaces",
             "name": "[concat('rdshA-', copyindex(), '-nif')]",
-            "location": "[parameters('location')]",
+            "location": "[parameters('siteLocation')]",
             "copy": {
                 "name": "rdshA-nif-loop",
                 "count": "[parameters('numberOfApplicationHostInstances')]"
@@ -546,7 +546,7 @@
             "apiVersion": "[variables('apiVersion')]",
             "type": "Microsoft.Compute/virtualMachines",
             "name": "gw-vm",
-            "location": "[parameters('location')]",
+            "location": "[parameters('siteLocation')]",
             "dependsOn": [
                 "[concat('Microsoft.Storage/storageAccounts/', variables('StorageAccountName'))]",
                 "[resourceId('Microsoft.Compute/availabilitySets', 'availabilityset')]",
@@ -594,7 +594,7 @@
                      "apiVersion": "2015-05-01-preview",		
                      "type": "Microsoft.Compute/virtualMachines/extensions",		
                      "name": "gw-vm/GatewaySetup",		
-                     "location": "[parameters('location')]",		
+                     "location": "[parameters('siteLocation')]",		
                      "dependsOn": [		
                          "[resourceId('Microsoft.Compute/virtualMachines', 'gw-vm')]"		
                      ],		
@@ -634,7 +634,7 @@
             "apiVersion": "[variables('apiVersion')]",
             "type": "Microsoft.Compute/virtualMachines",
             "name": "[concat('rdshD-', copyindex())]",
-            "location": "[parameters('location')]",
+            "location": "[parameters('siteLocation')]",
             "copy": {
                 "name": "rdshD-vm-loop",
                 "count": "[parameters('numberOfDesktopHostInstances')]"
@@ -682,7 +682,7 @@
                     "apiVersion": "[variables('apiVersion')]",
                     "type": "Microsoft.Compute/virtualMachines/extensions",
                     "name": "[concat('rdshD-', copyindex(),'/DesktopHost')]",
-                    "location": "[parameters('location')]",
+                    "location": "[parameters('siteLocation')]",
                     "dependsOn": [
                         "[resourceId('Microsoft.Compute/virtualMachines', concat('rdshD-', copyindex()))]",
                         "Microsoft.Compute/virtualMachines/cb-vm/extensions/EricomConnectServerSetup"
@@ -720,7 +720,7 @@
             "apiVersion": "[variables('apiVersion')]",
             "type": "Microsoft.Compute/virtualMachines",
             "name": "[concat('rdshD8-', copyindex())]",
-            "location": "[parameters('location')]",
+            "location": "[parameters('siteLocation')]",
             "copy": {
                 "name": "rdshD8-vm-loop",
                 "count": "[parameters('numberOfDesktopHostInstances')]"
@@ -768,7 +768,7 @@
                     "apiVersion": "[variables('apiVersion')]",
                     "type": "Microsoft.Compute/virtualMachines/extensions",
                     "name": "[concat('rdshD8-', copyindex(),'/DesktopHost')]",
-                    "location": "[parameters('location')]",
+                    "location": "[parameters('siteLocation')]",
                     "dependsOn": [
                         "[resourceId('Microsoft.Compute/virtualMachines', concat('rdshD8-', copyindex()))]",
                         "Microsoft.Compute/virtualMachines/cb-vm/extensions/EricomConnectServerSetup"
@@ -806,7 +806,7 @@
             "apiVersion": "[variables('apiVersion')]",
             "type": "Microsoft.Compute/virtualMachines",
             "name": "[concat('rdshA-', copyindex())]",
-            "location": "[parameters('location')]",
+            "location": "[parameters('siteLocation')]",
             "copy": {
                 "name": "rdshA-vm-loop",
                 "count": "[parameters('numberOfApplicationHostInstances')]"
@@ -854,7 +854,7 @@
                     "apiVersion": "[variables('apiVersion')]",
                     "type": "Microsoft.Compute/virtualMachines/extensions",
                     "name": "[concat('rdshA-', copyindex(),'/ApplicationHost')]",
-                    "location": "[parameters('location')]",
+                    "location": "[parameters('siteLocation')]",
                     "dependsOn": [
                         "[resourceId('Microsoft.Compute/virtualMachines', concat('rdshA-', copyindex()))]",
                         "Microsoft.Compute/virtualMachines/cb-vm/extensions/EricomConnectServerSetup"
@@ -891,7 +891,7 @@
             "apiVersion": "[variables('apiVersion')]",
             "type": "Microsoft.Compute/virtualMachines",
             "name": "cb-vm",
-            "location": "[parameters('location')]",
+            "location": "[parameters('siteLocation')]",
             "dependsOn": [
                 "[concat('Microsoft.Storage/storageAccounts/', variables('StorageAccountName'))]",
                 "[resourceId('Microsoft.Compute/availabilitySets', 'availabilityset')]",
@@ -938,7 +938,7 @@
                     "type": "Microsoft.Compute/virtualMachines/extensions",
                     "name": "cb-vm/EricomConnectServerSetup",
                     "apiVersion": "[variables('apiVersion')]",
-                    "location": "[parameters('location')]",
+                    "location": "[parameters('siteLocation')]",
                     "dependsOn": [
                         "[resourceId('Microsoft.Compute/virtualMachines', 'cb-vm')]"
                     ],
