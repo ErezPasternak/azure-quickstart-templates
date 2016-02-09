@@ -110,7 +110,7 @@ configuration GatewaySetup
             Ensure = "Present" 
             Path  = "C:\EricomConnectDataGrid_x64_WT.msi"
             Name = "Ericom Connect Data Grid"
-            ProductId = "E6923378-7F98-470D-A831-F0C4B214AA1B"
+            ProductId = "E94F3137-AD33-434F-94B1-D34E12C02064"
             Arguments = ""
             LogPath = "C:\log-ecdg.txt"
             DependsOn = "[Script]DownloadGridMSI"
@@ -135,7 +135,7 @@ configuration GatewaySetup
             Ensure = "Present" 
             Path  = "C:\EricomConnectSecureGateway.msi"
             Name = "Ericom Connect Secure Gateway"
-            ProductId = "5A0AAAFD-60CF-4145-B4BE-1AC68F7A7D35"
+            ProductId = "D52E3491-F0FC-4067-BBC4-F567C2D4CEF5"
             Arguments = ""
             LogPath = "C:\log-ecsg.txt"
             DependsOn = "[Script]DownloadSecureGatewayMSI"
@@ -345,7 +345,7 @@ configuration DesktopHost
             Ensure = "Present" 
             Path  = "C:\EricomConnectDataGrid_x64.msi"
             Name = "Ericom Connect Data Grid"
-            ProductId = "E6923378-7F98-470D-A831-F0C4B214AA1B"
+            ProductId = "E94F3137-AD33-434F-94B1-D34E12C02064"
             Arguments = ""
             LogPath = "C:\log-ecdg.txt"
             DependsOn = "[Script]DownloadGridMSI"
@@ -371,7 +371,7 @@ configuration DesktopHost
             Ensure = "Present" 
             Path  = "C:\EricomConnectRemoteAgentClient_x64.msi"
             Name = "Ericom Connect Remote Agent Client"
-            ProductId = "6D1931C7-198E-4B2E-902F-1BC5AE1CCF81"
+            ProductId = "91D821BA-94CA-4383-B5D8-709239F39553"
             Arguments = ""
             LogPath = "C:\log-ecrac.txt"
             DependsOn = "[Script]DownloadRemoteAgentMSI"
@@ -591,7 +591,7 @@ configuration ApplicationHost
             Ensure = "Present" 
             Path  = "C:\EricomConnectDataGrid_x64.msi"
             Name = "Ericom Connect Data Grid"
-            ProductId = "E6923378-7F98-470D-A831-F0C4B214AA1B"
+            ProductId = "E94F3137-AD33-434F-94B1-D34E12C02064"
             Arguments = ""
             LogPath = "C:\log-ecdg.txt"
             DependsOn = "[Script]DownloadGridMSI"
@@ -617,7 +617,7 @@ configuration ApplicationHost
             Ensure = "Present" 
             Path  = "C:\EricomConnectRemoteAgentClient_x64.msi"
             Name = "Ericom Connect Remote Agent Client"
-            ProductId = "6D1931C7-198E-4B2E-902F-1BC5AE1CCF81"
+            ProductId = "91D821BA-94CA-4383-B5D8-709239F39553"
             Arguments = ""
             LogPath = "C:\log-ecrac.txt"
             DependsOn = "[Script]DownloadRemoteAgentMSI"
@@ -846,7 +846,7 @@ configuration EricomConnectServerSetup
             Ensure = "Present" 
             Path  = "C:\EricomConnectDataGrid_x64_WT.msi"
             Name = "Ericom Connect Data Grid"
-            ProductId = "E6923378-7F98-470D-A831-F0C4B214AA1B"
+            ProductId = "E94F3137-AD33-434F-94B1-D34E12C02064"
             Arguments = ""
             LogPath = "C:\log-ecdg.txt"
             DependsOn = "[Script]DownloadGridMSI"
@@ -872,7 +872,7 @@ configuration EricomConnectServerSetup
             Ensure = "Present" 
             Path  = "C:\EricomConnectProcessingUnitServer.msi"
             Name = "Ericom Connect Processing Unit Server"
-            ProductId = "F5C5CB9A-3837-43A6-97B4-F627C7EC470C"
+            ProductId = "4D24EBBE-380B-4E7D-8F1A-C1AD5B236E03"
             Arguments = ""
             LogPath = "C:\log-ecpus.txt"
             DependsOn = "[Script]DownloadProcessingUnitServerMSI"
@@ -899,7 +899,7 @@ configuration EricomConnectServerSetup
             Ensure = "Present" 
             Path  = "C:\EricomConnectAdminWebService.msi"
             Name = "Ericom Connect Admin Web Service"
-            ProductId = "461BDB69-781C-4183-87D0-F3C06BA9D607"
+            ProductId = "2048FBD6-BDC3-46E8-8018-61DDDC7F7623"
             Arguments = ""
             LogPath = "C:\log-ecaws.txt"
             DependsOn = "[Script]DownloadAdminWebServiceMSI"
@@ -925,36 +925,24 @@ configuration EricomConnectServerSetup
             Ensure = "Present" 
             Path  = "C:\EricomConnectClientWebService.msi"
             Name = "Ericom Connect Client Web Service"
-            ProductId = "AAD4F30B-9BCE-4D61-9234-B5B6E3915905"
+            ProductId = "A05F2AC6-0209-4BED-8671-5C168F2AEB7D"
             Arguments = ""
             LogPath = "C:\log-eccws.txt"
             DependsOn = "[Script]DownloadClientWebServiceMSI"
         }
         
-        Script DownloadRemoteAgentWebServiceMSI
+        Script DownloadEricomAirZip
         {
             TestScript = {
-                Test-Path "C:\EricomConnectRemoteAgentWebService.msi"
+                Test-Path "C:\SSO.zip"
             }
             SetScript ={
-                $_softwareBaseLocation = "$Using:softwareBaseLocation"
-                $source = ($_softwareBaseLocation + "EricomConnectRemoteAgentWebService.msi")
-                $dest = "C:\EricomConnectRemoteAgentWebService.msi"
+                $source = "https://raw.githubusercontent.com/ErezPasternak/azure-quickstart-templates/EricomConnect/EC-DaaS/SSO.zip"
+                $dest = "C:\SSO.zip"
                 Invoke-WebRequest $source -OutFile $dest
             }
-            GetScript = {@{Result = "DownloadRemoteAgentWebServiceMSI"}}
+            GetScript = {@{Result = "DownloadEricomAirZip"}}
       
-        }
-		
-        Package InstallRemoteAgentWebServiceMSI
-        {
-            Ensure = "Present" 
-            Path  = "C:\EricomConnectRemoteAgentWebService.msi"
-            Name = "Ericom Remote Agent Web Service"
-            ProductId = "8CE508C8-D657-4BA9-A9DD-EF7EDB6D49CD"
-            Arguments = ""
-            LogPath = "C:\log-ecrws.txt"
-            DependsOn = "[Script]DownloadRemoteAgentWebServiceMSI"
         }
         
         Script DisableFirewallDomainProfile
@@ -1027,19 +1015,7 @@ configuration EricomConnectServerSetup
             }
             GetScript = {@{Result = "InitializeGrid"}}      
         }
-         Script DownloadEricomAirZip
-        {
-            TestScript = {
-                Test-Path "C:\SSO.zip"
-            }
-            SetScript ={
-                $source = "https://raw.githubusercontent.com/ErezPasternak/azure-quickstart-templates/EricomConnect/EricomConnectDaaS/SSO.zip"
-                $dest = "C:\SSO.zip"
-                Invoke-WebRequest $source -OutFile $dest
-            }
-            GetScript = {@{Result = "DownloadEricomAirZip"}}
-      
-        }
+        
         Script UnZipAir
         {
             TestScript = {
