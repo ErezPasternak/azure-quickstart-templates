@@ -59,7 +59,7 @@
       },
       "emailAddress":{
          "type":"string",
-         "defaultValue":"Erez.Pasternak@erico.com",
+         "defaultValue":"Erez.Pasternak@ericom.com",
          "metadata":{
             "description":"The email address to send the test message to."
          }
