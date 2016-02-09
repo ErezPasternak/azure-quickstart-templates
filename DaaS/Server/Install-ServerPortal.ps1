@@ -2,10 +2,9 @@
 param(
     [Parameter()][String]$EC_AdminUser = "ericom@ericom.local",
     [Parameter()][String]$EC_AdminPass = "Ericom123$",
-    [Parameter()][String]$WebsitePath = "C:\Website",
-    [Parameter()][String]$ServerPath = "C:\Server",
     [Parameter()][String]$ServerPort = "2233",
-    [Parameter()][String]$baseADGroupRDP = "DaaS-RDP"
+    [Parameter()][String]$baseADGroupRDP = "DaaS-RDP",
+    [Parameter()][String]$remoteHostPattern = "rdsh*"
 )
 
 # Remove previous installation
@@ -95,7 +94,8 @@ Move-Item $modules -Destination $serverModuleFolder -Force
 # Running Bootstrap
 $boostrapRun = Join-Path $finalDestination -ChildPath $bootstrapFile
 cd $finalDestination
-Invoke-Expression ".\Bootstrap.ps1 -adminUsername `"$EC_AdminUser`" -adminPassword `"$EC_AdminPass`" -baseADGroupRDP `"$baseADGroupRDP`" -remoteHostPattern `"$remoteHostPattern`""
+$adminUsername = $EC_AdminUser.Split("@")[0];
+Invoke-Expression ".\Bootstrap.ps1 -adminUsername `"$adminUsername`" -adminPassword `"$EC_AdminPass`" -baseADGroupRDP `"$baseADGroupRDP`" -remoteHostPattern `"$remoteHostPattern`""
 
 # Register Server
 $WebsitePath = Join-Path $finalDestination -ChildPath "Website"
