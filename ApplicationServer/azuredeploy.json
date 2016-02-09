@@ -108,7 +108,6 @@
     "subnet1Ref": "[concat(variables('vnetID'),'/subnets/',variables('subnet1Name'))]",
     "publicIPAddressName": "[concat(parameters('vmName'), '-PublicIP-VM')]",
     "storageAccountType": "Standard_LRS",
-    "AppsList" : "Excel,Winzip,Chrome"
   },
   "resources": [
     {
@@ -263,7 +262,7 @@
               "configurationFunction": "DeplyApps.ps1\\Main",
               "properties": {
                 "MachineName": "[parameters('vmName')]",
-                "WebDeployPackagePath": "[parameters('webdeploypkg')]",
+                "WebDeployPackagePath": "[parameters('appsdeploypkg')]",
                 "UserName": "[parameters('adminUserName')]",
                 "Password": "[parameters('adminPassword')]",
                 "AppsList": "[variables('AppsList')]"
