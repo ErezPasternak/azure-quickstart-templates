@@ -107,7 +107,7 @@
     "subnet2Prefix": "10.0.1.0/24",
     "subnet1Ref": "[concat(variables('vnetID'),'/subnets/',variables('subnet1Name'))]",
     "publicIPAddressName": "[concat(parameters('vmName'), '-PublicIP-VM')]",
-    "storageAccountType": "Standard_LRS",
+    "storageAccountType": "Standard_LRS"
   },
   "resources": [
     {
