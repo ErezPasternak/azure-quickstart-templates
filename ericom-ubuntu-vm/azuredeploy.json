@@ -36,7 +36,7 @@
         "description": "Password for the Virtual Machine."
       }
     },
-    "domainA": {
+    "domain": {
       "type": "string",
       "defaultValue": "test.local"
     },

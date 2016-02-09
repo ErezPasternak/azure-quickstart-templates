@@ -9,7 +9,7 @@
     "adminUsername": {
       "value": "Ericom"
     },
-    "domainA": {
+    "domain": {
       "value": "test.local"
     },
     "rAWSaddress": {
