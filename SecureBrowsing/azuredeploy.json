@@ -751,7 +751,7 @@
                      "fileUris":[
                         "https://raw.githubusercontent.com/ErezPasternak/azure-quickstart-templates/EricomConnect/EricomConnect75/install_ericom.sh"
                      ],
-                     "commandToExecute":"[concat(variables('command'), ' ' ,'lnx-', copyindex(),'.',parameters('domainName'))]"
+                     "commandToExecute":"[concat(variables('command'), ' ' ,'lnx-', copyindex(),'.',variables('domainName'))]"
                   }
                }
             }
