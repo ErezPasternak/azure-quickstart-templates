@@ -36,9 +36,9 @@
         "description": "Password for the Virtual Machine."
       }
     },
-    "domain": {
+    "domainA": {
       "type": "string",
-      "value": "test.local"
+      "defaultValue": "test.local"
     },
     "rAWSaddress": {
       "type": "string",
