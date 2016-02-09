@@ -383,7 +383,7 @@
          "location":"[parameters('siteLocation')]",
          "copy":{
             "name":"lnx-nif-loop",
-            "count":"[parameters('numberOflnxInstances')]"
+            "count":"[variables('numberOflnxInstances')]"
          },
          "dependsOn":[
             "Microsoft.Resources/deployments/updatevnetdns"
@@ -694,7 +694,7 @@
          "location":"[parameters('siteLocation')]",
          "copy":{
             "name":"lnx-vm-loop",
-            "count":"[parameters('numberOflnxInstances')]"
+            "count":"[variables('numberOflnxInstances')]"
          },
          "dependsOn":[
             "[concat('Microsoft.Storage/storageAccounts/', variables('StorageAccountName'))]",
