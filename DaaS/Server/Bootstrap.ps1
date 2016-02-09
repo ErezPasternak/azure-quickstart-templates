@@ -8,7 +8,9 @@
 #### START OF CONFIGURATION AREA
 param(
     [Parameter(Mandatory)][String]$adminUsername = "admin@test.local",
-    [Parameter(Mandatory)][String]$adminPassword = "admin"
+    [Parameter(Mandatory)][String]$adminPassword = "admin",
+    [Parameter(Mandatory)][String]$baseADGroupRDP = "DaaS-RDP",
+    [Parameter(Mandatory)][String]$remoteHostPattern = "rdsh*"
 )
 
 $configuration = @{
@@ -49,8 +51,16 @@ $configuration = @{
 Function Run-Configuration {
     param(
         [Parameter(Mandatory)][String]$adminUsername,
-        [Parameter(Mandatory)][String]$adminPassword
+        [Parameter(Mandatory)][String]$adminPassword,
+        [Parameter(Mandatory)][String]$baseADGroupRDP,
+        [Parameter(Mandatory)][String]$remoteHostPattern
     )
+
+    # Create our Base RDP Group
+    New-ADGroup -Name "$baseADGroupRDP" -SamAccountName $baseADGroupRDP -GroupCategory Security -GroupScope Universal -DisplayName "$baseADGroupRDP"
+    # Add Base RDP Group to local "Remote Desktop Users" for each Remote Session Host
+    Get-ADComputer -Filter 'SamAccountName -like "$remoteHostPattern"' | Foreach-Object { $ComputerName = $_.Name; Invoke-Command { param([String]$RDPGroup) net localgroup "Remote Desktop Users" "$RDPGroup" /ADD } -computername $ComputerName -ArgumentList "$baseADGroupRDP"  }
+
 
     if ($configuration -ne $null -and $configuration.Count -gt 0){
         # Active Directory
@@ -63,13 +73,14 @@ Function Run-Configuration {
                         $password = $configuration.ActiveDirectory.Users[$key].Password
                         $securePassword = ConvertTo-SecureString -String $password -AsPlainText -Force	
 
-                        New-ADUser -SamAccountName $userName -Name "$userName" -Enabled $true -Verbose -AccountPassword $securePassword
+                        New-ADUser -PasswordNeverExpires $true -SamAccountName $userName -Name "$userName" -Enabled $true -Verbose -AccountPassword $securePassword
+                        Add-ADGroupMember -Identity (Get-ADGroup $baseADGroupRDP) -Members $userName
                     }                   
                 }
                 #groups
                 if($configuration.ActiveDirectory.Contains("Groups")) {
                    foreach($key in $configuration.ActiveDirectory.Groups.Keys) {
-                        New-ADGroup -Name "$key" -SamAccountName $key -GroupCategory Security -GroupScope Global -DisplayName "$key"
+                        New-ADGroup -Name "$key" -SamAccountName $key -GroupCategory Security -GroupScope Universal -DisplayName "$key"
                         $users = $configuration.ActiveDirectory.Groups[$key]
                         if ($users.Count -gt 0) {
                             foreach( $item in $configuration.ActiveDirectory.Groups[$key]) {
@@ -248,9 +259,16 @@ Function Create-ResourceDefinitionBinding
         [Parameter()][string]$adminUser,
         [Parameter()][string]$adminPassword,
         [Parameter()][String]$resourceGroup,
-        [Parameter()][string]$applicationName
+        [Parameter()][string]$applicationName,
+        [Parameter()][string]$aliasName = "",
+        [Parameter()][bool]$desktopShortcut = $true
     )
     $applicationName = $applicationName.Trim();
+
+    if($applicationName -eq "Desktop") {
+        $aliasName = "VirtualDesktop"
+        $desktopShortcut = $false
+    }
 
     $adminApi = Start-EricomConnection
     $adminSessionId = ($adminApi.CreateAdminsession($adminUser, $adminPassword,"rooturl","en-us")).AdminSessionId
@@ -279,7 +297,11 @@ Function Create-ResourceDefinitionBinding
         }
         # try publish it
         if ($foundApp -eq $null) {
-            $foundApp = (Publish-App -adminUser $adminUser -adminPassword $adminPassword -applicationName $applicationName).id
+            if ($applicationName -eq "Desktop") {
+                $foundApp = (Publish-Desktop -adminUser $adminUser -adminPassword $adminPassword -aliasName $aliasName -desktopShortcut $desktopShortcut).id
+            } else {
+                $foundApp = (Publish-App -adminUser $adminUser -adminPassword $adminPassword -applicationName $applicationName -aliasName $aliasName -desktopShortcut $desktopShortcut).id
+            }
         }
         if ($foundApp -ne $null) {
             $rlist = $rGroup.ResourceDefinitionIds
@@ -333,7 +355,9 @@ Function Publish-App {
     param(
         [Parameter()][string]$adminUser,
         [Parameter()][string]$adminPassword,
-        [Parameter()][String]$applicationName
+        [Parameter()][string]$applicationName,
+        [Parameter()][string]$aliasName,
+        [Parameter()][bool]$desktopShortcut =  $true
     )
 
     $adminApi = Start-EricomConnection
@@ -349,6 +373,10 @@ Function Publish-App {
 	    {
             if(($browsingItem.Label -eq $applicationName))
             {
+                $appName = $applicationName
+                if($aliasName.Length -gt 0) {
+                    $appName = $aliasName
+                }
                 $resourceDefinition = $adminApi.CreateResourceDefinition($adminSessionId.AdminSessionId, $applicationName)
 
                 $val1 = $resourceDefinition.ConnectionProperties.GetLocalPropertyValue("remoteapplicationmode")
@@ -364,12 +392,16 @@ Function Publish-App {
                 $val3.LocalValue = $browsingItem.ApplicationString.Length
                 $val3.ComputeBy = "Literal"
 
+                $valS = $resourceDefinition.DisplayProperties.GetLocalPropertyValue("ShortcutDesktop")
+                $valS.LocalValue = $desktopShortcut
+                $valS.ComputeBy = "Literal"
+
                 $val4 = $resourceDefinition.DisplayProperties.GetLocalPropertyValue("IconString")
                 $val4.LocalValue = $browsingItem.ApplicationString
                 $val4.ComputeBy = "Literal"
 
                 $val5 = $resourceDefinition.DisplayProperties.GetLocalPropertyValue("DisplayName")
-                $val5.LocalValue = $applicationName
+                $val5.LocalValue = $appName
                 $val5.ComputeBy = "Literal"
 
                 $response = @{}
@@ -424,6 +456,85 @@ Function Publish-App {
     }
 }
 
+Function Publish-Desktop {
+    param(
+        [Parameter()][string]$adminUser,
+        [Parameter()][string]$adminPassword,
+        [Parameter()][string]$aliasName,
+        [Parameter()][bool]$desktopShortcut =  $true
+    )
+
+    $applicationName = "Desktop"
+
+    $adminApi = Start-EricomConnection
+    $adminSessionId = $adminApi.CreateAdminsession($adminUser, $adminPassword,"rooturl","en-us")
+    
+    $response = $null;
+
+    $appName = $applicationName
+    if($aliasName.Length -gt 0) {
+        $appName = $aliasName
+    }
+    $resourceDefinition = $adminApi.CreateResourceDefinition($adminSessionId.AdminSessionId, $applicationName)
+
+    $iconfile = "$env:windir\system32\mstsc.exe"
+
+    $val1 = $resourceDefinition.ConnectionProperties.GetLocalPropertyValue("remoteapplicationmode")
+    $val1.LocalValue = $false
+    $val1.ComputeBy = "Literal"
+
+    try {
+        $iconstring = [System.Drawing.Icon]::ExtractAssociatedIcon($iconfile).ToString();
+        $icon = [System.Drawing.Icon]::ExtractAssociatedIcon($iconfile);
+        $iconstream = New-Object System.IO.MemoryStream;
+        $icon.ToBitmap().Save($iconstream, [System.Drawing.Imaging.ImageFormat]::Png)
+        $iconbytes = $iconstream.ToArray();
+        $iconbase64 = [convert]::ToBase64String($iconbytes)
+        $iconstream.Flush();
+        $iconstream.Dispose();
+        
+
+        $val3 = $resourceDefinition.DisplayProperties.GetLocalPropertyValue("IconLength")
+        $val3.LocalValue = $iconbase64.Length
+        $val3.ComputeBy = "Literal"
+
+        $val4 = $resourceDefinition.DisplayProperties.GetLocalPropertyValue("IconString")
+        $val4.LocalValue = $iconbase64
+        $val4.ComputeBy = "Literal"
+    } catch {
+        Write-Warning $_.Exception.Message
+    }
+
+    $valS = $resourceDefinition.DisplayProperties.GetLocalPropertyValue("ShortcutDesktop")
+    $valS.LocalValue = $desktopShortcut
+    $valS.ComputeBy = "Literal"
+
+    $val5 = $resourceDefinition.DisplayProperties.GetLocalPropertyValue("DisplayName")
+    $val5.LocalValue = $appName
+    $val5.ComputeBy = "Literal"
+
+    $response = @{}
+    try 
+    {
+        $adminApi.AddResourceDefinition($adminSessionId.AdminSessionId, $resourceDefinition, "true")
+
+        $response = @{
+            status = "OK"
+            success = "true"
+            id = $resourceDefinition.ResourceDefinitionId
+            message = "The resource has been successfuly published."
+        }
+    } 
+    catch [Exception] 
+    {
+        $response = @{
+            status = "ERROR"
+            message = $_.Exception.Message
+        }
+    }
+    return $response
+}
+
 Function Start-EricomConnection { 
     $Assem = Import-EricomLib
 
@@ -461,4 +572,4 @@ Function Import-EricomLib {
 
 
 
-Run-Configuration -adminUsername $adminUsername -adminPassword $adminPassword
+Run-Configuration -adminUsername $adminUsername -adminPassword $adminPassword -baseADGroupRDP $baseADGroupRDP -remoteHostPattern $remoteHostPattern

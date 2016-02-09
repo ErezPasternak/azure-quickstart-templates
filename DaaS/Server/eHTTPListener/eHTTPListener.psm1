@@ -18,6 +18,10 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
+[System.Reflection.Assembly]::LoadWithPartialName("System.Web.MimeMapping") | Out-Null
+[System.Reflection.Assembly]::LoadWithPartialName("System.Drawing")  | Out-Null
+[System.Reflection.Assembly]::LoadWithPartialName("System.DirectoryServices.AccountManagement") | Out-Null
+
 Function ConvertTo-HashTable {
     <#
     .Synopsis
@@ -68,7 +72,9 @@ Function ConvertTo-HashTable {
 
 Function SendMailTo {
    Param (
-    [Parameter()][String]$To = "sebastian.constantinescu@ericom.com"
+    [Parameter()][String]$To = "sebastian.constantinescu@ericom.com",
+    [Parameter()][String]$Subject = "Test",
+    [Parameter()][String]$Message = "This is an automatic Email created at $date"
    )
     
 	$date=(Get-Date).TOString();
@@ -76,28 +82,44 @@ Function SendMailTo {
     [String]$SMTPServer = "ericom-com.mail.protection.outlook.com"
     [String]$Port = 25
     [String]$From = "daas@ericom.com"
-    [String]$Subject = "Test"
-    [String]$Message = "This is an automatic Email created at $date"
     
     $securePassword = ConvertTo-SecureString -String "1qaz@Wsx#" -AsPlainText -Force
     $credential = New-Object System.Management.Automation.PSCredential ("daas@ericom.com", $securePassword)
     $date = (Get-Date).ToString();
 
-    Write-Verbose $credential.UserName
-	
-	Send-MailMessage -Body "$Message" -BodyAsHtml -Subject "$Subject" -SmtpServer $SmtpServer -Port $Port -Credential $credential -From $credential.UserName -To $To -ErrorAction Continue
-    #Send-MailMessage -SmtpServer 'ericom-com.mail.protection.outlook.com' -Port 25 -credential $mycreds -UseSsl -From daas@ericom.com -To sebastian.constantinescu@ericom.com -Subject 'Some Subject' -Body 'Automatic Email' -BodyAsHtml
-	#Write-Verbose "Send-MailMessage -SmtpServer $SMTPServer -Port $Port -credential $mycreds -UseSsl -From $From -To $To -Subject $Subject -Body $Message -BodyAsHtml"
-    #$Invoke-Expression $Command   
+	Send-MailMessage -Body "$Message" -BodyAsHtml -Subject "$Subject" -SmtpServer $SmtpServer -Port $Port -Credential $credential -From $credential.UserName -To $To -ErrorAction Continue | Out-Default
+}
+
+Function SendReadyEmail
+{
+    param(
+        [string]$To,
+        [string]$Username,
+        [string]$Password,
+        [string]$EmailPath
+    )
+
+    $subject = (Get-Content $EmailPath | Select -First 1  | Out-String).Replace("#subject:", "").Trim();
+
+    $content = (Get-Content $EmailPath | Select -Skip 1 | Out-String);
+    $message = $content.Replace("#username#", $Username); 
+    $message = $message.Replace("#password#", $Password);
+    $_externalFqdn = [System.Net.Dns]::GetHostByName(($env:computerName)).HostName
+    $url = "https://$_externalFqdn/EricomXml/AirSSO/AccessSSO.htm"
+    $here = "<a href=`"$url`">here</a>";
+    $message = $message.Replace("#here#", $here);
+
+    SendMailTo -To $Email -Subject "$subject" -Message $message | Out-Null
 }
 
 Function Create-User {
 	param(
 		[String]$Username = "new.user",
 		[String]$Password = "123!#abcd",
-		[String]$Email = "generic.user@ericom.com"
+		[String]$Email = "generic.user@ericom.com",
+        [String]$BaseADGroupRDP = "DaaS-RDP"
 	)
-    return (FindAndCreateUserInGroup -Username $Username -Password $Password -Email $Email)
+    return (FindAndCreateUserInGroup -Username $Username -Password $Password -Email $Email -BaseADGroupRDP $BaseADGroupRDP)
 }
 
 Function Auth-User {
@@ -122,9 +144,12 @@ Function Test-ADCredentials {
     $isValid = ($pc.ValidateCredentials($Username, $Password) | Out-String).ToString().Trim() -eq "True"
     $response = $null
     if ($isValid -eq $true) {
+        $email = ((Get-AdUser $Username -Properties EmailAddress | Select EmailAddress).EmailAddress | Out-String).Trim()
+
         $response = @{
             status = "OK"
             success = "true"
+            email = "$email"
             message = "Authentication OK"
         }
     } else {
@@ -223,34 +248,18 @@ Function FindAndCreateUserInGroup {
 	param(
 		[String]$Username,
 		[String]$Password,
-		[String]$Email
+		[String]$Email,
+        [String]$BaseADGroupRDP
 	)
     
     $response = $null
 
     $securePassword = ConvertTo-SecureString -String $Password -AsPlainText -Force	
-	$usrTemplate = Get-ADUser "generic.user1"
-
-    $when = ((Get-Date).AddDays(-30)).Date
-
-    $users = Get-ADUser -Filter {whenCreated -ge $when -and Name -like "udaas-*"} -Properties whenCreated | Sort-Object whenCreated -Descending
-    $userNo = $users.Item(0).Name.Substring(6);
-    $userNo = $userNo.ToInt32($Null)+1;
-
-    $mLength= $users.Item(0).Name.Substring(6).Length
-
-    $length = $mLength - $userNo.ToString().Length
-
-    $Name = $userNo.ToString()
-
-    for ($i=1; $i -le $length; $i++){
-        $Name = $Name.Insert(0,0)
-    }
-
     $domainName = (Get-ADDomain).Forest
     $hasError = $false;
     try {
-	    New-ADUser -SamAccountName $Username -Instance $usrTemplate -Name "udaas-$Name" -Enabled $true -Verbose -EmailAddress $Email -AccountPassword $securePassword -UserPrincipalName ("udaas-$Name" + "@" + "$domainName") -ErrorAction Continue
+	    New-ADUser -PasswordNeverExpires $true -SamAccountName $Username -Name "$Username" -Enabled $true -Verbose -EmailAddress $Email -AccountPassword $securePassword -UserPrincipalName ("$Username" + "@" + "$domainName") -ErrorAction Continue
+        Add-ADGroupMember -Identity (Get-ADGroup $BaseADGroupRDP) -Members $Username
     } catch  {
         $hasError = $true;
         $ErrorMessage = $_.Exception.Message
@@ -330,7 +339,10 @@ Function PopulateConnect{
 Function Assign-User {
     param(
         [String]$Username,
-        [String]$Template
+        [String]$Password,
+        [String]$Template,
+        [String]$Email,
+        [String]$EmailPath
     )
 
 
@@ -360,15 +372,19 @@ Function Assign-User {
     } catch {
         $isSuccess = $false;
         $message = $_.Exception.Message
+        Write-Warning $message
     }
-    $_externalFqdn = [System.Net.Dns]::GetHostByName(($env:computerName)).HostName # TODO: we should make sure we get the right external FQDN
+    $_externalFqdn = [System.Net.Dns]::GetHostByName(($env:computerName)).HostName
     $response = $null;
     if ($isSuccess -eq $true) {
+        $emailFile = Join-Path $EmailPath -ChildPath "ready.html"
+        SendReadyEmail -To $Email -Username $Username -Password $Password -EmailPath "$emailFile"
+
         $response = @{
             status = "OK"
             success = "true"
             message = "User has been successfuly added to the selected group"
-            url = "https://$_externalFqdn/EricomXml/AccessPortal/Start.html#/login"
+            url = "https://$_externalFqdn/EricomXml/AirSSO/AccessSSO.htm"
         }
     } else {
         $response = @{
@@ -548,11 +564,18 @@ Function Start-HTTPListener {
         [String]$WebsitePath,
 
         [Parameter()]
+        [String]$BaseADGroupRDP,
+
+        [Parameter()]
         [System.Net.AuthenticationSchemes] $Auth = [System.Net.AuthenticationSchemes]::Anonymous
         )
 
     Process {
-     #   $ErrorActionPreference = "Stop"
+        [System.Reflection.Assembly]::LoadWithPartialName("System.Web.MimeMapping") | Out-Null
+        [System.Reflection.Assembly]::LoadWithPartialName('System.Drawing')  | Out-Null
+
+        $emailPath = Join-Path -Path $WebsitePath -ChildPath ("emails")
+
         #PopulateAD
         #PopulateConnect
         $CurrentPrincipal = New-Object Security.Principal.WindowsPrincipal( [Security.Principal.WindowsIdentity]::GetCurrent())
@@ -645,7 +668,7 @@ Function Start-HTTPListener {
                                     $password = $request.QueryString.Item("password");
                                     $email = $request.QueryString.Item("email");
                                 }
-                                $command = "Create-User -Username $username -Email $email -Password `"$password`""
+                                $command = "Create-User -Username $username -Email $email -Password `"$password`" -BaseADGroupRDP `"$BaseADGroupRDP`""
                             }
                             "Auth-User"{
 								# Create an AD User using a powershell function
@@ -662,13 +685,18 @@ Function Start-HTTPListener {
                             "Assign-User"{
                                 Write-Verbose "Received command to assign user to organizational unit"
                                 if ($request.HttpMethod -eq "POST") {
+                                    $email = $nameValuePair.email;
                                     $username = $nameValuePair.username;
+                                    $password = $nameValuePair.password;
                                     $config = $nameValuePair.config;
                                 } else {
+                                    $email = $request.QueryString.Item("email");
                                     $username = $request.QueryString.Item("username");
+                                    $password = $request.QueryString.Item("password");
                                     $config = $request.QueryString.Item("config");
                                 }
-                                $command = "Assign-User -Username $username -Template `"$config`""
+
+                                $command = "Assign-User -Username `"$username`" -Password `"$password`" -Template `"$config`" -EmailPath `"$emailPath`" -Email `"$email`""
                             }
                             "Get-AppList"{
                                 #return list of apps and icons

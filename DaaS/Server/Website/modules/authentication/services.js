@@ -73,11 +73,11 @@ angular.module('Authentication')
 
         service.SetCredentials = function (username, password, email) {
             var authdata = Base64.encode(username + ':' + password);
-
             $rootScope.globals = {
                 currentUser: {
                     username: username,
                     email: email,
+					password: password,
                     authdata: authdata
                 }
             };
@@ -95,8 +95,8 @@ angular.module('Authentication')
         return service;
     }])
 .factory('ApplicationService', 
-	['Base64', '$http', '$cookieStore', '$rootScope', '$timeout',
-	function(Base64, $http, $cookieStore, $rootScope, $timeout){
+	['Base64', '$http', '$cookieStore', '$rootScope', '$timeout', 'localStorageService',
+	function(Base64, $http, $cookieStore, $rootScope, $timeout, localStorageService){
 		var service = {};
 		
 		service.GetAllApplications = function (groups, callback) {
@@ -109,10 +109,9 @@ angular.module('Authentication')
                     'Content-Type': 'application/json'
                 }
             }
-            
             $http.post('api', data, config)
-             .then(function successCallback(response) {
-               callback(response.data);  
+             .then(function successCallback(response, storage) {
+                callback(response.data);
             }, function errorCallback(response) {
                 // error
                 callback(response.data);

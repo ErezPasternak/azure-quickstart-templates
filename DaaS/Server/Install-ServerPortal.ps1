@@ -1,7 +1,12 @@
-# WARNING: Please run this script with Administrator priviledges
-$EC_AdminUser = "admin@test.local"
-$EC_AdminPass = "admin"
-$ServerPort = "2222"
+# WARNING: Please run this script with Administrator privileges
+param(
+    [Parameter()][String]$EC_AdminUser = "ericom@ericom.local",
+    [Parameter()][String]$EC_AdminPass = "Ericom123$",
+    [Parameter()][String]$WebsitePath = "C:\Website",
+    [Parameter()][String]$ServerPath = "C:\Server",
+    [Parameter()][String]$ServerPort = "2233",
+    [Parameter()][String]$baseADGroupRDP = "DaaS-RDP"
+)
 
 # Remove previous installation
 try {
@@ -19,6 +24,7 @@ Start-Sleep -Seconds 5
 
 $siteUrl = "https://github.com/ErezPasternak/azure-quickstart-templates/raw/EricomConnect/DaaS/Server/Website.zip"
 $serverUrl = "https://github.com/ErezPasternak/azure-quickstart-templates/raw/EricomConnect/DaaS/Server/eHTTPListener.zip"
+$bootstrapUrl = "https://github.com/ErezPasternak/azure-quickstart-templates/raw/EricomConnect/DaaS/Server/Bootstrap-DaaS.ps1"
 
 $finalDestination = "C:\DaaS-Portal";
 $tempDestination = "C:\portaltmp";
@@ -40,6 +46,14 @@ Invoke-WebRequest $serverSource -OutFile $serverDestination
 Unblock-File $serverDestination
 
 Start-Sleep -Seconds 5
+
+# download bootstrap
+$bootstrapFile = "Bootstrap.ps1"
+$bootstrapSource = $bootstrapUrl
+$bootstrapDestination = Join-Path $tempDestination -ChildPath $bootstrapFile
+Invoke-WebRequest $bootstrapSource -OutFile $bootstrapDestination
+Unblock-File $bootstrapDestination
+
 
 # Step 3: unpack resources
 $shellSite = new-object -com shell.application
@@ -64,6 +78,9 @@ foreach($item in $zipServer.items())
 Start-Sleep -Seconds 5
 Copy-Item $serverTempDestination -Destination $finalDestination -Force -Recurse
 
+
+Copy-Item $bootstrapDestination -Destination $finalDestination -Force
+
 # Clean up: delete Temporary Files
 Remove-Item $tempDestination -Force -Recurse
 
@@ -75,11 +92,18 @@ New-Item $serverModuleFolder -ItemType Directory -Force
 $modules = (Join-Path $finalDestination -ChildPath "Webserver") + "\eHTTPListener.*"  
 Move-Item $modules -Destination $serverModuleFolder -Force
 
+# Running Bootstrap
+$boostrapRun = Join-Path $finalDestination -ChildPath $bootstrapFile
+cd $finalDestination
+Invoke-Expression ".\Bootstrap.ps1 -adminUsername `"$EC_AdminUser`" -adminPassword `"$EC_AdminPass`" -baseADGroupRDP `"$baseADGroupRDP`" -remoteHostPattern `"$remoteHostPattern`""
+
+# Register Server
 $WebsitePath = Join-Path $finalDestination -ChildPath "Website"
 $ServerPath = Join-Path $finalDestination -ChildPath "Webserver"
 cd (Join-Path $finalDestination -ChildPath "Webserver")
-$registerServer = ".\Task-Registration.ps1 -EC_AdminUser `"$EC_AdminUser`" -EC_AdminPass `"$EC_AdminPass`" -WebsitePath `"$WebsitePath`" -ServerPath `"$ServerPath`" -ServerPort `"$ServerPort`" "
+$registerServer = ".\Task-Registration.ps1 -EC_AdminUser `"$EC_AdminUser`" -EC_AdminPass `"$EC_AdminPass`" -WebsitePath `"$WebsitePath`" -ServerPath `"$ServerPath`" -ServerPort `"$ServerPort`" -BaseADGroupRDP `"$baseADGroupRDP`" "
 Invoke-Expression $registerServer
 
+# Open in Browser
 $url = "http://localhost:$ServerPort/";
 Start-Process -FilePath $url

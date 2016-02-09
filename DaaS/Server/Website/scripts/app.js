@@ -9,6 +9,7 @@ var app = angular.module('app', [
     'ngRoute',
     'ngCookies',
     'ngAnimate',
+	'LocalStorageModule',
     'ui.bootstrap',
     'checklist-model'
 ])
@@ -51,6 +52,52 @@ var app = angular.module('app', [
     title: function() { return title; },
     setTitle: function(newTitle) { title = newTitle; }
   };
+})
+
+.factory('ApplicationData', function($rootScope, $http, ApplicationService, localStorageService){
+	var app;
+	var defaultApps, customApps = {}
+
+	var storage = localStorageService;
+	var $scope = $rootScope;
+	
+	var data = {
+		command: 'Get-AppList',
+		groups: "TaskWorkers,KnowledgeWorkers,MobileWorkers,Office,Internet,Multimedia"
+	};
+	var config = {
+		headers : {
+			'Content-Type': 'application/json'
+		}
+	}
+	$http.post('api', data, config)
+	 .then(function successCallback(response) {
+		var resp = response.data
+		if(!!resp && 'TaskWorkers' in resp) {
+			defaultApps = {
+				TaskWorkers: resp.TaskWorkers,
+				KnowledgeWorkers: resp.KnowledgeWorkers,
+				MobileWorkers: resp.MobileWorkers
+			}
+			
+			customApps = {
+				Office: resp.Office,
+				Internet: resp.Internet,
+				Multimedia: resp.Multimedia
+			}
+			// debugger;
+		} else {
+			defaultApps = null;
+			customApps = null;
+		}
+	}, function errorCallback(resp) {
+		// error
+		// callback(response.data);
+	});
+	return {
+		DefaultApps: defaultApps,
+		CustomApps: customApps
+	};
 })
 
 .factory('Wizard', function($route,$location,$rootScope){

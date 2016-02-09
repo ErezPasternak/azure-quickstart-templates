@@ -22,6 +22,8 @@ angular.module('Desk', [])
         var data = {
             command: 'Assign-User',
             username:$rootScope.globals.currentUser.username,
+			password:$rootScope.globals.currentUser.password,
+			email:$rootScope.globals.currentUser.email,
             config:$scope.selectedDesktop.id
         };
         var config = {
@@ -35,9 +37,9 @@ angular.module('Desk', [])
             // set data to access page
             $rootScope.accessData = {
                 username: $rootScope.globals.currentUser.username,
-                password: '******',
+                password: $rootScope.globals.currentUser.password,
                 email: $rootScope.globals.currentUser.email,
-                url: response.url,
+                url: response.data.url,
             };
             $location.path('/access');
         }, function errorCallback(response) {
@@ -108,7 +110,7 @@ angular.module('Desk', [])
     if(!$rootScope.isAccessDesk)$location.path('/'); 
     
     $scope.goToDesk = function () {
-       $window.location.href = $rootScope.accessData.url;
+       $window.location.href = $rootScope.accessData.url + "?username=" + $rootScope.accessData.username + "&password=" + $rootScope.accessData.password + "&appName=VirtualDesktop&autostart=true";
     };
     
 

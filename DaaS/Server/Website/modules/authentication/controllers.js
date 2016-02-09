@@ -2,11 +2,11 @@
 
 angular.module(['Authentication'])
 
-.controller('registerController',function ($scope, $rootScope, $location, $http , AuthenticationService, Page, ApplicationService) {
+.controller('registerController',function ($scope, $rootScope, $location, $http , AuthenticationService, Page, ApplicationData, ApplicationService) {
 	$rootScope.compactWidthPage =true;
 
 	Page.setTitle('Service Provider Desktop as a Service (DaaS) Portal');
-
+	
 	// reset login status
 	ApplicationService.GetDefaultApplications(function(response){
 		if(!!response && 'TaskWorkers' in response) {
@@ -76,7 +76,7 @@ angular.module(['Authentication'])
 		$scope.dataLoading = true;
 		AuthenticationService.Login($scope.username, $scope.password, function (response) {
 			if (response.success) {
-				AuthenticationService.SetCredentials($scope.username, $scope.password);
+				AuthenticationService.SetCredentials($scope.username, $scope.password, response.email);
 				$location.path('/');
 			} else {
 				$scope.error = 'Username or password is incorrect';
