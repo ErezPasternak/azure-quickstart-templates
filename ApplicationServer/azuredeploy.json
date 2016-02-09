@@ -3,6 +3,7 @@
   "contentVersion": "1.0.0.0",
   "parameters": {
     "vmLocation": {
+      "defaultValue" : "West US",
       "type": "string",
       "allowedValues": [
         "West US",
@@ -15,14 +16,9 @@
         "description": "This is the location of the Virtual Machine"
       }
     },
-    "newStorageAccountName": {
-      "type": "string",
-      "metadata": {
-        "description": "This is the name of the storage account for storing Virtual Machine disk"
-      }
-    },
     "vmName": {
       "type": "string",
+      "defaultValue" : "VmName",
       "metadata": {
         "description": "This is the name of the Virtual Machine"
       }
@@ -57,12 +53,14 @@
     },
     "adminUserName": {
       "type": "string",
+      "defaultValue" : "ericom",
       "metadata": {
         "description": "This is the Virtual Machine administrator login name"
       }
     },
     "adminPassword": {
       "type": "securestring",
+      "defaultValue" : "Ericom123$",
       "metadata": {
         "description": "This is the Virtual Machine administrator login password"
       }
@@ -75,24 +73,28 @@
     },
     "configurationFunction": {
       "type": "string",
+      "defaultValue" : "setup",
       "metadata": {
         "description": "This is the link to the Web Deploy package to be deployed to the Virtual Machine. It is a github URL in this example."
       }
     },
     "modulesUrl": {
       "type": "string",
+      "defaultValue" : "http://base",
       "metadata": {
         "description": "This is the URL for downloading the PowerShell DSC module. In this case it should be the link to a zip file hosted under an Azure storage container"
       }
     },
     "appsdeploypkg": {
       "type": "string",
+      "defaultValue" : "Excel,Winzip,Chrome",
       "metadata": {
         "description": "This is the link to the Web Deploy package for the website that's going to be deployed to the Virtual Machine"
       }
     }
   },
   "variables": {
+    "storageAccountName":"[concat(uniquestring(resourceGroup().id), 'RDS', 'Storage')]",
     "virtualNetworkName": "[concat(parameters('vmName'), '-VNET')]",
     "vnetID": "[resourceId('Microsoft.Network/virtualNetworks',variables('virtualNetworkName'))]",
     "OSDiskName": "osdiskforwindowssimple",
@@ -111,7 +113,7 @@
   "resources": [
     {
       "type": "Microsoft.Storage/storageAccounts",
-      "name": "[parameters('newStorageAccountName')]",
+      "name": "[variables('StorageAccountName')]",
       "apiVersion": "2015-05-01-preview",
       "location": "[parameters('vmLocation')]",
       "tags": {
@@ -204,7 +206,7 @@
         "displayName": "VirtualMachine"
       },
       "dependsOn": [
-        "[concat('Microsoft.Storage/storageAccounts/', parameters('newStorageAccountName'))]",
+        "[concat('Microsoft.Storage/storageAccounts/', variable('StorageAccountName'))]",
         "[concat('Microsoft.Network/networkInterfaces/', variables('nicName'))]"
       ],
       "properties": {
@@ -226,7 +228,7 @@
           "osDisk": {
             "name": "osdisk",
             "vhd": {
-              "uri": "[concat('http://',parameters('newStorageAccountName'),'.blob.core.windows.net/vhds/','osdisk.vhd')]"
+              "uri": "[concat('http://',variable('StorageAccountName'),'.blob.core.windows.net/vhds/','osdisk.vhd')]"
             },
             "caching": "ReadWrite",
             "createOption": "FromImage"
