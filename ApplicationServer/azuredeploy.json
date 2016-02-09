@@ -18,7 +18,7 @@
     },
     "vmName": {
       "type": "string",
-      "defaultValue" : "VmName",
+      "defaultValue" : "ErezVm",
       "metadata": {
         "description": "This is the name of the Virtual Machine"
       }
