@@ -14,7 +14,7 @@
         [Int]$RetryIntervalSec=30
     ) 
     
-    Import-DscResource -ModuleName xActiveDirectory, xDisk, xNetworking, xPendingReboot, cDisk
+    Import-DscResource -ModuleName xActiveDirectory, xDisk, xNetworking, xPendingReboot, cDisk, xDnsServer
     $adminUsername = $Admincreds.UserName
     [System.Management.Automation.PSCredential ]$DomainCreds = New-Object System.Management.Automation.PSCredential ("${DomainName}\$($Admincreds.UserName)", $Admincreds.Password)
 
@@ -158,38 +158,47 @@
             GetScript = {@{Result = "FixUPNSuffix"}}      
         }
 
-        Script FixLinuxMachine
-        {
-            TestScript = {
-                Test-Path "C:\linuxmachine"
-            }
-            SetScript ={               
-                $dc = "dc." + $Using:DomainName;
-                $domain = "$Using:DomainName";
-                $arguments = "$dc /config $domain /allowupdate 1" 
-                $configPath = "C:\Windows\system32\dnscmd.exe";               
-                $exitCode = (Start-Process -Filepath $configPath -ArgumentList "$arguments" -Wait -Passthru).ExitCode
-                New-Item -Path "C:\linuxmachine" -ItemType Directory 
+      #  Script FixLinuxMachine
+      #  {
+      #      TestScript = {
+      #          Test-Path "C:\linuxmachine"
+      #      }
+      #      SetScript ={               
+      #          $dc = "dc." + $Using:DomainName;
+      #          $domain = "$Using:DomainName";
+      #          $arguments = "$dc /config $domain /allowupdate 1" 
+      #          $configPath = "C:\Windows\system32\dnscmd.exe";               
+      #          $exitCode = (Start-Process -Filepath $configPath -ArgumentList "$arguments" -Wait -Passthru).ExitCode
+      #          New-Item -Path "C:\linuxmachine" -ItemType Directory 
                 
-            }
-            GetScript = {@{Result = "FixLinuxMachine"}}      
-        }
+       #     }
+       #     GetScript = {@{Result = "FixLinuxMachine"}}      
+       # }
         
-        Script FixDNS
-        {
-            TestScript = {
-                Test-Path "C:\fixdns"
-            }
-            SetScript ={              
-                $dc = "dc." + $Using:DomainName;
-                $domain = "$Using:DomainName";
-                $arguments = "$dc /writebackfiles" 
-                $configPath = "C:\Windows\system32\dnscmd.exe";               
-                $exitCode = (Start-Process -Filepath $configPath -ArgumentList "$arguments" -Wait -Passthru).ExitCode
-                New-Item -Path "C:\fixdns" -ItemType Directory 
+       # Script FixDNS
+       # {
+       #     TestScript = {
+       #         Test-Path "C:\fixdns"
+       #     }
+       #     SetScript ={              
+       #         $dc = "dc." + $Using:DomainName;
+       #         $domain = "$Using:DomainName";
+       #         $arguments = "$dc /writebackfiles" 
+       #         $configPath = "C:\Windows\system32\dnscmd.exe";               
+       #         $exitCode = (Start-Process -Filepath $configPath -ArgumentList "$arguments" -Wait -Passthru).ExitCode
+       #         New-Item -Path "C:\fixdns" -ItemType Directory 
                 
-            }
-            GetScript = {@{Result = "FixDNS"}}      
+        #    }
+        #    GetScript = {@{Result = "FixDNS"}}      
+        #}
+        xDnsServerADZone addForwardADZone
+        {
+         Name = $DomainName
+         DynamicUpdate = 'NonsecureAndSecure'
+         ReplicationScope = 'Forest'
+         ComputerName = "dc."+ $DomainName
+         Credential = $DomainCreds
+         Ensure = 'Present'
         }
    }
 } 
