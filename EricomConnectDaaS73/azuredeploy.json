@@ -10,7 +10,7 @@
       },
       "siteLocation":{
          "type":"string",
-         "defaultValue":"West US",
+         "defaultValue":"East US",
          "allowedValues":[
             "West US",
             "East US",
