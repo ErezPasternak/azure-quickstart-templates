@@ -70,11 +70,11 @@
             "description":"Number of Desktop instances"
          }
       },
-      "numberOf2008DesktopHostInstances":{
+      "numberOf2016DesktopHostInstances":{
          "type":"int",
          "defaultValue":0,
          "metadata":{
-            "description":"Number of 2008 Desktop instances"
+            "description":"Number of 2016 Desktop instances"
          }
       },
       "numberOfApplicationHostInstances":{
@@ -482,11 +482,11 @@
       {
          "apiVersion":"[variables('apiVersion')]",
          "type":"Microsoft.Network/networkInterfaces",
-         "name":"[concat('rdshD8-', copyindex(), '-nif')]",
+         "name":"[concat('rdshD16-', copyindex(), '-nif')]",
          "location":"[parameters('siteLocation')]",
          "copy":{
-            "name":"rdshD8-nif-loop",
-            "count":"[parameters('numberOf2008DesktopHostInstances')]"
+            "name":"rdshD16-nif-loop",
+            "count":"[parameters('numberOf2016DesktopHostInstances')]"
          },
          "dependsOn":[
             "Microsoft.Resources/deployments/updatevnetdns"
@@ -704,22 +704,22 @@
       {
          "apiVersion":"[variables('apiVersion')]",
          "type":"Microsoft.Compute/virtualMachines",
-         "name":"[concat('rdshD8-', copyindex())]",
+         "name":"[concat('rdshD16-', copyindex())]",
          "location":"[parameters('siteLocation')]",
          "copy":{
-            "name":"rdshD8-vm-loop",
+            "name":"rdshD16-vm-loop",
             "count":"[parameters('numberOfDesktopHostInstances')]"
          },
          "dependsOn":[
             "[concat('Microsoft.Storage/storageAccounts/', variables('StorageAccountName'))]",
-            "[concat('Microsoft.Network/networkInterfaces/', 'rdshD8-', copyindex(), '-nif')]"
+            "[concat('Microsoft.Network/networkInterfaces/', 'rdshD16-', copyindex(), '-nif')]"
          ],
          "properties":{
             "hardwareProfile":{
                "vmSize":"[parameters('DesktopVmSize')]"
             },
             "osProfile":{
-               "computerName":"[concat('rdshD8-', copyIndex())]",
+               "computerName":"[concat('rdshD16-', copyIndex())]",
                "adminUsername":"[parameters('adminUsername')]",
                "adminPassword":"[parameters('adminPassword')]"
             },
@@ -727,13 +727,13 @@
                "imageReference":{
                   "publisher":"[variables('imagePublisher')]",
                   "offer":"[variables('imageOffer')]",
-                  "sku":"2008-R2-SP1",
+                  "sku":"2016-Technical-Preview-with-Containers",
                   "version":"latest"
                },
                "osDisk":{
                   "name":"osdisk",
                   "vhd":{
-                     "uri":"[concat('http://',variables('StorageAccountName'),'.blob.core.windows.net/vhds/rdshD8-',copyindex(),'-osdisk.vhd')]"
+                     "uri":"[concat('http://',variables('StorageAccountName'),'.blob.core.windows.net/vhds/rdshD16-',copyindex(),'-osdisk.vhd')]"
                   },
                   "caching":"ReadWrite",
                   "createOption":"FromImage"
@@ -742,7 +742,7 @@
             "networkProfile":{
                "networkInterfaces":[
                   {
-                     "id":"[resourceId('Microsoft.Network/networkInterfaces',concat('rdshD8-', copyindex(), '-nif'))]"
+                     "id":"[resourceId('Microsoft.Network/networkInterfaces',concat('rdshD16-', copyindex(), '-nif'))]"
                   }
                ]
             }
@@ -751,10 +751,10 @@
             {
                "apiVersion":"[variables('apiVersion')]",
                "type":"Microsoft.Compute/virtualMachines/extensions",
-               "name":"[concat('rdshD8-', copyindex(),'/DesktopHost')]",
+               "name":"[concat('rdshD16-', copyindex(),'/DesktopHost')]",
                "location":"[parameters('siteLocation')]",
                "dependsOn":[
-                  "[resourceId('Microsoft.Compute/virtualMachines', concat('rdshD8-', copyindex()))]",
+                  "[resourceId('Microsoft.Compute/virtualMachines', concat('rdshD16-', copyindex()))]",
                   "Microsoft.Compute/virtualMachines/cb-vm/extensions/EricomConnectServerSetup"
                ],
                "properties":{

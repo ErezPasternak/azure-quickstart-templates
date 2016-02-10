@@ -40,7 +40,7 @@ $configuration = @{
     }
     RemoteHostsGroups = @{
         "2012Desktop" = "rdshD-*"
-        "2008Desktop" = "rdshD8-*"
+        "2016Desktop" = "rdshD16-*"
         "AppsServer" = "rdshA-*"
         "LinuxServer" = "lnx--*"
     }
