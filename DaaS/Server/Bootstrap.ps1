@@ -13,6 +13,11 @@ param(
     [Parameter(Mandatory)][String]$remoteHostPattern = "rdsh*"
 )
 
+Write-Host "AdminUsername: $adminUsername" -ForegroundColor Green
+Write-Host "AdminPassword: $adminPassword" -ForegroundColor Green
+Write-Host "BaseRDPGroup: $baseADGroupRDP" -ForegroundColor Green
+Write-Host "RemoteHostPattern: $remoteHostPattern" -ForegroundColor Green
+
 $configuration = @{
     ActiveDirectory = @{
         Users = @{
