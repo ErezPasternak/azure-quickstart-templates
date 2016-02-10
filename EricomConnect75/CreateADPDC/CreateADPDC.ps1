@@ -194,8 +194,8 @@
         xDnsServerADZone addForwardADZone
         {
          Name = $DomainName
-         DynamicUpdate = 'NonsecureAndSecure'
-         ReplicationScope = 'Forest'
+         DynamicUpdate = "NonsecureAndSecure"
+         ReplicationScope = "Legacy"
          ComputerName = "dc."+ $DomainName
          Credential = $DomainCreds
          Ensure = 'Present'
