@@ -59,7 +59,7 @@ Function Run-Configuration {
     # Create our Base RDP Group
     New-ADGroup -Name "$baseADGroupRDP" -SamAccountName $baseADGroupRDP -GroupCategory Security -GroupScope Universal -DisplayName "$baseADGroupRDP"
     # Add Base RDP Group to local "Remote Desktop Users" for each Remote Session Host
-    Get-ADComputer -Filter 'SamAccountName -like "$remoteHostPattern"' | Foreach-Object { $ComputerName = $_.Name; Invoke-Command { param([String]$RDPGroup) net localgroup "Remote Desktop Users" "$RDPGroup" /ADD } -computername $ComputerName -ArgumentList "$baseADGroupRDP"  }
+    Get-ADComputer -Filter "SamAccountName -like '$remoteHostPattern'" | Foreach-Object { $ComputerName = $_.Name; Invoke-Command { param([String]$RDPGroup) net localgroup "Remote Desktop Users" "$RDPGroup" /ADD } -computername $ComputerName -ArgumentList "$baseADGroupRDP"  }
 
 
     if ($configuration -ne $null -and $configuration.Count -gt 0){
