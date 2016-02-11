@@ -69,27 +69,37 @@ $configuration = @{
         }
         KnowledgeWorkers = @{
             Apps = { "Calculator", "Notepad", "WordPad" }
-            RemoteHostGroup = "2012server"
+            RemoteHostGroup = "2012App"
+            AdGroup = "KnowledgeWorkers"
+        }
+        KnowledgeWorkersDesktop = @{
+            Apps = { "Desktop" }
+            RemoteHostGroup = "2012Desktop"
             AdGroup = "KnowledgeWorkers"
         }
         MobileWorkers = @{
             Apps = { "Calculator", "Notepad", "WordPad", "Paint", "Command Prompt" }
-            RemoteHostGroup = "2012server"
+            RemoteHostGroup = "2012App"
+            AdGroup = "MobileWorkers"
+        }
+        MobileWorkersDesktop = @{
+            Apps = { "Desktop" }
+            RemoteHostGroup = "2012Desktop"
             AdGroup = "MobileWorkers"
         }
         Office = @{
             Apps = { "Calculator", "WordPad" }
-            RemoteHostGroup = "2012server"
+            RemoteHostGroup = "2012App"
             AdGroup = "CustomApps"
         }
         Internet = @{
             Apps = { "Internet Explorer", "Notepad", "WordPad" }
-            RemoteHostGroup = "2012server"
+            RemoteHostGroup = "2012App"
             AdGroup = "CustomApps"
         }
         Multimedia = @{
             Apps = { "Internet Explorer", "Notepad", "WordPad", "Paint", "Command Prompt" }
-            RemoteHostGroup = "2012server"
+            RemoteHostGroup = "2012App"
             AdGroup = "CustomApps"
         }
     }
