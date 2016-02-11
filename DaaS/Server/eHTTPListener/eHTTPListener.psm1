@@ -703,7 +703,7 @@ Function Start-HTTPListener {
                                     [string]$password = $request.QueryString.Item("password");
                                     [string]$email = $request.QueryString.Item("email");
                                 }
-                                $command = "Create-User -Username $username -Email $email -Password `"$password`" -BaseADGroupRDP `"$BaseADGroupRDP`""
+                                $command = "Create-User -Username `"$username`" -Email `"$email`" -Password `"$password`" -BaseADGroupRDP `"$BaseADGroupRDP`""
                             }
                             "Auth-User"{
 								# Create an AD User using a powershell function
@@ -715,7 +715,7 @@ Function Start-HTTPListener {
                                     [string]$username = $request.QueryString.Item("username");
                                     [string]$password = $request.QueryString.Item("password");
                                 }
-                                $command = "Auth-User -Username $username -Password `"$password`""
+                                $command = "Auth-User -Username `"$username`" -Password `"$password`""
                             }
                             "Assign-User"{
                                 Write-Verbose "Received command to assign user to organizational unit"
