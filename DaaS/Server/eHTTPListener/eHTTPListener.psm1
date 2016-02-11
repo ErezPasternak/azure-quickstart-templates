@@ -18,7 +18,6 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-[System.Reflection.Assembly]::LoadWithPartialName("System.Web.MimeMapping") | Out-Null
 [System.Reflection.Assembly]::LoadWithPartialName("System.Drawing")  | Out-Null
 [System.Reflection.Assembly]::LoadWithPartialName("System.DirectoryServices.AccountManagement") | Out-Null
 
@@ -116,6 +115,37 @@ Function SendReadyEmail
     $message = $message.Replace("#here#", $here);
 
     SendMailTo -To $Email -Subject "$subject" -Message $message | Out-Null
+}
+
+Function Get-MimeType { 
+  <# 
+    .NOTES 
+        Author: greg zakharov 
+  #> 
+  param( 
+    [Parameter(Mandatory=$true, ValueFromPipeline=$true)] 
+    [ValidateScript({Test-Path $_})] 
+    [String]$File 
+  ) 
+   
+  $res = 'text/plain' 
+   
+  try { 
+    $rk = [Microsoft.Win32.Registry]::ClassesRoot.OpenSubKey( 
+      ($ext = ([IO.FileInfo](($File = cvpa $File))).Extension.ToLower()) 
+    ) 
+  } 
+  finally { 
+    if ($rk -ne $null) { 
+      if (![String]::IsNullOrEmpty(($cur = $rk.GetValue('Content Type')))) { 
+        $res = $cur 
+      } 
+      $rk.Close() 
+    } #if 
+  } 
+   
+  Write-Host $File`: -f Yellow -no 
+  $res 
 }
 
 Function Create-User {
@@ -577,7 +607,6 @@ Function Start-HTTPListener {
         )
 
     Process {
-        [System.Reflection.Assembly]::LoadWithPartialName("System.Web.MimeMapping") | Out-Null
         [System.Reflection.Assembly]::LoadWithPartialName('System.Drawing')  | Out-Null
 
         $emailPath = Join-Path -Path $WebsitePath -ChildPath ("emails")
@@ -780,7 +809,7 @@ Function Start-HTTPListener {
                     Write-Warning $checkExistingPath
                     try {
                         if(Test-Path $checkExistingPath) {
-                            $contentType = [System.Web.MimeMapping]::GetMimeMapping($checkExistingPath);
+                            $contentType = Get-MimeType($checkExistingPath);
                             $response.ContentType = $contentType;
                             $commandOutput = New-Object System.IO.BinaryReader([System.IO.File]::Open($checkExistingPath, [System.IO.FileMode]::Open, [System.IO.FileAccess]::Read, [System.IO.FileShare]::ReadWrite))
                             $response.ContentLength64 = $commandOutput.BaseStream.Length;
