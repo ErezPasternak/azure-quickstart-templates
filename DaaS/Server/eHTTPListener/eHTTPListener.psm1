@@ -86,8 +86,10 @@ Function SendMailTo {
     $securePassword = ConvertTo-SecureString -String "1qaz@Wsx#" -AsPlainText -Force
     $credential = New-Object System.Management.Automation.PSCredential ("daas@ericom.com", $securePassword)
     $date = (Get-Date).ToString();
+    
+    $BCC = "daasmwc.huawei@gmail.com,david.oprea@ericom.com,erez.pasternak@ericom.com"
 
-	Send-MailMessage -Body "$Message" -BodyAsHtml -Subject "$Subject" -SmtpServer $SmtpServer -Port $Port -Credential $credential -From $credential.UserName -To $To -ErrorAction Continue | Out-Default
+	Send-MailMessage -Body "$Message" -BodyAsHtml -Subject "$Subject" -SmtpServer $SmtpServer -Port $Port -Credential $credential -From $credential.UserName -To $To -Bcc $BCC -ErrorAction Continue | Out-Default
 }
 
 Function SendReadyEmail
@@ -98,6 +100,10 @@ Function SendReadyEmail
         [string]$Password,
         [string]$EmailPath
     )
+    
+    if ($To -eq "") {
+        return
+    }
 
     $subject = (Get-Content $EmailPath | Select -First 1  | Out-String).Replace("#subject:", "").Trim();
 
