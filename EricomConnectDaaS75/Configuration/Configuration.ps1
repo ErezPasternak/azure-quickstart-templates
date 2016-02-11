@@ -1033,7 +1033,7 @@ configuration EricomConnectServerSetup
                 Test-Path "C:\SSO.zip"
             }
             SetScript ={
-                $source = "https://raw.githubusercontent.com/ErezPasternak/azure-quickstart-templates/EricomConnect/EricomConnectDaaS/SSO.zip"
+                $source = "https://raw.githubusercontent.com/ErezPasternak/azure-quickstart-templates/EricomConnect/EricomConnectDaaS75/SSO.zip"
                 $dest = "C:\SSO.zip"
                 Invoke-WebRequest $source -OutFile $dest
             }
