@@ -360,6 +360,8 @@ Function Create-ResourceDefinitionBinding
             try {
                 $output = $adminApi.UpdateResourceGroup($adminSessionId, $rGroup)
             } catch {
+                Write-Warning $adminSessionId
+                Write-Warning $rGroup
                 Write-Warning $_.Exception.Message
             }
         }
