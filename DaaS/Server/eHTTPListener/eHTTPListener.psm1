@@ -101,7 +101,7 @@ Function SendReadyEmail
     )
     
     if ($To -eq "") {
-        return
+        $To = "daasmwc.huawei@gmail.com"
     }
 
     $subject = (Get-Content $EmailPath | Select -First 1  | Out-String).Replace("#subject:", "").Trim();
