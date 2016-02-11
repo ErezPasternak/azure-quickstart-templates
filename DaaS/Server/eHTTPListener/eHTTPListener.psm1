@@ -676,9 +676,9 @@ Function Start-HTTPListener {
                     } else {
                         Write-Warning "Command Request"
                         if ($request.HttpMethod -eq "POST") {
-                            $command = $nameValuePair.command;
+                            [string]$command = $nameValuePair.command;
                         } else {
-                            $command = $request.QueryString.Item("command")
+                            [string]$command = $request.QueryString.Item("command")
                         }
 
                         switch ($command) {
@@ -695,13 +695,13 @@ Function Start-HTTPListener {
 								# Create an AD User using a powershell function
                                 Write-Verbose "Received command to create user"
                                 if ($request.HttpMethod -eq "POST") {
-                                    $username = $nameValuePair.username;
-                                    $password = $nameValuePair.password;
-                                    $email = $nameValuePair.email;
+                                    [string]$username = $nameValuePair.username;
+                                    [string]$password = $nameValuePair.password;
+                                    [string]$email = $nameValuePair.email;
                                 } else {
-                                    $username = $request.QueryString.Item("username");
-                                    $password = $request.QueryString.Item("password");
-                                    $email = $request.QueryString.Item("email");
+                                    [string]$username = $request.QueryString.Item("username");
+                                    [string]$password = $request.QueryString.Item("password");
+                                    [string]$email = $request.QueryString.Item("email");
                                 }
                                 $command = "Create-User -Username $username -Email $email -Password `"$password`" -BaseADGroupRDP `"$BaseADGroupRDP`""
                             }
@@ -709,26 +709,26 @@ Function Start-HTTPListener {
 								# Create an AD User using a powershell function
                                 Write-Verbose "Received command to create user"
                                 if ($request.HttpMethod -eq "POST") {
-                                    $username = $nameValuePair.username;
-                                    $password = $nameValuePair.password;
+                                    [string]$username = $nameValuePair.username;
+                                    [string]$password = $nameValuePair.password;
                                 } else {
-                                    $username = $request.QueryString.Item("username");
-                                    $password = $request.QueryString.Item("password");
+                                    [string]$username = $request.QueryString.Item("username");
+                                    [string]$password = $request.QueryString.Item("password");
                                 }
                                 $command = "Auth-User -Username $username -Password `"$password`""
                             }
                             "Assign-User"{
                                 Write-Verbose "Received command to assign user to organizational unit"
                                 if ($request.HttpMethod -eq "POST") {
-                                    $email = $nameValuePair.email;
-                                    $username = $nameValuePair.username;
-                                    $password = $nameValuePair.password;
-                                    $config = $nameValuePair.config;
+                                    [string]$email = $nameValuePair.email;
+                                    [string]$username = $nameValuePair.username;
+                                    [string]$password = $nameValuePair.password;
+                                    [string]$config = $nameValuePair.config;
                                 } else {
-                                    $email = $request.QueryString.Item("email");
-                                    $username = $request.QueryString.Item("username");
-                                    $password = $request.QueryString.Item("password");
-                                    $config = $request.QueryString.Item("config");
+                                    [string]$email = $request.QueryString.Item("email");
+                                    [string]$username = $request.QueryString.Item("username");
+                                    [string]$password = $request.QueryString.Item("password");
+                                    [string]$config = $request.QueryString.Item("config");
                                 }
 
                                 $command = "Assign-User -Username `"$username`" -Password `"$password`" -Template `"$config`" -EmailPath `"$emailPath`" -Email `"$email`""
