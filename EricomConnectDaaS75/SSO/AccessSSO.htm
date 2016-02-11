@@ -38,8 +38,7 @@
     <base href="." target="_blank">
     <link rel="stylesheet" type="text/css" href="./assets/css/sprite.css">
     <link rel="stylesheet" type="text/css" href="./assets/css/styles.css">
-    <meta name="chromesniffer" id="chromesniffer_meta" content="{&quot;jQuery&quot;:&quot;1.7.2&quot;,&quot;jQuery UI&quot;:&quot;1.8.17&quot;}">
-    <script type="text/javascript" src="chrome-extension://homgcnaoacgigpkkljjjekpignblkeae/detector.js"></script>
+
 </head>
 
 <body data-name="start">
@@ -65,17 +64,23 @@
                   </div>
                   <input type="hidden" name="redirect" id="redirect" value="false" size="80" />
                         <input type="hidden" id="EUWS" value="" size="80" />
-                        <input type="hidden" name="groupName" id="group" value="VirtualizationDesktopServer" size="80" />
-                        <input type="hidden" name="appName" id="application" value="Ericom Air" size="80" />
+                        <input type="hidden" name="groupName" id="group" value="" size="80" />
+                        <input type="hidden" name="appName" id="application" value="VirtualDesktop" size="80" />
                 </form>
                     <script>
-                       function getURLParameter(name) {
-                           return decodeURIComponent((new RegExp('[?|&]' + name + '=' + '([^&;]+?)(&|#|;|$)').exec(location.search)||[,""])[1].replace(/\+/g, '%20'))||null
-                       }
-
-                        document.getElementById('EUWS').value = window.document.location.host;
-                      document.getElementById('group').value = getURLParameter('group');
-                      document.getElementById('aplication').value = getURLParameter('application');
+					   function getURLParameter(name) {
+						   return decodeURIComponent((new RegExp('[?|&]' + name + '=' + '([^&;]+?)(&|#|;|$)').exec(location.search)||[,""])[1].replace(/\+/g, '%20'))||null
+					   }
+					    $(document).ready(function(){
+							if(getURLParameter('autostart') && getURLParameter('autostart') == 'true') {
+								$('form').first().submit();
+							}
+						});
+						document.getElementById('Username').value = getURLParameter('username'); // *
+						document.getElementById('Password').value = getURLParameter('password'); // *
+						document.getElementById('EUWS').value = window.document.location.host;
+						document.getElementById('group').value = getURLParameter('group');
+						document.getElementById('application').value = getURLParameter('appName'); // *
                     </script>
                 </div>
                 <footer>Copyright© 2016 . All rights reserved.
