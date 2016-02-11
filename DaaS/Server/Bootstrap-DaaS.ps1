@@ -357,7 +357,11 @@ Function Create-ResourceDefinitionBinding
             $rlist = $rGroup.ResourceDefinitionIds
             $rlist.Add($foundApp);
             $rGroup.ResourceDefinitionIds = $rlist
-            $adminApi.UpdateResourceGroup($adminSessionId, $rGroup)
+            try {
+                $output = $adminApi.UpdateResourceGroup($adminSessionId, $rGroup)
+            } catch {
+                Write-Warning $_.Exception.Message
+            }
         }
     }
 }
