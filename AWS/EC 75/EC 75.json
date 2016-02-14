@@ -57,7 +57,7 @@
       "MinLength": "1",
       "MaxLength": "15",
       "AllowedPattern": "[a-zA-Z0-9]+"
-    },  
+    },
     "RDSHD-0NetBIOSName": {
       "Description": "NetBIOS name of the RDSH server For Desktops   (upto 15 characters)",
       "Type": "String",
@@ -1451,6 +1451,204 @@
         }
       },
       "Metadata": {
+        "AWS::CloudFormation::Init": {
+          "configSets": {
+            "config": [
+              "setup",
+              "rename",
+              "downloadSoftware",
+              "installDB",
+              "installEC",
+              "configuregrid",
+              "finalize"
+            ]
+          },
+          "setup": {
+            "files": {
+              "c:\\cfn\\cfn-hup.conf": {
+                "content": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "[main]\n",
+                      "stack=",
+                      {
+                        "Ref": "AWS::StackName"
+                      },
+                      "\n",
+                      "region=",
+                      {
+                        "Ref": "AWS::Region"
+                      },
+                      "\n"
+                    ]
+                  ]
+                }
+              },
+              "c:\\cfn\\hooks.d\\cfn-auto-reloader.conf": {
+                "content": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "[cfn-auto-reloader-hook]\n",
+                      "triggers=post.update\n",
+                      "path=Resources.RDGateway.Metadata.AWS::CloudFormation::Init\n",
+                      "action=cfn-init.exe -v -c config -s ",
+                      {
+                        "Ref": "AWS::StackId"
+                      },
+                      " -r RDGateway",
+                      " --region ",
+                      {
+                        "Ref": "AWS::Region"
+                      },
+                      "\n"
+                    ]
+                  ]
+                }
+              },
+              "c:\\cfn\\scripts\\Configure-Grid.ps1": {
+                "source": "https://s3.amazonaws.com/quickstart-reference/microsoft/activedirectory/latest/scripts/Configure-Grid.ps1"
+              }
+            },
+            "services": {
+              "windows": {
+                "cfn-hup": {
+                  "enabled": "true",
+                  "ensureRunning": "true",
+                  "files": [
+                    "c:\\cfn\\cfn-hup.conf",
+                    "c:\\cfn\\hooks.d\\cfn-auto-reloader.conf"
+                  ]
+                }
+              }
+            }
+          },
+          "rename": {
+            "commands": {
+              "1-execute-powershell-script-RenameComputer": {
+                "command": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "powershell.exe Rename-Computer -NewName ",
+                      {
+                        "Ref": "GRIDNetBIOSName"
+                      },
+                      " -Restart"
+                    ]
+                  ]
+                },
+                "waitAfterCompletion": "forever"
+              }
+            }
+          },
+          "downloadgridsoftware": {
+            "commands": {
+              "DownloadSoftware": {
+                "command": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "powershell.exe -ExecutionPolicy RemoteSigned",
+                      " C:\\cfn\\scripts\\DownloadGridSoftware.ps1 -ServerFQDN ",
+                      {
+                        "Ref": "GRIDNetBIOSName"
+                      },
+                      " -Restart"
+                    ]
+                  ]
+                },
+                "waitAfterCompletion": "forever"
+              }
+            }
+          },
+          "configuregrid": {
+            "commands": {
+              "a-install-rds": {
+                "command": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "powershell.exe \"Install-WindowsFeature RDS-Gateway,RSAT-RDS-Gateway\""
+                    ]
+                  ]
+                }
+              },
+              "b-create-admin": {
+                "command": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "net user /add ",
+                      {
+                        "Ref": "AdminUser"
+                      },
+                      " ",
+                      {
+                        "Ref": "AdminPassword"
+                      }
+                    ]
+                  ]
+                }
+              },
+              "c-set-admin-group": {
+                "command": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "net localgroup Administrators ",
+                      {
+                        "Ref": "AdminUser"
+                      },
+                      " /ADD"
+                    ]
+                  ]
+                }
+              },
+              "d-configure-rdgw": {
+                "command": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "powershell.exe -ExecutionPolicy RemoteSigned",
+                      " C:\\cfn\\scripts\\Configure-ESG.ps1 -ServerFQDN ",
+                      {
+                        "Ref": "GRIDNetBIOSName"
+                      },
+                      ".",
+                      {
+                        "Ref": "DomainDNSName"
+                      },
+                      " -DomainNetBiosName BUILTIN -GroupName administrators -UserName ",
+                      {
+                        "Ref": "AdminUser"
+                      }
+                    ]
+                  ]
+                }
+              }
+            }
+          },
+          "finalize": {
+            "commands": {
+              "1-signal-success": {
+                "command": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "cfn-signal.exe -e 0 \"",
+                      {
+                        "Ref": "RDGWWaitHandle"
+                      },
+                      "\""
+                    ]
+                  ]
+                }
+              }
+            }
+          }
+        },
         "AWS::CloudFormation::Designer": {
           "id": "03847c68-869b-4ffa-822d-bb1548b72ca7"
         }
