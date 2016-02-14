@@ -855,7 +855,7 @@
                 }
               },
               "c:\\cfn\\scripts\\Configure-ESG.ps1": {
-                "source": "https://s3.amazonaws.com/quickstart-reference/microsoft/activedirectory/latest/scripts/Configure-ESG.ps1"
+                "source": "https://s3.amazonaws.com/ec75automation/Configure-ESG.ps1"
               }
             },
             "services": {
@@ -1111,7 +1111,7 @@
                 }
               },
               "c:\\cfn\\scripts\\Configure-ESG.ps1": {
-                "source": "https://s3.amazonaws.com/quickstart-reference/microsoft/activedirectory/latest/scripts/Configure-ESG.ps1"
+                "source": "https://s3.amazonaws.com/ec75automation/Configure-ESG.ps1"
               }
             },
             "services": {
@@ -1508,7 +1508,7 @@
                 }
               },
               "c:\\cfn\\scripts\\Configure-Grid.ps1": {
-                "source": "https://s3.amazonaws.com/quickstart-reference/microsoft/activedirectory/latest/scripts/Configure-Grid.ps1"
+                "source": "https://s3.amazonaws.com/ec75automation/Configure-GRID.ps1"
               }
             },
             "services": {
