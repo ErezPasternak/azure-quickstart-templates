@@ -45,7 +45,7 @@
     "AdminUser": {
       "Description": "User name for the new local administrator account",
       "Type": "String",
-      "Default": "StackAdmin",
+      "Default": "Ericom",
       "MinLength": "5",
       "MaxLength": "25",
       "AllowedPattern": "[a-zA-Z0-9]*"
@@ -57,12 +57,12 @@
       "MaxLength": "32",
       "AllowedPattern": "(?=^.{6,255}$)((?=.*\\d)(?=.*[A-Z])(?=.*[a-z])|(?=.*\\d)(?=.*[^A-Za-z0-9])(?=.*[a-z])|(?=.*[^A-Za-z0-9])(?=.*[A-Z])(?=.*[a-z])|(?=.*\\d)(?=.*[A-Z])(?=.*[^A-Za-z0-9]))^.*",
       "NoEcho": "true",
-      "Default": "Password123"
+      "Default": "Ericom123$"
     },
     "DomainDNSName": {
       "Description": "Fully qualified domain name (FQDN) e.g. example.com",
       "Type": "String",
-      "Default": "example.com",
+      "Default": "test.local",
       "MinLength": "3",
       "MaxLength": "25",
       "AllowedPattern": "[a-zA-Z0-9]+\\..+"
@@ -774,7 +774,7 @@
             "config": [
               "setup",
               "rename",
-              "installRDS",
+              "installESG",
               "finalize"
             ]
           },
@@ -822,8 +822,8 @@
                   ]
                 }
               },
-              "c:\\cfn\\scripts\\Configure-RDGW.ps1": {
-                "source": "https://s3.amazonaws.com/quickstart-reference/microsoft/activedirectory/latest/scripts/Configure-RDGW.ps1"
+              "c:\\cfn\\scripts\\Configure-ESG.ps1": {
+                "source": "https://s3.amazonaws.com/quickstart-reference/microsoft/activedirectory/latest/scripts/Configure-ESG.ps1"
               }
             },
             "services": {
@@ -858,7 +858,7 @@
               }
             }
           },
-          "installRDS": {
+          "installESG": {
             "commands": {
               "a-install-rds": {
                 "command": {
@@ -907,7 +907,7 @@
                     "",
                     [
                       "powershell.exe -ExecutionPolicy RemoteSigned",
-                      " C:\\cfn\\scripts\\Configure-RDGW.ps1 -ServerFQDN ",
+                      " C:\\cfn\\scripts\\Configure-ESG.ps1 -ServerFQDN ",
                       {
                         "Ref": "RDGWNetBIOSName1"
                       },
@@ -1030,7 +1030,7 @@
             "config": [
               "setup",
               "rename",
-              "installRDS",
+              "installESG",
               "finalize"
             ]
           },
@@ -1078,8 +1078,8 @@
                   ]
                 }
               },
-              "c:\\cfn\\scripts\\Configure-RDGW.ps1": {
-                "source": "https://s3.amazonaws.com/quickstart-reference/microsoft/activedirectory/latest/scripts/Configure-RDGW.ps1"
+              "c:\\cfn\\scripts\\Configure-ESG.ps1": {
+                "source": "https://s3.amazonaws.com/quickstart-reference/microsoft/activedirectory/latest/scripts/Configure-ESG.ps1"
               }
             },
             "services": {
@@ -1114,7 +1114,7 @@
               }
             }
           },
-          "installRDS": {
+          "installESG": {
             "commands": {
               "a-install-rds": {
                 "command": {
@@ -1163,7 +1163,7 @@
                     "",
                     [
                       "powershell.exe -ExecutionPolicy RemoteSigned",
-                      " C:\\cfn\\scripts\\Configure-RDGW.ps1 -ServerFQDN ",
+                      " C:\\cfn\\scripts\\Configure-ESG.ps1 -ServerFQDN ",
                       {
                         "Ref": "RDGWNetBIOSName2"
                       },
