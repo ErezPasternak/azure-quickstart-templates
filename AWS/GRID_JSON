@@ -1,6 +1,6 @@
 {
   "Resources": {
-    "ECGrid1": {
+    "RDSHD1": {
       "Type": "AWS::EC2::Instance",
       "Metadata": {
         "AWS::CloudFormation::Init": {
@@ -8,10 +8,9 @@
             "config": [
               "setup",
               "rename",
-              "downloadSoftware",
-              "installDB",
-              "installEC",
-              "configuregrid",
+              "downloadsoftware",
+              "installsoftware",
+              "connecttogrid",
               "finalize"
             ]
           },
@@ -59,8 +58,8 @@
                   ]
                 }
               },
-              "c:\\cfn\\scripts\\Configure-Grid.ps1": {
-                "source": "https://s3.amazonaws.com/quickstart-reference/microsoft/activedirectory/latest/scripts/Configure-Grid.ps1"
+              "c:\\cfn\\scripts\\Configure-RDSHD.ps1": {
+                "source": "https://s3.amazonaws.com/quickstart-reference/microsoft/activedirectory/latest/scripts/Configure-RDSHD.ps1"
               }
             },
             "services": {
@@ -85,7 +84,7 @@
                     [
                       "powershell.exe Rename-Computer -NewName ",
                       {
-                        "Ref": "GRIDNetBIOSName"
+                        "Ref": "RDSHDNetBIOSName"
                       },
                       " -Restart"
                     ]
@@ -95,7 +94,7 @@
               }
             }
           },
-          "downloadgridsoftware": {
+          "downloadRDSHDsoftware": {
             "commands": {
               "DownloadSoftware": {
                 "command": {
@@ -103,9 +102,9 @@
                     "",
                     [
                       "powershell.exe -ExecutionPolicy RemoteSigned",
-                      " C:\\cfn\\scripts\\DownloadGridSoftware.ps1 -ServerFQDN ",
+                      " C:\\cfn\\scripts\\DownloadRDSHDSoftware.ps1 -ServerFQDN ",
                       {
-                        "Ref": "GRIDNetBIOSName"
+                        "Ref": "RDSHDNetBIOSName"
                       },
                       " -Restart"
                     ]
@@ -115,7 +114,7 @@
               }
             }
           },
-          "configuregrid": {
+          "connecttogrid": {
             "commands": {
               "a-install-rds": {
                 "command": {
@@ -166,7 +165,7 @@
                       "powershell.exe -ExecutionPolicy RemoteSigned",
                       " C:\\cfn\\scripts\\Configure-ESG.ps1 -ServerFQDN ",
                       {
-                        "Ref": "GRIDNetBIOSName"
+                        "Ref": "RDSHSNetBIOSName"
                       },
                       ".",
                       {
@@ -202,7 +201,7 @@
           }
         },
         "AWS::CloudFormation::Designer": {
-          "id": "03847c68-869b-4ffa-822d-bb1548b72ca7"
+          "id": "986418bb-9fe8-4801-8130-00594cb308ff"
         }
       }
     }

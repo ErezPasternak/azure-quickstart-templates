@@ -1653,6 +1653,19 @@
           "id": "03847c68-869b-4ffa-822d-bb1548b72ca7"
         }
       }
+    },
+    "RDSHD": {
+      "Type": "AWS::EC2::Instance",
+      "Properties": {
+        "SubnetId": {
+          "Ref": "PrivateSubnet1"
+        }
+      },
+      "Metadata": {
+        "AWS::CloudFormation::Designer": {
+          "id": "986418bb-9fe8-4801-8130-00594cb308ff"
+        }
+      }
     }
   },
   "Outputs": {
@@ -1889,6 +1902,7 @@
         "z": 2,
         "parent": "4e235794-fb9a-4743-82b7-ae1fb0b1ca89",
         "embeds": [
+          "986418bb-9fe8-4801-8130-00594cb308ff",
           "03847c68-869b-4ffa-822d-bb1548b72ca7"
         ]
       },
@@ -2128,8 +2142,21 @@
           "height": 60
         },
         "position": {
-          "x": 840,
-          "y": 510
+          "x": 860,
+          "y": 460
+        },
+        "z": 3,
+        "parent": "cc4da199-5316-45aa-888c-94d7e8ca2f3c",
+        "embeds": []
+      },
+      "986418bb-9fe8-4801-8130-00594cb308ff": {
+        "size": {
+          "width": 60,
+          "height": 60
+        },
+        "position": {
+          "x": 800,
+          "y": 530
         },
         "z": 3,
         "parent": "cc4da199-5316-45aa-888c-94d7e8ca2f3c",
