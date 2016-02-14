@@ -26,18 +26,50 @@
         "m4.4xlarge"
       ]
     },
-    "RDGWNetBIOSName1": {
-      "Description": "NetBIOS name of the 1st RD Gateway (upto 15 characters)",
+    "ESGNetBIOSName1": {
+      "Description": "NetBIOS name of the 1st ESG (upto 15 characters)",
       "Type": "String",
-      "Default": "RDGW1",
+      "Default": "ESG1",
       "MinLength": "1",
       "MaxLength": "15",
       "AllowedPattern": "[a-zA-Z0-9]+"
     },
-    "RDGWNetBIOSName2": {
-      "Description": "NetBIOS name of the 2nd RD Gateway (upto 15 characters)",
+    "ESGNetBIOSName2": {
+      "Description": "NetBIOS name of the 2nd ESG (upto 15 characters)",
       "Type": "String",
-      "Default": "RDGW2",
+      "Default": "ESG22",
+      "MinLength": "1",
+      "MaxLength": "15",
+      "AllowedPattern": "[a-zA-Z0-9]+"
+    },
+    "GRIDNetBIOSName": {
+      "Description": "NetBIOS name of the Ericom Connect Grid  (upto 15 characters)",
+      "Type": "String",
+      "Default": "Broker",
+      "MinLength": "1",
+      "MaxLength": "15",
+      "AllowedPattern": "[a-zA-Z0-9]+"
+    },
+    "DCNetBIOSName": {
+      "Description": "NetBIOS name of the Domain Controller   (upto 15 characters)",
+      "Type": "String",
+      "Default": "dc1",
+      "MinLength": "1",
+      "MaxLength": "15",
+      "AllowedPattern": "[a-zA-Z0-9]+"
+    },  
+    "RDSHD-0NetBIOSName": {
+      "Description": "NetBIOS name of the RDSH server For Desktops   (upto 15 characters)",
+      "Type": "String",
+      "Default": "rdshd-0",
+      "MinLength": "1",
+      "MaxLength": "15",
+      "AllowedPattern": "[a-zA-Z0-9]+"
+    },
+    "RDSHA-0NetBIOSName": {
+      "Description": "NetBIOS name of the RDSH server For Applications   (upto 15 characters)",
+      "Type": "String",
+      "Default": "rdsha-0",
       "MinLength": "1",
       "MaxLength": "15",
       "AllowedPattern": "[a-zA-Z0-9]+"
@@ -848,7 +880,7 @@
                     [
                       "powershell.exe Rename-Computer -NewName ",
                       {
-                        "Ref": "RDGWNetBIOSName1"
+                        "Ref": "ESGNetBIOSName1"
                       },
                       " -Restart"
                     ]
@@ -909,7 +941,7 @@
                       "powershell.exe -ExecutionPolicy RemoteSigned",
                       " C:\\cfn\\scripts\\Configure-ESG.ps1 -ServerFQDN ",
                       {
-                        "Ref": "RDGWNetBIOSName1"
+                        "Ref": "ESGNetBIOSName1"
                       },
                       ".",
                       {
@@ -1104,7 +1136,7 @@
                     [
                       "powershell.exe Rename-Computer -NewName ",
                       {
-                        "Ref": "RDGWNetBIOSName2"
+                        "Ref": "ESGNetBIOSName2"
                       },
                       " -Restart"
                     ]
@@ -1165,7 +1197,7 @@
                       "powershell.exe -ExecutionPolicy RemoteSigned",
                       " C:\\cfn\\scripts\\Configure-ESG.ps1 -ServerFQDN ",
                       {
-                        "Ref": "RDGWNetBIOSName2"
+                        "Ref": "ESGNetBIOSName2"
                       },
                       ".",
                       {
@@ -1410,6 +1442,19 @@
           "id": "d558c51c-eef3-4b9c-bbd0-c8c3f770ccc4"
         }
       }
+    },
+    "ECGrid1": {
+      "Type": "AWS::EC2::Instance",
+      "Properties": {
+        "SubnetId": {
+          "Ref": "PrivateSubnet1"
+        }
+      },
+      "Metadata": {
+        "AWS::CloudFormation::Designer": {
+          "id": "03847c68-869b-4ffa-822d-bb1548b72ca7"
+        }
+      }
     }
   },
   "Outputs": {
@@ -1426,7 +1471,7 @@
           [
             "c:\\",
             {
-              "Ref": "RDGWNetBIOSName1"
+              "Ref": "ESGNetBIOSName1"
             },
             ".cer"
           ]
@@ -1447,7 +1492,7 @@
           [
             "c:\\",
             {
-              "Ref": "RDGWNetBIOSName2"
+              "Ref": "ESGNetBIOSName2"
             },
             ".cer"
           ]
@@ -1643,7 +1688,9 @@
         },
         "z": 2,
         "parent": "4e235794-fb9a-4743-82b7-ae1fb0b1ca89",
-        "embeds": []
+        "embeds": [
+          "03847c68-869b-4ffa-822d-bb1548b72ca7"
+        ]
       },
       "120f358d-67a8-4c04-bb87-386c2c411975": {
         "source": {
@@ -1870,7 +1917,20 @@
         },
         "target": {
           "id": "041936eb-eb5f-49e7-9408-9aa6ff663397"
-        }
+        },
+        "z": 2
+      },
+      "03847c68-869b-4ffa-822d-bb1548b72ca7": {
+        "size": {
+          "width": 60,
+          "height": 60
+        },
+        "position": {
+          "x": 893.4075388329474,
+          "y": 482.7368519797784
+        },
+        "z": 3,
+        "parent": "cc4da199-5316-45aa-888c-94d7e8ca2f3c"
       }
     }
   }
