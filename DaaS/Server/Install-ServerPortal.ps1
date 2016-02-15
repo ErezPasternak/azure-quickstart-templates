@@ -4,7 +4,8 @@ param(
     [Parameter()][String]$EC_AdminPass = "Ericom123$",
     [Parameter()][String]$ServerPort = "2233",
     [Parameter()][String]$baseADGroupRDP = "DaaS-RDP",
-    [Parameter()][String]$remoteHostPattern = "rdsh*"
+    [Parameter()][String]$remoteHostPattern = "rdsh*",
+    [Parameter()][String]$externalFqdn = "localhost"
 )
 
 # Remove previous installation
@@ -101,7 +102,7 @@ Invoke-Expression ".\Bootstrap.ps1 -adminUsername `"$adminUsername`" -adminPassw
 $WebsitePath = Join-Path $finalDestination -ChildPath "Website"
 $ServerPath = Join-Path $finalDestination -ChildPath "Webserver"
 cd (Join-Path $finalDestination -ChildPath "Webserver")
-$registerServer = ".\Task-Registration.ps1 -EC_AdminUser `"$EC_AdminUser`" -EC_AdminPass `"$EC_AdminPass`" -WebsitePath `"$WebsitePath`" -ServerPath `"$ServerPath`" -ServerPort `"$ServerPort`" -BaseADGroupRDP `"$baseADGroupRDP`" "
+$registerServer = ".\Task-Registration.ps1 -EC_AdminUser `"$EC_AdminUser`" -EC_AdminPass `"$EC_AdminPass`" -WebsitePath `"$WebsitePath`" -ServerPath `"$ServerPath`" -ServerPort `"$ServerPort`" -BaseADGroupRDP `"$baseADGroupRDP`" -externalFqdn `"$externalFqdn`""
 Invoke-Expression $registerServer
 
 # Open in Browser

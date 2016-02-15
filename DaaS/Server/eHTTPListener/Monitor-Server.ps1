@@ -5,7 +5,8 @@ param(
     [Parameter()][String]$WebsitePath = "C:\Website",
     [Parameter()][String]$ServerPath = "C:\Server",
     [Parameter()][String]$ServerPort = "2233",
-    [Parameter()][String]$baseADGroupRDP = "DaaS-RDP"
+    [Parameter()][String]$baseADGroupRDP = "DaaS-RDP",
+    [Parameter()][String]$externalFqdn = "localhost"
 )
 
 $startServer = "Start-Server.ps1"
@@ -36,7 +37,7 @@ try {
 }
 
 $powershellBinary = "C:\Windows\System32\WindowsPowershell\v1.0\powershell.exe"
-$argumentsList = "-executionPolicy bypass -noexit -file `"$pathStartServer`" -EC_AdminUser `"$EC_AdminUser`" -EC_AdminPass `"$EC_AdminPass`" -WebsitePath `"$WebsitePath`" -ServerPort `"$ServerPort`" -BaseADGroupRDP `"$baseADGroupRDP`" "
+$argumentsList = "-executionPolicy bypass -noexit -file `"$pathStartServer`" -EC_AdminUser `"$EC_AdminUser`" -EC_AdminPass `"$EC_AdminPass`" -WebsitePath `"$WebsitePath`" -ServerPort `"$ServerPort`" -BaseADGroupRDP `"$baseADGroupRDP`" -externalFqdn `"$externalFqdn`" "
 # If not, then start server manually
 if ($isRunning -eq $false) {
     Start-Process -Filepath $powershellBinary -ArgumentList $argumentsList -Passthru

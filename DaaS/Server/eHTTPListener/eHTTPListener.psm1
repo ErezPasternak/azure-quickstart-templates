@@ -21,6 +21,16 @@
 [System.Reflection.Assembly]::LoadWithPartialName("System.Drawing")  | Out-Null
 [System.Reflection.Assembly]::LoadWithPartialName("System.DirectoryServices.AccountManagement") | Out-Null
 
+
+Function GetSSOUrl
+{
+    param(
+        [string]$externalFqdn = "localhost"
+    )
+    $url = "https://$_externalFqdn/EricomXml/AirSSO/AccessSSO.htm"
+    return $url    
+} 
+
 Function ConvertTo-HashTable {
     <#
     .Synopsis
@@ -97,7 +107,8 @@ Function SendReadyEmail
         [string]$To,
         [string]$Username,
         [string]$Password,
-        [string]$EmailPath
+        [string]$EmailPath,
+        [string]$externalFqdn
     )
     
     if ($To -eq "") {
@@ -110,7 +121,7 @@ Function SendReadyEmail
     $message = $content.Replace("#username#", $Username); 
     $message = $message.Replace("#password#", $Password);
     $_externalFqdn = [System.Net.Dns]::GetHostByName(($env:computerName)).HostName
-    $url = "https://$_externalFqdn/EricomXml/AirSSO/AccessSSO.htm"
+    $url = GetSSOUrl -externalFqdn $externalFqdn
     $here = "<a href=`"$url`">here</a>";
     $message = $message.Replace("#here#", $here);
 
@@ -378,7 +389,8 @@ Function Assign-User {
         [String]$Password,
         [String]$Template,
         [String]$Email,
-        [String]$EmailPath
+        [String]$EmailPath,
+        [String]$externalFqdn
     )
 
 
@@ -389,6 +401,16 @@ Function Assign-User {
     $isSuccess = $true
     $message = ""
     try {
+        # remove user from previous groups
+        $previousGroups = $null
+        $previousGroups = (Get-ADPrincipalGroupMembership $user | Select Name | Where { $_.Name -like "*workers" })
+        if($previousGroups -ne $null -and $previousGroups.Name.Count -gt 1) {
+            foreach($item in $previousGroups.Name) {
+                Remove-ADGroupMember -Identity "$item" -Members "$user" -Confirm:$false
+            }
+        }
+    } catch { Write-Warning "Something went wrong when removing the membership"; Write-Warning $_.Exception.Message }
+    try {        
         switch($Template){
             "1" {
                 $group = Get-ADGroup TaskWorkers
@@ -414,13 +436,13 @@ Function Assign-User {
     $response = $null;
     if ($isSuccess -eq $true) {
         $emailFile = Join-Path $EmailPath -ChildPath "ready.html"
-        SendReadyEmail -To $Email -Username $Username -Password $Password -EmailPath "$emailFile"
+        SendReadyEmail -To $Email -Username $Username -Password $Password -EmailPath "$emailFile" -externalFqdn "$externalFqdn"
 
         $response = @{
             status = "OK"
             success = "true"
             message = "User has been successfuly added to the selected group"
-            url = "https://$_externalFqdn/EricomXml/AirSSO/AccessSSO.htm"
+            url = (GetSSOUrl -externalFqdn $externalFqdn)
         }
     } else {
         $response = @{
@@ -601,6 +623,9 @@ Function Start-HTTPListener {
 
         [Parameter()]
         [String]$BaseADGroupRDP,
+        
+        [Parameter()]
+        [String]$externalFqdn,
 
         [Parameter()]
         [System.Net.AuthenticationSchemes] $Auth = [System.Net.AuthenticationSchemes]::Anonymous
@@ -731,7 +756,7 @@ Function Start-HTTPListener {
                                     [string]$config = $request.QueryString.Item("config");
                                 }
 
-                                $command = "Assign-User -Username `"$username`" -Password `"$password`" -Template `"$config`" -EmailPath `"$emailPath`" -Email `"$email`""
+                                $command = "Assign-User -Username `"$username`" -Password `"$password`" -Template `"$config`" -EmailPath `"$emailPath`" -Email `"$email`" -externalFqdn `"$externalFqdn`""
                             }
                             "Get-AppList"{
                                 #return list of apps and icons
