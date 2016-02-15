@@ -27,7 +27,7 @@ Function GetSSOUrl
     param(
         [string]$externalFqdn = "localhost"
     )
-    $url = "https://$_externalFqdn/EricomXml/AirSSO/AccessSSO.htm"
+    $url = "https://$externalFqdn/EricomXml/AirSSO/AccessSSO.htm"
     return $url    
 } 
 
