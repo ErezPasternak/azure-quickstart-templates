@@ -18,7 +18,11 @@ try {
 try {
     Unregister-ScheduledJob -Name MonitorPSServer -Force -ErrorAction SilentlyContinue
 } catch {  }
-Remove-Item "C:\DaaS-Portal" -Recurse -Force
+try {
+    if(Test-Path "C:\DaaS-Portal") {
+        Remove-Item "C:\DaaS-Portal" -Recurse -Force
+    }
+} catch {  }
 
 Start-Sleep -Seconds 5
 
