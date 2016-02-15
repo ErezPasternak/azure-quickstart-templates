@@ -17,7 +17,9 @@ Write-Host "AdminUsername: $adminUsername" -ForegroundColor Green
 Write-Host "AdminPassword: $adminPassword" -ForegroundColor Green
 Write-Host "BaseRDPGroup: $baseADGroupRDP" -ForegroundColor Green
 Write-Host "RemoteHostPattern: $remoteHostPattern" -ForegroundColor Green
-Write-Host "externalFqdn: $externalFqdn" -ForegroundColor Green
+
+Install-windowsfeature -name AD-Domain-Services –IncludeManagementTools
+Import-Module ActiveDirectory
 
 $configuration = @{
     ActiveDirectory = @{
