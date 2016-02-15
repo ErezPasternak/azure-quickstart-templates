@@ -628,6 +628,9 @@ Function Start-HTTPListener {
         [String]$externalFqdn,
 
         [Parameter()]
+        [String]$daasFolderUrl = "DaaS",
+
+        [Parameter()]
         [System.Net.AuthenticationSchemes] $Auth = [System.Net.AuthenticationSchemes]::Anonymous
         )
 
@@ -697,6 +700,9 @@ Function Start-HTTPListener {
                         $reqFile = $request.Url.LocalPath.ToString();
 
                         $currentPath =  $WebsitePath;
+                        if ($reqFile.Length -gt 1 -and $reqFile.StartsWith("/$daasFolderUrl")) {
+                            $reqFile = $reqFile.Substring(($daasFolderUrl.Length +1))
+                        }
                         $checkExistingPath = Join-Path -Path $currentPath -ChildPath ("$reqFile")
                     } else {
                         Write-Warning "Command Request"
@@ -843,14 +849,14 @@ Function Start-HTTPListener {
                         } else {
                             $commandOutput = "SYNTAX: command=<string> format=[JSON|TEXT|XML|NONE|CLIXML]"
                             if($request.Url.LocalPath -eq "/") {
-                                $response.RedirectLocation = "/index.html"
+                                $response.RedirectLocation = "/$daasFolderUrl/index.html"
                             }
                         }
                     } catch {
                         $commandOutput = "SYNTAX: command=<string> format=[JSON|TEXT|XML|NONE|CLIXML]"
                         if($request.Url.LocalPath -eq "/") {
                             $response.StatusCode = 301
-                            $response.RedirectLocation = ($request.Url.AbsoluteUri + "index.html")
+                            $response.RedirectLocation = ($request.Url.AbsoluteUri + "$daasFolderUrl/index.html")
                             Write-Error ($request.Url.AbsoluteUri + "index.html")
                         }
                     }
