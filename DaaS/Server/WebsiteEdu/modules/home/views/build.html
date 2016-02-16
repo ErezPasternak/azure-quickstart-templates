@@ -1,0 +1,189 @@
+<section class="sops-sect sops-desk cloud-desk clearfix">
+    <div class="cloud-desk-bg">
+        <div class="container">
+            <div class="row conf-row-1 row-eq-height">
+                <div class="col-sm-9 col-lg-10"></div>
+                <div class="col-sm-3 col-lg-2 rel cloud-dsk-out">
+                    <div class="cloud-dsk">
+                        <span class="thumb"><i class="icon-setting-c"></i></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="cloud-desk-front">
+    <div class="container">
+        <form name="form" ng-submit="sendDesk()" role="form">
+            <div class="row conf-row-1 row-eq-height">
+                <div class="col-sm-9 col-lg-10">
+                    <div class="row conf-row-1 row-eq-height">
+                        <div  class="col-md-6  col-lg-6 block-sm">
+                            <div class="conf-el conf-el-panel">
+                                <div class="head clearfix">
+                                    <h2 class="title h4 weight-light">{{:: config.hardware.title}}</h2>
+                                </div>
+                                <div class="body clearfix">
+                                    <div class="row conf-row-1">
+                                        <div class="col-sm-12">
+                                            <div ng-repeat="d in :: config.hardware.options" class="check-el-bl"
+                                                 ng-class="{'disabled': d.isDisable}">
+                                                <label>
+                                                    <div class="check-el">
+                                                        <input type="radio" name="hardware" 
+                                                               ng-model="selectedConfig.hardware"
+                                                               ng-change="change()"
+                                                               ng-value=":: d"
+                                                               ng-disabled=":: d.isDisable"
+                                                               ng-required=":: d.isRequired"
+                                                               />
+
+                                                        <span><i class="icon-check-w icon"></i></span>
+                                                    </div>
+                                                    <h5 class="title">{{:: d.title}}</h5>
+                                                    <div class="txt">{{:: d.description}}</div>
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="head no-radius clearfix">
+                                    <h2 class="title h4 weight-light">{{:: config.os.title}}</h2>
+                                </div>
+                                <div class="body clearfix">
+                                    <div class="row conf-row-1">
+                                        <div class="col-sm-6" ng-repeat="d in :: config.os.options">
+                                            <div class="check-el-bl" ng-class="{'disabled': d.isDisable}">
+                                                <label class="">
+                                                    <div class="check-el">
+                                                        <input type="radio" name="os" 
+                                                               ng-model="selectedConfig.os"
+                                                               ng-change="change()"s
+                                                               ng-value=":: d"
+                                                               ng-disabled=":: d.isDisable"
+                                                               ng-required=":: d.isRequired"
+                                                               />
+                                                        <span><i class="icon-check-w icon"></i></span>
+                                                    </div>
+                                                    <div class="txt">{{:: d.title}}</div>
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="head clearfix no-radius">
+                                    <h2 class="title h4 weight-light">{{:: config.services.title}}</h2>
+                                </div>
+                                <div class="body clearfix">
+                                    <div class="row conf-row-1">
+                                        <div class="col-sm-6" ng-repeat="d in :: config.services.options">
+                                            <div class="check-el-bl" ng-class="{'disabled': d.isDisable}">
+                                                <label>
+                                                    <div class="check-el">
+                                                        <input type="checkbox" name="service_{{$index}}" 
+                                                               checklist-model="selectedConfig.services"
+                                                               ng-change="change()"
+                                                               checklist-value=":: d" 
+                                                               ng-disabled=":: d.isDisable"
+                                                               ng-required=":: d.isRequired"
+                                                               />
+
+                                                        <span><i class="icon-check-w icon"></i></span>
+                                                    </div>
+                                                    <div class="txt">{{:: d.title}}</div>
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div  class="col-md-6 col-lg-6 block-sm">
+                            <div class="conf-el conf-el-panel">
+                                <div class="head clearfix">
+                                    <h2 class="title h4 weight-light">{{:: config.apps.title}}</h2>
+                                </div>
+
+                                <uib-tabset justified="false" class="conf-tabs-cnt">
+                                    <uib-tab ng-repeat="tab in config.apps.tabs" 
+                                             heading="{{tab.title}}" 
+                                             active="tab.active">    
+
+                                        <div class="body">
+
+                                            <div ng-repeat="d in :: tab.options"
+                                                 class="check-el-bl" ng-class="{'disabled': d.isDisable}">
+                                                <label>
+                                                    <div class="check-el">
+                                                        <input type="checkbox" name="app_{{$parent.$index}}_{{$index}}" 
+                                                               checklist-model="selectedConfig.apps"
+                                                               ng-change="change()"
+                                                               checklist-value=":: d" 
+                                                               ng-disabled=":: d.isDisable"
+                                                               ng-required=":: d.isRequired"
+                                                               />
+
+                                                        <span><i class="icon-check-w icon"></i></span>
+                                                    </div>
+                                                    <div class="txt w-ic">
+                                                        <div class="pd-tbl">
+                                                            <div class="pd-col addon">
+                                                                <img ng-src="{{:: d.icon}}" alt="{{:: d.title}}" />
+                                                            </div>
+                                                            <div class="pd-col">
+                                                                {{:: d.title}}. 
+                                                                <any ng-if=":: d.price > 0"><strong>${{:: d.price}}</strong><span class="weight-light">/month</span></any>
+                                                                <any ng-if=":: d.price === 0">
+                                                                    <span class="weight-light">(free)</span>
+                                                                </any>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </label>
+                                            </div>
+
+                                        </div>
+                                    </uib-tab>
+                                </uib-tabset>
+
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-sm-3 col-lg-2">
+                    <article class="conf-el cloud-desk-el empty block-sm">  
+                        <div class="empty-body text-center">
+                            <h3 class="title h4 weight-middle block-sm">Total Desktop<br>Price</h3>
+                            <div class="block-md brand-primary-color">
+<div class="t-sz-bnum weight-middle">
+${{ selectedConfig.hardware.price  +  selectedConfig.os.price + calcPriceEl(selectedConfig.services) + calcPriceEl(selectedConfig.apps) }}
+</div>
+                            <div class="weight-light t-sz-large">per month</div>
+                            </div> 
+
+
+
+
+
+                        </div>
+                        <div class="form-actions form-actions-config text-center block-md">
+                            <div class="clearfix">
+                                <button type="submit" ng-disabled="form.$invalid || dataLoading" 
+                                        class="btn btn-submit btn-lg  rounded">
+                                    NEXT<i class="icon-arr-l-right"></i>
+                                </button>
+                                <img ng-if="dataLoading" src="data:image/gif;base64,R0lGODlhEAAQAPIAAP///wAAAMLCwkJCQgAAAGJiYoKCgpKSkiH/C05FVFNDQVBFMi4wAwEAAAAh/hpDcmVhdGVkIHdpdGggYWpheGxvYWQuaW5mbwAh+QQJCgAAACwAAAAAEAAQAAADMwi63P4wyklrE2MIOggZnAdOmGYJRbExwroUmcG2LmDEwnHQLVsYOd2mBzkYDAdKa+dIAAAh+QQJCgAAACwAAAAAEAAQAAADNAi63P5OjCEgG4QMu7DmikRxQlFUYDEZIGBMRVsaqHwctXXf7WEYB4Ag1xjihkMZsiUkKhIAIfkECQoAAAAsAAAAABAAEAAAAzYIujIjK8pByJDMlFYvBoVjHA70GU7xSUJhmKtwHPAKzLO9HMaoKwJZ7Rf8AYPDDzKpZBqfvwQAIfkECQoAAAAsAAAAABAAEAAAAzMIumIlK8oyhpHsnFZfhYumCYUhDAQxRIdhHBGqRoKw0R8DYlJd8z0fMDgsGo/IpHI5TAAAIfkECQoAAAAsAAAAABAAEAAAAzIIunInK0rnZBTwGPNMgQwmdsNgXGJUlIWEuR5oWUIpz8pAEAMe6TwfwyYsGo/IpFKSAAAh+QQJCgAAACwAAAAAEAAQAAADMwi6IMKQORfjdOe82p4wGccc4CEuQradylesojEMBgsUc2G7sDX3lQGBMLAJibufbSlKAAAh+QQJCgAAACwAAAAAEAAQAAADMgi63P7wCRHZnFVdmgHu2nFwlWCI3WGc3TSWhUFGxTAUkGCbtgENBMJAEJsxgMLWzpEAACH5BAkKAAAALAAAAAAQABAAAAMyCLrc/jDKSatlQtScKdceCAjDII7HcQ4EMTCpyrCuUBjCYRgHVtqlAiB1YhiCnlsRkAAAOwAAAAAAAAAAAA==" />
+                            </div>
+                        </div>
+
+                    </article> 
+                </div>
+            </div>
+        </form>
+
+        <!--<pre>{{selectedConfig | json}}</pre>-->
+
+
+
+    </div>
+    </div>
+</section>

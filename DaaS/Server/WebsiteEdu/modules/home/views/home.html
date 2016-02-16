@@ -1,0 +1,113 @@
+<section class="sops-sect sops-desk clearfix">
+    <div class="container">
+        <form name="form" ng-submit="sendDesk()" role="form">
+            <div class="row conf-row-1 conf-row-1 row-eq-height">
+                <div class="col-sm-6 col-md-9">
+                    <div class="row conf-row-1 row-eq-height">
+                        <div ng-repeat="d in :: selectDesk" class="col-md-4 block-sm">
+                            <label class="conf-el" for="el-{{$index}}"
+                                   ng-class="{'active': d.id == selectedDesktop.id}">
+                                <div class="head clearfix">
+                                    <h2 class="title h4 weight-middle block-sm">{{:: d.title}}</h2>
+                                    <div class=" block-sm">{{:: d.description}}</div>
+                                    <div class="head-thmb">
+                                        <div class="bg"></div>
+                                        <div class="cmp-wrap cmp-wrap_dsk">
+                                            <div class="cmp-screen clearfix">
+                                                <img ng-src="{{:: imagePath + d.icon}}" class="thumb" alt="{{:: d.title}}" />
+                                            </div>
+                                            <div class="cmp-base">
+                                                <div class="cmp-0"></div><div class="cmp-1-1"></div><div class="cmp-1-2"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="content">
+                                    <div class="content-body">
+                                        <div class="body">
+                                            <div class="hard-prop t-sz-16">
+                                                <div class="hard-prop-in t-sz-16">
+                                                    <div class="prop-el" ng-repeat="o in :: d.hardware">
+                                                        {{o}}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="body text-center">
+                                            <div class="apps-thm clearfix">
+                                                <div class="thumb" ng-repeat="a in :: d.apps" uib-tooltip="{{:: a.title}}">
+                                                    <img data-ng-src="{{:: a.icon}}" alt="{{:: a.title}}" />
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="foot price text-center">
+                                        <div class="t-sz-16 block-sm">
+                                            <strong>${{:: d.price}}</strong><span class="weight-light">/{{:: d.price_term}}</span>
+                                        </div>
+                                        <div class="check-el check-lg">
+                                            <input type="radio" 
+                                                   id="el-{{$index}}" name="selectDesk" 
+                                                   ng-model="selectedDesktop.id" value="{{:: d.id}}" 
+                                                   required
+                                                   />
+                                            <span class="thumb-in">
+                                                <i class="icon-check-w icon"></i>
+                                            </span>
+                                        </div>
+
+                                    </div>
+                                </div>
+                            </label>
+                        </div>
+                    </div> 
+                </div>
+                <div class="col-sm-6 col-md-3">
+                    <article class="conf-el empty block-sm">
+                        <div class="content">
+                            <div class="content-body">
+                                <div class="empty-body clearfix text-center">
+                                    <h3 class="title h4 weight-middle block-mdß">Customize<br>your Desktop</h3>
+                                    <div class="own-circle-cnt block-md">
+                                        <a class="btn btn-circle" href="#/build">
+                                            <div class="ratio-content">
+                                                <div class="btn-circle-in">
+
+                                                    <div class="cmp-wrap cmp-wrap_dsk ">
+                                                        <div class="cmp-screen clearfix">
+                                                            <span class="thumb"><i class="icon-setting-c"></i></span>
+                                                        </div>
+                                                        <div class="cmp-base">
+                                                            <div class="cmp-0"></div><div class="cmp-1-1"></div><div class="cmp-1-2"></div>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="txt">Build your<br>Own Desktop</div>
+                                                </div>
+                                            </div>
+                                        </a>
+                                    </div>
+                                </div>
+
+
+                            </div>
+                        </div>
+                        <div class="empty-body">
+                            <div class="form-actions form-actions-config text-center block-sm">
+                                <div class="clearfix">
+                                    <button type="submit" ng-disabled="form.$invalid || dataLoading" 
+                                            class="btn btn-submit btn-lg  rounded">
+                                        NEXT<i class="icon-arr-l-right"></i>
+                                    </button>
+                                    <img ng-if="dataLoading" src="data:image/gif;base64,R0lGODlhEAAQAPIAAP///wAAAMLCwkJCQgAAAGJiYoKCgpKSkiH/C05FVFNDQVBFMi4wAwEAAAAh/hpDcmVhdGVkIHdpdGggYWpheGxvYWQuaW5mbwAh+QQJCgAAACwAAAAAEAAQAAADMwi63P4wyklrE2MIOggZnAdOmGYJRbExwroUmcG2LmDEwnHQLVsYOd2mBzkYDAdKa+dIAAAh+QQJCgAAACwAAAAAEAAQAAADNAi63P5OjCEgG4QMu7DmikRxQlFUYDEZIGBMRVsaqHwctXXf7WEYB4Ag1xjihkMZsiUkKhIAIfkECQoAAAAsAAAAABAAEAAAAzYIujIjK8pByJDMlFYvBoVjHA70GU7xSUJhmKtwHPAKzLO9HMaoKwJZ7Rf8AYPDDzKpZBqfvwQAIfkECQoAAAAsAAAAABAAEAAAAzMIumIlK8oyhpHsnFZfhYumCYUhDAQxRIdhHBGqRoKw0R8DYlJd8z0fMDgsGo/IpHI5TAAAIfkECQoAAAAsAAAAABAAEAAAAzIIunInK0rnZBTwGPNMgQwmdsNgXGJUlIWEuR5oWUIpz8pAEAMe6TwfwyYsGo/IpFKSAAAh+QQJCgAAACwAAAAAEAAQAAADMwi6IMKQORfjdOe82p4wGccc4CEuQradylesojEMBgsUc2G7sDX3lQGBMLAJibufbSlKAAAh+QQJCgAAACwAAAAAEAAQAAADMgi63P7wCRHZnFVdmgHu2nFwlWCI3WGc3TSWhUFGxTAUkGCbtgENBMJAEJsxgMLWzpEAACH5BAkKAAAALAAAAAAQABAAAAMyCLrc/jDKSatlQtScKdceCAjDII7HcQ4EMTCpyrCuUBjCYRgHVtqlAiB1YhiCnlsRkAAAOwAAAAAAAAAAAA==" />
+                                </div>
+                            </div>
+                        </div>
+
+                    </article> 
+                </div>
+            </div>
+        </form>
+
+    </div>
+</section>
