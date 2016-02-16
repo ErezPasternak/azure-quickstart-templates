@@ -870,7 +870,8 @@ Function Custom-Desk {
         [String]$apps,
         [String]$services
     )
-
+    $adminUsername = $AdminUser;
+    $adminPassword = $AdminPass;
 
     #$user = Get-ADUser {Name -eq $Username }
     $user = Get-ADUser $Username
