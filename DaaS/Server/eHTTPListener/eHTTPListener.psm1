@@ -96,9 +96,10 @@ Function SendMailTo {
     $credential = New-Object System.Management.Automation.PSCredential ("daas@ericom.com", $securePassword)
     $date = (Get-Date).ToString();
     
-    $BCC = "daasmwc.huawei@gmail.com,david.oprea@ericom.com,erez.pasternak@ericom.com"
-
-	Send-MailMessage -Body "$Message" -BodyAsHtml -Subject "$Subject" -SmtpServer $SmtpServer -Port $Port -Credential $credential -From $credential.UserName -To $To -Bcc $BCC -ErrorAction Continue | Out-Default
+    $BCC = @( "daasmwc.huawei@gmail.com" , "david.oprea@ericom.com", "erez.pasternak@ericom.com" )
+    try {
+	    Send-MailMessage -Body "$Message" -BodyAsHtml -Subject "$Subject" -SmtpServer $SmtpServer -Port $Port -Credential $credential -From $credential.UserName -To $To -Bcc $BCC -ErrorAction SilentlyContinue | Out-Null
+    } catch { }
 }
 
 Function SendReadyEmail
@@ -120,8 +121,7 @@ Function SendReadyEmail
     $content = (Get-Content $EmailPath | Select -Skip 1 | Out-String);
     $message = $content.Replace("#username#", $Username); 
     $message = $message.Replace("#password#", $Password);
-    $_externalFqdn = [System.Net.Dns]::GetHostByName(($env:computerName)).HostName
-    $url = GetSSOUrl -externalFqdn $externalFqdn
+    $url = (GetSSOUrl -externalFqdn $externalFqdn) + "?" + "username=$Username&password=$Password&group=Desktop2012&appName=VirtualDesktop&autostart=true"
     $here = "<a href=`"$url`">here</a>";
     $message = $message.Replace("#here#", $here);
 
@@ -183,7 +183,7 @@ Function Test-ADCredentials {
         $Username = 'user1',
         $Password = 'P@ssw0rd'
     )
-    $Domain = $env:USERDOMAIN
+    $Domain = (Get-ADDomainController).Domain
 
     Add-Type -AssemblyName System.DirectoryServices.AccountManagement
     $ct = [System.DirectoryServices.AccountManagement.ContextType]::Domain
@@ -291,6 +291,411 @@ Function Create-RemoteHostsGroup {
 
 }
 
+Function Create-ResourceGroup
+{
+    param(
+        [Parameter()][string]$adminUser,
+        [Parameter()][string]$adminPassword,
+        [Parameter()][String]$groupName
+    )
+
+
+    $adminApi = Start-EricomConnection
+    $adminSessionId = ($adminApi.CreateAdminsession($adminUser, $adminPassword,"rooturl","en-us")).AdminSessionId
+
+    $resources = $adminApi.ResourceGroupSearch($adminSessionId, $null, $null, $null)
+
+    # check if resource group already exists
+    $isPresent = $false;
+    foreach ($resource in $resources){
+        if ( $resource.DisplayName -eq $groupName) {
+            $isPresent = $true;
+        }
+    }
+
+    # create resource group
+    if ($isPresent -eq $false) {
+        $rGroup = $adminApi.CreateResourceGroup($adminSessionId, $groupName)
+        $adminApi.AddResourceGroup($adminSessionId, $rGroup)
+    }
+}
+
+function Get-ResourceDefinitionId
+{
+    param(
+        [Parameter()][string]$adminUser,
+        [Parameter()][string]$adminPassword,
+        [Parameter()][string]$applicationName,
+        [Parameter()][string]$aliasName = ""
+    )
+    $applicationName = $applicationName.Trim();
+
+    if($applicationName -eq "Desktop") {
+        $aliasName = "VirtualDesktop"
+    }
+
+    $adminApi = Start-EricomConnection
+    $adminSessionId = ($adminApi.CreateAdminsession($adminUser, $adminPassword,"rooturl","en-us")).AdminSessionId
+
+    $AppList = $adminApi.ResourceDefinitionSearch($adminSessionId,$null,$null)
+    $foundApp = $null
+    foreach ($app in $AppList)
+    {
+        if($app.DisplayName -eq $applicationName -or $app.DisplayName -eq $aliasName) {
+            $foundApp = $app.ResourceDefinitionId;
+        }    
+    }
+    return $foundApp
+}
+
+Function Create-ResourceDefinitionBinding
+{
+    param(
+        [Parameter()][string]$adminUser,
+        [Parameter()][string]$adminPassword,
+        [Parameter()][String]$resourceGroup,
+        [Parameter()][string]$applicationName,
+        [Parameter()][string]$aliasName = "",
+        [Parameter()][bool]$desktopShortcut = $true
+    )
+    $applicationName = $applicationName.Trim();
+
+    if($applicationName -eq "Desktop") {
+        $aliasName = "VirtualDesktop"
+        $desktopShortcut = $false
+    }
+    $groupName = $resourceGroup;
+
+    $adminApi = Start-EricomConnection
+    $adminSessionId = ($adminApi.CreateAdminsession($adminUser, $adminPassword,"rooturl","en-us")).AdminSessionId
+
+    $resources = $adminApi.ResourceGroupSearch($adminSessionId, $null, $null, $null)
+    $rGroup = $null;
+    # check if resource group already exists
+    $isPresent = $false;
+    foreach ($resource in $resources){
+        if ( $resource.DisplayName -eq $groupName) {
+            $isPresent = $true;
+            $rGroup = $resource;
+        }
+    }
+
+    # resource group found, now check for app
+    if ($isPresent) {
+        $foundApp = Get-ResourceDefinitionId -adminUser $adminUser -adminPassword $adminPassword -applicationName $applicationName -aliasName $aliasName
+        # try publish it
+        if ($foundApp -eq $null) {
+            if ($applicationName -eq "Desktop") {
+                Publish-Desktop -adminUser $adminUser -adminPassword $adminPassword -aliasName $aliasName -desktopShortcut $desktopShortcut
+            } else {
+                Publish-App -adminUser $adminUser -adminPassword $adminPassword -applicationName $applicationName -aliasName $aliasName -desktopShortcut $desktopShortcut
+            }
+            $foundApp = Get-ResourceDefinitionId -adminUser $adminUser -adminPassword $adminPassword -applicationName $applicationName -aliasName $aliasName
+        }
+        if ($foundApp -ne $null) {
+            $adminApi = Start-EricomConnection
+            $adminSessionId = ($adminApi.CreateAdminsession($adminUser, $adminPassword,"rooturl","en-us")).AdminSessionId
+            $rlist = $rGroup.ResourceDefinitionIds
+            $rlist.Add($foundApp);
+            $rGroup.ResourceDefinitionIds = $rlist
+            try {
+                $output = $adminApi.UpdateResourceGroup($adminSessionId, $rGroup)
+            } catch {
+                Write-Warning $adminSessionId
+                Write-Warning $rGroup
+                Write-Warning $_.Exception.Message
+            }
+        }
+    }
+}
+
+function Create-SystemBinding
+{
+    param(
+        [Parameter()][string]$adminUser,
+        [Parameter()][string]$adminPassword,
+        [Parameter()][String]$resourceGroup,
+        [Parameter()][string]$remoteHostGroup
+    )
+    $adminApi = Start-EricomConnection
+    $adminSessionId = ($adminApi.CreateAdminsession($adminUser, $adminPassword,"rooturl","en-us")).AdminSessionId
+
+    $resources = $adminApi.ResourceGroupSearch($adminSessionId, $null, $null, $null)
+    $rGroup = $null;
+    # check if resource group already exists
+    $isPresent = $false;
+    foreach ($resource in $resources){
+        if ( $resource.DisplayName -eq $groupName) {
+            $isPresent = $true;
+            $rGroup = $resource;
+        }
+    }
+
+    # resource group found, now check for remote host group
+    if ($isPresent) {
+        $rhmc = [Ericom.MegaConnect.Runtime.XapApi.RemoteHostMembershipComputation]::Explicit
+        $rhg = $adminApi.RemoteHostGroupSearch($adminSessionId, $rhmc, 100, $remoteHostGroup)
+        if ($rhg.Count -gt 0) {
+
+            [System.Collections.Generic.List[String]]$remoteHostsGroupList = New-Object System.Collections.Generic.List[String];
+            foreach($g in $rhg)
+            {
+	            $remoteHostsGroupList.Add($g.RemoteHostGroupId)
+            }
+            $rGroup.RemoteHostGroupIds = $remoteHostsGroupList
+            $adminApi.UpdateResourceGroup($adminSessionId, $rGroup)
+        }
+    }
+}
+
+Function Publish-App {
+    param(
+        [Parameter()][string]$adminUser,
+        [Parameter()][string]$adminPassword,
+        [Parameter()][string]$applicationName,
+        [Parameter()][string]$aliasName,
+        [Parameter()][bool]$desktopShortcut =  $true
+    )
+
+    $adminApi = Start-EricomConnection
+    $adminSessionId = $adminApi.CreateAdminsession($adminUser, $adminPassword,"rooturl","en-us")
+    $goon = $true;
+    $response = $null;
+
+    $RemoteHostList = $adminApi.RemoteHostStatusSearch($adminSessionId.AdminSessionId, "Running", "", "100", "100", "0", "", "true", "true", "true")
+
+    function FlattenFilesForDirectory
+    {
+        param(
+            $browsingFolder,
+            $rremoteAgentId,
+            $rremoteHostId,
+            $goon
+        )
+
+        if ($goon -ne $true) { return $false; }
+
+	    foreach ($browsingItem in $browsingFolder.Files.Values)
+	    {
+            if($goon -eq $true -and ($browsingItem.Label -eq $applicationName) )
+            {
+                $appName = $applicationName
+                if($aliasName.Length -gt 0) {
+                    $appName = $aliasName
+                }
+                $resourceDefinition = $adminApi.CreateResourceDefinition($adminSessionId.AdminSessionId, $applicationName)
+
+                $val1 = $resourceDefinition.ConnectionProperties.GetLocalPropertyValue("remoteapplicationmode")
+                $val1.LocalValue = $true
+                $val1.ComputeBy = "Literal"
+
+                $val2 = $resourceDefinition.ConnectionProperties.GetLocalPropertyValue("alternate_S_shell")
+                $val2.LocalValue = "" +  $browsingItem.Path + $browsingItem.Name + ""
+                $val2.ComputeBy = "Literal"
+                $val2.LocalValue
+
+                $val3 = $resourceDefinition.DisplayProperties.GetLocalPropertyValue("IconLength")
+                $val3.LocalValue = $browsingItem.ApplicationString.Length
+                $val3.ComputeBy = "Literal"
+
+                $valS = $resourceDefinition.DisplayProperties.GetLocalPropertyValue("ShortcutDesktop")
+                $valS.LocalValue = $desktopShortcut
+                $valS.ComputeBy = "Literal"
+
+                $val4 = $resourceDefinition.DisplayProperties.GetLocalPropertyValue("IconString")
+                $val4.LocalValue = $browsingItem.ApplicationString
+                $val4.ComputeBy = "Literal"
+
+                $val5 = $resourceDefinition.DisplayProperties.GetLocalPropertyValue("DisplayName")
+                $val5.LocalValue = $appName
+                $val5.ComputeBy = "Literal"
+
+                try 
+                {
+                    $adminApi.AddResourceDefinition($adminSessionId.AdminSessionId, $resourceDefinition, "true") | Out-Null
+                } 
+                catch [Exception] 
+                {
+                }
+                $goon = $false;
+                return $false;
+            }
+        }
+
+        if ($goon -eq $true) {
+	        foreach ($directory in $browsingFolder.SubFolders.Values)
+	        {
+                if ($goon -eq $true) {
+		            $goon = FlattenFilesForDirectory -browsingFolder $directory -rremoteAgentId $rremoteAgentId -rremoteHostId $rremoteHostId -goon $goon
+                }
+	        }
+        }
+        return ($goon -eq $true)
+    }
+
+
+    foreach ($RH in $RemoteHostList)
+    {
+        $browsingFolder = $adminApi.SendCustomRequest(	$adminSessionId.AdminSessionId, 
+												        $RH.RemoteAgentId,
+											           [Ericom.MegaConnect.Runtime.XapApi.StandaloneServerRequestType]::HostAgentApplications,
+											           "null",
+											           "false",
+											           "999999999")
+
+       if($goon -eq $true) {
+            $goon = FlattenFilesForDirectory -browsingFolder $browsingFolder -rremoteAgentId $RH.RemoteAgentId -rremoteHostId $RH.RemoteHostId -goon $goon
+       }
+       if($goon -ne $true)
+       {
+            return
+       }
+    }
+}
+
+Function Publish-Desktop {
+    param(
+        [Parameter()][string]$adminUser,
+        [Parameter()][string]$adminPassword,
+        [Parameter()][string]$aliasName,
+        [Parameter()][bool]$desktopShortcut =  $true
+    )
+
+    $applicationName = "Desktop"
+
+    $adminApi = Start-EricomConnection
+    $adminSessionId = $adminApi.CreateAdminsession($adminUser, $adminPassword,"rooturl","en-us")
+    
+    $response = $null;
+
+    $appName = $applicationName
+    if($aliasName.Length -gt 0) {
+        $appName = $aliasName
+    }
+    $resourceDefinition = $adminApi.CreateResourceDefinition($adminSessionId.AdminSessionId, $applicationName)
+
+    $iconfile = "$env:windir\system32\mstsc.exe"
+
+    $val1 = $resourceDefinition.ConnectionProperties.GetLocalPropertyValue("remoteapplicationmode")
+    $val1.LocalValue = $false
+    $val1.ComputeBy = "Literal"
+
+    try {
+        $iconstring = [System.Drawing.Icon]::ExtractAssociatedIcon($iconfile).ToString();
+        $icon = [System.Drawing.Icon]::ExtractAssociatedIcon($iconfile);
+        $iconstream = New-Object System.IO.MemoryStream;
+        $icon.ToBitmap().Save($iconstream, [System.Drawing.Imaging.ImageFormat]::Png)
+        $iconbytes = $iconstream.ToArray();
+        $iconbase64 = [convert]::ToBase64String($iconbytes)
+        $iconstream.Flush();
+        $iconstream.Dispose();
+        
+
+        $val3 = $resourceDefinition.DisplayProperties.GetLocalPropertyValue("IconLength")
+        $val3.LocalValue = $iconbase64.Length
+        $val3.ComputeBy = "Literal"
+
+        $val4 = $resourceDefinition.DisplayProperties.GetLocalPropertyValue("IconString")
+        $val4.LocalValue = $iconbase64
+        $val4.ComputeBy = "Literal"
+    } catch {
+        Write-Warning $_.Exception.Message
+    }
+
+    $valS = $resourceDefinition.DisplayProperties.GetLocalPropertyValue("ShortcutDesktop")
+    $valS.LocalValue = $desktopShortcut
+    $valS.ComputeBy = "Literal"
+
+    $val5 = $resourceDefinition.DisplayProperties.GetLocalPropertyValue("DisplayName")
+    $val5.LocalValue = $appName
+    $val5.ComputeBy = "Literal"
+
+    $response = @{}
+    try 
+    {
+        $adminApi.AddResourceDefinition($adminSessionId.AdminSessionId, $resourceDefinition, "true")
+
+        $response = @{
+            status = "OK"
+            success = "true"
+            id = $resourceDefinition.ResourceDefinitionId
+            message = "The resource has been successfuly published."
+        }
+    } 
+    catch [Exception] 
+    {
+        $response = @{
+            status = "ERROR"
+            message = $_.Exception.Message
+        }
+    }
+    return $response
+}
+
+Function Create-ADGroupBinding
+{
+    param(
+        [Parameter()][string]$adminUser,
+        [Parameter()][string]$adminPassword,
+        [Parameter()][String]$resourceGroup,
+        [Parameter()][string]$adGroup
+    )
+    $groupName = $resourceGroup;
+
+    $adminApi = Start-EricomConnection
+    $adminSessionId = ($adminApi.CreateAdminsession($adminUser, $adminPassword,"rooturl","en-us")).AdminSessionId
+
+    $resources = $adminApi.ResourceGroupSearch($adminSessionId, $null, $null, $null)
+    # check if resource group already exists
+    $rGroup = $null;
+    $isPresent = $false;
+    foreach ($resource in $resources){
+        if ( $resource.DisplayName -eq $groupName) {
+            $isPresent = $true;
+            $rGroup = $resource;
+        }
+    }
+
+    if ($isPresent -eq $true) {
+        [Ericom.MegaConnect.Runtime.XapApi.BindingGroupType]$adGroupBindingType = 2
+        $adName = (Get-ADDomainController).Domain
+        $rGroup.AddBindingGroup("$adGroup", $adGroupBindingType, $adName, ("id_" + $adGroup));
+        $adminApi.UpdateResourceGroup($adminSessionId, $rGroup)
+    }
+}
+
+Function Create-ADUserBinding
+{
+    param(
+        [Parameter()][string]$adminUser,
+        [Parameter()][string]$adminPassword,
+        [Parameter()][String]$resourceGroup,
+        [Parameter()][string]$adUser
+    )
+    $groupName = $resourceGroup;
+
+    $adminApi = Start-EricomConnection
+    $adminSessionId = ($adminApi.CreateAdminsession($adminUser, $adminPassword,"rooturl","en-us")).AdminSessionId
+
+    $resources = $adminApi.ResourceGroupSearch($adminSessionId, $null, $null, $null)
+    # check if resource group already exists
+    $rGroup = $null;
+    $isPresent = $false;
+    foreach ($resource in $resources){
+        if ( $resource.DisplayName -eq $groupName) {
+            $isPresent = $true;
+            $rGroup = $resource;
+        }
+    }
+
+    if ($isPresent -eq $true) {
+        [Ericom.MegaConnect.Runtime.XapApi.BindingGroupType]$adGroupBindingType = 1
+        $adName = (Get-ADDomainController).Domain
+        $rGroup.AddBindingGroup("$adUser", $adGroupBindingType, $adName, ("id_" + $adUser));
+        $adminApi.UpdateResourceGroup($adminSessionId, $rGroup);
+    }
+}
+
 Function FindAndCreateUserInGroup {
 	param(
 		[String]$Username,
@@ -302,7 +707,7 @@ Function FindAndCreateUserInGroup {
     $response = $null
 
     $securePassword = ConvertTo-SecureString -String $Password -AsPlainText -Force	
-    $domainName = (Get-ADDomain).Forest
+    $domainName = (Get-ADDomainController).Domain
     $hasError = $false;
     try {
 	    New-ADUser -PasswordNeverExpires $true -SamAccountName $Username -Name "$Username" -Enabled $true -Verbose -EmailAddress $Email -AccountPassword $securePassword -UserPrincipalName ("$Username" + "@" + "$domainName") -ErrorAction Continue
@@ -396,8 +801,7 @@ Function Assign-User {
 
     #$user = Get-ADUser {Name -eq $Username }
     $user = Get-ADUser $Username
-    $dName = Get-ADDomain | Select-Object DistinguishedName
-    $dName = $dName.DistinguishedName.ToString()
+    $dName = (Get-ADDomainController).Domain
     $isSuccess = $true
     $message = ""
     try {
@@ -432,7 +836,7 @@ Function Assign-User {
         $message = $_.Exception.Message
         Write-Warning $message
     }
-    $_externalFqdn = [System.Net.Dns]::GetHostByName(($env:computerName)).HostName
+
     $response = $null;
     if ($isSuccess -eq $true) {
         $emailFile = Join-Path $EmailPath -ChildPath "ready.html"
@@ -442,7 +846,97 @@ Function Assign-User {
             status = "OK"
             success = "true"
             message = "User has been successfuly added to the selected group"
-            url = (GetSSOUrl -externalFqdn $externalFqdn)
+            url = ((GetSSOUrl -externalFqdn $externalFqdn) + "?username=$Username&password=$Password&group=Desktop2012&appName=VirtualDesktop&autostart=true")
+        }
+    } else {
+        $response = @{
+            status = "ERROR"
+            message = "$message"
+        }
+    }
+    return $response
+}
+
+Function Custom-Desk {
+    param(
+        [String]$Username,
+        [String]$Password,
+        [String]$Template,
+        [String]$Email,
+        [String]$EmailPath,
+        [String]$externalFqdn,
+        [String]$hw,
+        [String]$os,
+        [String]$apps,
+        [String]$services
+    )
+
+
+    #$user = Get-ADUser {Name -eq $Username }
+    $user = Get-ADUser $Username
+    $dName = (Get-ADDomainController).Domain
+    $isSuccess = $true
+    $message = ""
+    try {
+        # remove user from previous groups
+        $previousGroups = $null
+        $previousGroups = (Get-ADPrincipalGroupMembership $user | Select Name | Where { $_.Name -like "*workers" })
+        if($previousGroups -ne $null -and $previousGroups.Name.Count -gt 1) {
+            foreach($item in $previousGroups.Name) {
+                Remove-ADGroupMember -Identity "$item" -Members "$user" -Confirm:$false
+            }
+        }
+    } catch { Write-Warning "Something went wrong when removing the membership"; Write-Warning $_.Exception.Message }
+    try {
+        # should we create dedicated AD group? No.
+        $createADgroup = $false;
+        if ($createADgroup -eq $true) {
+            $userADGroup = "DaaS-Group-" + $user;
+            New-ADGroup -Name "$userADGroup" -SamAccountName $userADGroup -GroupCategory Security -GroupScope Universal -DisplayName "$userADGroup"
+            $group = Get-ADGroup $userADGroup
+            Add-ADGroupMember $group -Members $user
+        }
+
+        # create resource group
+        $groupName = "DaaS-" + $Username
+        Create-ResourceGroup -adminUser $adminUsername -adminPassword $adminPassword -groupName $groupName
+
+        # publish apps per group
+        $appslist = $apps.Split(",");
+        foreach($app in $appslist) {
+            Create-ResourceDefinitionBinding -adminUser $adminUsername -adminPassword $adminPassword -resourceGroup $groupName -applicationName ($app.Trim())
+        }
+
+        $groupNameDesktop = "DaaS-" + $Username + "Desktop"
+        Create-ResourceGroup -adminUser $adminUsername -adminPassword $adminPassword -groupName $groupNameDesktop
+        Create-ResourceDefinitionBinding -adminUser $adminUsername -adminPassword $adminPassword -resourceGroup $groupNameDesktop -applicationName "Desktop" -aliasName "VirtualDesktop"
+
+        # create user binding
+        Create-ADUserBinding -adminUser $adminUsername -adminPassword $adminPassword -resourceGroup $groupName -adUser $Username
+        Create-ADUserBinding -adminUser $adminUsername -adminPassword $adminPassword -resourceGroup $groupNameDesktop -adUser $Username
+
+        # create system binding
+        $desktopHost = "Desktop2012"
+        $appHost = "App2012"
+        Create-SystemBinding -adminUser $adminUsername -adminPassword $adminPassword -resourceGroup $groupName -remoteHostGroup $appHost
+        Create-SystemBinding -adminUser $adminUsername -adminPassword $adminPassword -resourceGroup $groupNameDesktop -remoteHostGroup $desktopHost
+
+    } catch {
+        $isSuccess = $false;
+        $message = $_.Exception.Message
+        Write-Warning $message
+    }
+
+    $response = $null;
+    if ($isSuccess -eq $true) {
+        $emailFile = Join-Path $EmailPath -ChildPath "ready.html"
+        SendReadyEmail -To $Email -Username $Username -Password $Password -EmailPath "$emailFile" -externalFqdn "$externalFqdn"
+
+        $response = @{
+            status = "OK"
+            success = "true"
+            message = "User has been successfuly added to the selected group"
+            url = ((GetSSOUrl -externalFqdn $externalFqdn) + "?username=$Username&password=$Password&group=Desktop2012&appName=VirtualDesktop&autostart=true")
         }
     } else {
         $response = @{
@@ -774,8 +1268,28 @@ Function Start-HTTPListener {
                                 Write-Verbose "Received command to retrieve application list from Ericom Connect"
                                 $command = "Get-AppList -adminUser $EC_AdminUser -adminPassword $EC_AdminPass -groupList `"$groupList`""
                             }
-                            "PublishAppsToUser"{
-                            #variables: user, list of apps
+                            "Custom-Desk"{
+                                Write-Verbose "Received command to create a new user inside organizational unit with its own apps"
+                                if ($request.HttpMethod -eq "POST") {
+                                    [string]$email = $nameValuePair.email;
+                                    [string]$username = $nameValuePair.username;
+                                    [string]$password = $nameValuePair.password;
+                                    [string]$hw = $nameValuePair.hardware;
+                                    [string]$os = $nameValuePair.os;
+                                    [string]$applications = $nameValuePair.applications;
+                                    [string]$services = $nameValuePair.services;
+                                    
+                                } else {
+                                    [string]$email = $request.QueryString.Item("email");
+                                    [string]$username = $request.QueryString.Item("username");
+                                    [string]$password = $request.QueryString.Item("password");
+                                    [string]$hw = $request.QueryString.Item("hardware");
+                                    [string]$os = $request.QueryString.Item("os");
+                                    [string]$applications = $request.QueryString.Item("applications");
+                                    [string]$services = $request.QueryString.Item("services");
+                                }
+
+                                $command = "Custom-Desk -Username `"$username`" -Password `"$password`" -Template `"$config`" -EmailPath `"$emailPath`" -Email `"$email`" -externalFqdn `"$externalFqdn`" -hw `"$hw`" -os `"$os`" -apps `"$applications`" -services `"$services`" "
                             }
                             "Get-AllAppList" {
                                 Write-Verbose "Received command to retrieve application list from all hosts"

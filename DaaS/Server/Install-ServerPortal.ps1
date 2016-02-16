@@ -1,6 +1,6 @@
 # WARNING: Please run this script with Administrator privileges
 param(
-    [Parameter()][String]$EC_AdminUser = "ericom@ericom.local",
+    [Parameter()][String]$EC_AdminUser = "ericom@daas.local",
     [Parameter()][String]$EC_AdminPass = "Ericom123$",
     [Parameter()][String]$ServerPort = "2233",
     [Parameter()][String]$baseADGroupRDP = "DaaS-RDP",
@@ -8,9 +8,17 @@ param(
     [Parameter()][String]$externalFqdn = "localhost"
 )
 
+Set-ExecutionPolicy Unrestricted
+Enable-WSManCredSSP -Role Server -Force
+
+# WARNING!!! The following commands should be executed on RDSH! 
+#>> Enable-PSRemoting -Force
+#>> Set-Item wsman:\localhost\Client\TrustedHosts -value broker.daas.local ($LUS)
+
+
 # Remove previous installation
 try {
-    Invoke-WebRequest "http://localhost:$ServerPort/api?exit"
+    Invoke-WebRequest "http://localhost:$ServerPort/DaaS/api?exit"
 } catch {  }
 try {
     Unregister-ScheduledJob -Name StartPSServer -Force -ErrorAction SilentlyContinue

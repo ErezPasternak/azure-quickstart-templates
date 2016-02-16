@@ -75,10 +75,18 @@ angular.module('Desk', [])
     ----------------------------------------------*/
     $scope.sendDesk = function () {
         $scope.dataLoading = true;
+		var hardwareid = $scope.selectedConfig.hardware.id;
+		var operatingsystem = $scope.selectedConfig.os.title;
+		var applications = $scope.selectedConfig.apps.map(function(obj){ return obj.title }).toString();
+		var services = $scope.selectedConfig.services.map(function(obj){ return obj.title }).toString();
+
         var data = {
             command: 'Custom-Desk',
             username:$rootScope.globals.currentUser.username,
-            config:$scope.selectedConfig
+			hardware: hardwareid,
+			os: operatingsystem,
+            applications:applications,
+			services: services
         };
         var config = {
             headers : {
@@ -90,10 +98,10 @@ angular.module('Desk', [])
             $rootScope.isAccessDesk =true;
             // set data to access page
             $rootScope.accessData = {
-                username: 'XXX',
-                password: 'XXX',
-                email: 'XXX@XXX.com',
-                url: 'https://www.blender.org/',
+                username: $rootScope.globals.currentUser.username,
+                password: $rootScope.globals.currentUser.password,
+                email: $rootScope.globals.currentUser.email,
+                url: response.data.url
             };
             $location.path('/access');
         }, function errorCallback(response) {
@@ -110,7 +118,7 @@ angular.module('Desk', [])
     if(!$rootScope.isAccessDesk)$location.path('/'); 
     
     $scope.goToDesk = function () {
-       $window.location.href = $rootScope.accessData.url + "?username=" + $rootScope.accessData.username + "&password=" + $rootScope.accessData.password + "&appName=VirtualDesktop&autostart=true";
+       $window.location.href = $rootScope.accessData.url;
     };
     
 

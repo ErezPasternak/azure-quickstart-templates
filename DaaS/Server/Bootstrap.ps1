@@ -312,10 +312,18 @@ Function Create-ResourceDefinitionBinding
             }
         }
         if ($foundApp -ne $null) {
+            $adminApi = Start-EricomConnection
+            $adminSessionId = ($adminApi.CreateAdminsession($adminUser, $adminPassword,"rooturl","en-us")).AdminSessionId
             $rlist = $rGroup.ResourceDefinitionIds
             $rlist.Add($foundApp);
             $rGroup.ResourceDefinitionIds = $rlist
-            $adminApi.UpdateResourceGroup($adminSessionId, $rGroup)
+            try {
+                $output = $adminApi.UpdateResourceGroup($adminSessionId, $rGroup)
+            } catch {
+                Write-Warning $adminSessionId
+                Write-Warning $rGroup
+                Write-Warning $_.Exception.Message
+            }
         }
     }
 }
