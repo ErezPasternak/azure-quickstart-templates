@@ -46,6 +46,14 @@ angular.module(['Authentication'])
             },{
                 image:'layout/slide-2.jpg',
                 id: 1
+            },
+            {
+                image:'layout/slide-3.jpg',
+                id: 2
+            },
+            {
+                image:'layout/slide-4.jpg',
+                id: 3
             }
         ];
       
@@ -92,9 +100,18 @@ angular.module(['Authentication'])
             {
                 image:'layout/slide-1.jpg',
                 id: 0
-            },{
+            },
+            {
                 image:'layout/slide-2.jpg',
                 id: 1
+            }
+            ,{
+                image:'layout/slide-3.jpg',
+                id: 2
+            }
+            ,{
+                image:'layout/slide-4.jpg',
+                id: 3
             }
         ];
   

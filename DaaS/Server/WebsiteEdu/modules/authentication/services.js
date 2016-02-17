@@ -34,16 +34,16 @@ angular.module('Authentication')
 
             /* Dummy authentication for testing, uses $timeout to simulate api call
              ----------------------------------------------*/
-            /*
-            $timeout(function () {
+            
+           /* $timeout(function () {
                 var response = { success: username === 'daas' && password === 'daas' };
                 if (!response.success) {
                     response.message = 'Username or password is incorrect';
                 }
                 callback(response);
             }, 1000);
-                        
-*/
+             */           
+
              
             /* Use this for real authentication
              ----------------------------------------------*/
