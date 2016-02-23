@@ -757,7 +757,7 @@
                   "[resourceId('Microsoft.Compute/virtualMachines', concat('rdshD8-', copyindex()))]",
                   "Microsoft.Compute/virtualMachines/cb-vm/extensions/EricomConnectServerSetup"
                ],
-               "properties":
+               "properties":[
 			   {
                   "publisher":"Microsoft.Powershell",
                   "type":"DSC",
@@ -782,7 +782,7 @@
                         "AdminPassword":"[parameters('adminPassword')]"
                      }
                   }
-               }
+               }]
             }
          ]
       },
