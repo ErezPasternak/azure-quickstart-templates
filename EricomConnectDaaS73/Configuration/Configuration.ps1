@@ -95,6 +95,31 @@ configuration EnableRemoteDesktopForDomainUsers
 	}
 }
 
+configuration EnableRunningScripts
+{
+	Node localhost 
+	{
+		LocalConfigurationManager
+        {
+            RebootNodeIfNeeded = $true
+        }
+		
+		Script SetExecutionPolicy
+		{
+			TestScript = {
+                Test-Path "C:\ExecutionPolicy\"
+            }
+            SetScript ={
+				New-Item -Path "C:\ExecutionPolicy" -ItemType Directory -Force -ErrorAction SilentlyContinue
+				try {
+					Set-ExecutionPolicy Unrestricted -Scope LocalMachine -Force -Confirm:$false -ErrorAction SilentlyContinue
+				} catch { }
+            }
+            GetScript = {@{Result = "SetExecutionPolicy"}}
+		}
+	}
+}
+
 configuration RunBootstrap
 {
 	param

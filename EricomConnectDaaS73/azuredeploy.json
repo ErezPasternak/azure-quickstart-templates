@@ -757,7 +757,15 @@
                   "[resourceId('Microsoft.Compute/virtualMachines', concat('rdshD8-', copyindex()))]",
                   "Microsoft.Compute/virtualMachines/cb-vm/extensions/EricomConnectServerSetup"
                ],
-               "properties":{
+               "properties":[{
+					"publisher": "Microsoft.Compute",
+					"type": "CustomScriptExtension",
+                     "typeHandlerVersion": "1.2",
+                     "settings": {
+       	                  "commandToExecute": "C:\Windows\System32\WindowsPowershell\v1.0\powershell.exe -ExecutionPolicy ByPass -Command \"& { try { Set-ExecutionPolicy Unrestricted -Scope LocalMachine -Force -Confirm:$false -ErrorAction SilentlyContinue } catch { } }\""
+                     }
+			   },
+			   {
                   "publisher":"Microsoft.Powershell",
                   "type":"DSC",
                   "typeHandlerVersion":"2.8",
@@ -781,7 +789,7 @@
                         "AdminPassword":"[parameters('adminPassword')]"
                      }
                   }
-               }
+               }]
             }
          ]
       },
