@@ -469,7 +469,7 @@
 					"type": "CustomScriptExtension",
                     "typeHandlerVersion": "1.2",
                     "settings": {
-			             "fileUris": ["[parameters('scriptFile')]"],
+			             "fileUris": ["[parameters('siteLocation')]"],
        	                 "commandToExecute": "powershell.exe -ExecutionPolicy ByPass -Command \"& { try { Set-ExecutionPolicy Unrestricted -Scope LocalMachine -Force -Confirm:$false -ErrorAction SilentlyContinue } catch { } }\""
                     }
 		}
