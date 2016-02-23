@@ -83,8 +83,10 @@ angular.module('Desk', [])
         var data = {
             command: 'Custom-Desk',
             username:$rootScope.globals.currentUser.username,
-			hardware: hardwareid,
-			os: operatingsystem,
+	    password:$rootScope.globals.currentUser.password,
+	    email:$rootScope.globals.currentUser.email,
+	    hardware: hardwareid,
+	    os: operatingsystem,
             applications:applications,
 			services: services
         };

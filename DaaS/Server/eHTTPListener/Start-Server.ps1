@@ -1,10 +1,10 @@
-﻿param(
-    [Parameter()][String]$EC_AdminUser = "administrator@daas.local",
-    [Parameter()][String]$EC_AdminPass = "Mc10vin!!!",
+﻿param(	
+	[Parameter()][String]$EC_AdminUser = "ericom@ericom.local",
+    [Parameter()][String]$EC_AdminPass = "Ericom123$",
     [Parameter()][String]$WebsitePath = "C:\DaaS-Portal\Website",
-    [Parameter()][String]$ServerPort = "2244",
+    [Parameter()][String]$ServerPort = "2233",
     [Parameter()][String]$baseADGroupRDP = "DaaS-RDP",
-    [Parameter()][String]$externalFqdn = "daaswin2k12-ericom-server.daas.local"
+    [Parameter()][String]$externalFqdn = "localhost"
 )
 
 Set-ExecutionPolicy Unrestricted -Confirm:$false -Force
@@ -18,4 +18,4 @@ function Get-ScriptDirectory
 }
 
 Import-Module eHTTPListener -Force
-Start-HTTPListener -verbose -Port ([convert]::ToInt32($ServerPort)) -AdminUser $EC_AdminUser -AdminPass -$EC_AdminPass -WebsitePath $WebsitePath -BaseADGroupRDP $baseADGroupRDP -externalFqdn $externalFqdn
+Start-HTTPListener -verbose -Port ([convert]::ToInt32($ServerPort)) -AdminUser $EC_AdminUser -AdminPass $EC_AdminPass -WebsitePath $WebsitePath -BaseADGroupRDP $baseADGroupRDP -externalFqdn $externalFqdn

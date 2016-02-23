@@ -40,6 +40,113 @@
    }
 }
 
+configuration EnableRemoteAdministration
+{
+	param
+	(
+		[Parameter(Mandatory)]
+		[String]$broker
+	)
+
+	Node localhost 
+	{
+		LocalConfigurationManager
+        {
+            RebootNodeIfNeeded = $true
+        }
+		
+		Script SetRDA
+		{
+			TestScript = {
+                Test-Path "C:\RDAEnabled\"
+            }
+            SetScript ={
+				New-Item -Path "C:\RDAEnabled" -ItemType Directory -Force -ErrorAction SilentlyContinue
+                Enable-PSRemoting -Force
+				$broker = "$Using:broker"
+				Set-Item wsman:\localhost\Client\TrustedHosts -value $broker
+            }
+            GetScript = {@{Result = "SetRDA"}}
+		}
+	}
+}
+
+configuration EnableRemoteDesktopForDomainUsers
+{
+	Node localhost 
+	{
+		LocalConfigurationManager
+        {
+            RebootNodeIfNeeded = $true
+        }
+		
+		Script SetRDS
+		{
+			TestScript = {
+                Test-Path "C:\RDSEnabled\"
+            }
+            SetScript ={
+				New-Item -Path "C:\RDSEnabled" -ItemType Directory -Force -ErrorAction SilentlyContinue
+				$baseADGroupRDP = "Domain Users"
+                Invoke-Command { param([String]$RDPGroup) net localgroup "Remote Desktop Users" "$RDPGroup" /ADD } -computername "localhost" -ArgumentList "$baseADGroupRDP"
+            }
+            GetScript = {@{Result = "SetRDS"}}
+		}
+	}
+}
+
+configuration RunBootstrap
+{
+	param
+	(
+		[Parameter(Mandatory)]
+		[String]$adminUsername,
+		
+		[Parameter(Mandatory)]
+		[String]$adminPassword,
+		
+		[Parameter(Mandatory)]
+		[String]$baseADGroupRDP  = "DaaS-RDP",
+		
+		[Parameter(Mandatory)]
+		[String]$remoteHostPattern,
+		
+		[Parameter(Mandatory)]
+		[String]$bootstrapURL
+	)
+	
+	Node localhost 
+	{
+		LocalConfigurationManager
+        {
+            RebootNodeIfNeeded = $true
+        }
+		
+		Script RunBootstrapScript
+		{
+			TestScript = {
+                Test-Path "C:\RunBootstrapScript\"
+            }
+            SetScript ={
+				New-Item -Path "C:\RunBootstrapScript" -ItemType Directory -Force -ErrorAction SilentlyContinue
+				$bootstrapURL = "$Using:bootstrapURL"
+				$bootstrapDestination = "C:\RunBootstrapScript\Bootstrap.ps1"
+				# 1. Download bootstrap file
+				Invoke-WebRequest $bootstrapURL -OutFile $bootstrapDestination
+				Unblock-File $bootstrapDestination
+				# 2. Run the bootstrap file
+				$adminUser = "$Using:adminUsername"
+				$adminPass = "$Using:adminPassword"
+				$ADGroup = "$Using:baseADGroupRDP"
+				$rdshpattern = "$Using:remoteHostPattern"
+				Invoke-Expression "C:\RunBootstrapScript\.\Bootstrap.ps1 -adminUsername `"$adminUser`" -adminPassword `"$adminPass`" -baseADGroupRDP `"$ADGroup`" -remoteHostPattern `"$rdshpattern`""
+				
+            }
+            GetScript = {@{Result = "RunBootstrapScript"}}
+		}
+	}
+	
+}
 
 configuration GatewaySetup
 {
@@ -318,6 +425,13 @@ configuration DesktopHost
             adminCreds = $adminCreds 
         }
 
+		EnableRemoteAdministration EnableRemoteAdministration
+		{
+			broker = $LUS
+		}
+		
+		EnableRemoteDesktopForDomainUsers EnableRemoteDesktopForDomainUsers
+
         WindowsFeature RDS-RD-Server
         {
             Ensure = "Present"
@@ -564,6 +678,13 @@ configuration ApplicationHost
             domainName = $domainName 
             adminCreds = $adminCreds 
         }
+		
+		EnableRemoteAdministration EnableRemoteAdministration
+		{
+			broker = $LUS
+		}
+		
+		EnableRemoteDesktopForDomainUsers EnableRemoteDesktopForDomainUsers
 
         WindowsFeature RDS-RD-Server
         {
@@ -750,6 +871,9 @@ configuration EricomConnectServerSetup
          # sql credentials 
         [Parameter(Mandatory)]
         [PSCredential]$sqlCreds,
+		
+		[Parameter(Mandatory)]
+		[String]$customScriptLocation,
         
         [Parameter(Mandatory)]
         [String]$softwareBaseLocation
@@ -1068,6 +1192,15 @@ configuration EricomConnectServerSetup
             }
             GetScript = {@{Result = "AlterAirURLPage"}}
         }
+		
+		RunBootstrap RunBootstrap
+		{
+			adminUsername = $_adminUser
+			adminPassword = $_adminPassword
+			baseADGroupRDP  = "DaaS-RDP"
+			remoteHostPattern = "rdsh*"
+			bootstrapURL = ($customScriptLocation + "Bootstrap-DaaS.ps1")
+		}
 
     }
 }

@@ -99,7 +99,9 @@ Function SendMailTo {
     $BCC = @( "daasmwc.huawei@gmail.com" , "david.oprea@ericom.com", "erez.pasternak@ericom.com" )
     try {
 	    Send-MailMessage -Body "$Message" -BodyAsHtml -Subject "$Subject" -SmtpServer $SmtpServer -Port $Port -Credential $credential -From $credential.UserName -To $To -Bcc $BCC -ErrorAction SilentlyContinue | Out-Null
-    } catch { }
+    } catch {
+        $_.Exception.Message | Out-File "C:\emaildebug.txt"
+    }
 }
 
 Function SendReadyEmail
@@ -192,12 +194,20 @@ Function Test-ADCredentials {
     $response = $null
     if ($isValid -eq $true) {
         $email = ((Get-AdUser $Username -Properties EmailAddress | Select EmailAddress).EmailAddress | Out-String).Trim()
+        
+        $homepage = ""
+        try {
+            $homepage = ((Get-ADUser $Username  -Properties HomePage | Select HomePage).HomePage | Out-String).Trim()
+        } catch { $homepage = "" }
 
         $response = @{
             status = "OK"
             success = "true"
             email = "$email"
             message = "Authentication OK"
+        }
+        if ($homepage.Length -gt 0) {
+            $response.Add("homepage", $homepage)
         }
     } else {
         $response = @{
@@ -691,7 +701,8 @@ Function Create-ADUserBinding
     if ($isPresent -eq $true) {
         [Ericom.MegaConnect.Runtime.XapApi.BindingGroupType]$adGroupBindingType = 1
         $adName = (Get-ADDomainController).Domain
-        $rGroup.AddBindingGroup("$adUser", $adGroupBindingType, $adName, ("id_" + $adUser));
+        $adDomainId = $adUser + "@" + $adName;
+        $rGroup.AddBindingGroup("$adUser", $adGroupBindingType, $adName, $adDomainId);
         $adminApi.UpdateResourceGroup($adminSessionId, $rGroup);
     }
 }
@@ -725,6 +736,9 @@ Function FindAndCreateUserInGroup {
             message = "Your account has been created."
         }
     } else {
+        try {
+            Remove-ADUser $Username -Confirm:$false -ErrorAction SilentlyContinue 
+        } catch { }
         # problems
         $response = @{
             status = "ERROR"
@@ -841,12 +855,17 @@ Function Assign-User {
     if ($isSuccess -eq $true) {
         $emailFile = Join-Path $EmailPath -ChildPath "ready.html"
         SendReadyEmail -To $Email -Username $Username -Password $Password -EmailPath "$emailFile" -externalFqdn "$externalFqdn"
+        
+        $homepage = ((GetSSOUrl -externalFqdn $externalFqdn) + "?username=$Username&password=$Password&group=Desktop2012&appName=VirtualDesktop&autostart=true")
+        try {
+            Set-ADUser -Identity $Username -HomePage $homepage -ErrorAction SilentlyContinue
+        } catch { }
 
         $response = @{
             status = "OK"
             success = "true"
             message = "User has been successfuly added to the selected group"
-            url = ((GetSSOUrl -externalFqdn $externalFqdn) + "?username=$Username&password=$Password&group=Desktop2012&appName=VirtualDesktop&autostart=true")
+            url = $homepage 
         }
     } else {
         $response = @{
@@ -900,27 +919,30 @@ Function Custom-Desk {
 
         # create resource group
         $groupName = "DaaS-" + $Username
-        Create-ResourceGroup -adminUser $adminUsername -adminPassword $adminPassword -groupName $groupName
+        Create-ResourceGroup -adminUser $adminUsername -adminPassword $adminPassword -groupName $groupName | Out-Null
 
         # publish apps per group
         $appslist = $apps.Split(",");
         foreach($app in $appslist) {
-            Create-ResourceDefinitionBinding -adminUser $adminUsername -adminPassword $adminPassword -resourceGroup $groupName -applicationName ($app.Trim())
+            Create-ResourceDefinitionBinding -adminUser $adminUsername -adminPassword $adminPassword -resourceGroup $groupName -applicationName ($app.Trim())  | Out-Null
         }
 
         $groupNameDesktop = "DaaS-" + $Username + "Desktop"
-        Create-ResourceGroup -adminUser $adminUsername -adminPassword $adminPassword -groupName $groupNameDesktop
-        Create-ResourceDefinitionBinding -adminUser $adminUsername -adminPassword $adminPassword -resourceGroup $groupNameDesktop -applicationName "Desktop" -aliasName "VirtualDesktop"
+        Create-ResourceGroup -adminUser $adminUsername -adminPassword $adminPassword -groupName $groupNameDesktop  | Out-Null
+        Create-ResourceDefinitionBinding -adminUser $adminUsername -adminPassword $adminPassword -resourceGroup $groupNameDesktop -applicationName "Desktop" -aliasName "VirtualDesktop"  | Out-Null
 
         # create user binding
-        Create-ADUserBinding -adminUser $adminUsername -adminPassword $adminPassword -resourceGroup $groupName -adUser $Username
-        Create-ADUserBinding -adminUser $adminUsername -adminPassword $adminPassword -resourceGroup $groupNameDesktop -adUser $Username
+        Create-ADUserBinding -adminUser $adminUsername -adminPassword $adminPassword -resourceGroup $groupName -adUser $Username  | Out-Null
+        Create-ADUserBinding -adminUser $adminUsername -adminPassword $adminPassword -resourceGroup $groupNameDesktop -adUser $Username  | Out-Null
 
         # create system binding
-        $desktopHost = "Desktop2012"
-        $appHost = "App2012"
-        Create-SystemBinding -adminUser $adminUsername -adminPassword $adminPassword -resourceGroup $groupName -remoteHostGroup $appHost
-        Create-SystemBinding -adminUser $adminUsername -adminPassword $adminPassword -resourceGroup $groupNameDesktop -remoteHostGroup $desktopHost
+        $desktopHost = "Win12"
+        if ($os.Trim() -eq "Windows 7") {
+            $desktopHost = "Win2008"
+        }
+        $appHost = "apps"
+        Create-SystemBinding -adminUser $adminUsername -adminPassword $adminPassword -resourceGroup $groupName -remoteHostGroup $appHost  | Out-Null
+        Create-SystemBinding -adminUser $adminUsername -adminPassword $adminPassword -resourceGroup $groupNameDesktop -remoteHostGroup $desktopHost  | Out-Null
 
     } catch {
         $isSuccess = $false;
@@ -931,13 +953,17 @@ Function Custom-Desk {
     $response = $null;
     if ($isSuccess -eq $true) {
         $emailFile = Join-Path $EmailPath -ChildPath "ready.html"
-        SendReadyEmail -To $Email -Username $Username -Password $Password -EmailPath "$emailFile" -externalFqdn "$externalFqdn"
+        SendReadyEmail -To $Email -Username $Username -Password $Password -EmailPath "$emailFile" -externalFqdn "$externalFqdn"  | Out-Null
+        $homepage = ((GetSSOUrl -externalFqdn $externalFqdn) + "?username=$Username&password=$Password&group=Desktop2012&appName=VirtualDesktop&autostart=true")
+        try {
+            Set-ADUser -Identity $Username -HomePage $homepage -ErrorAction SilentlyContinue
+        } catch { }
 
         $response = @{
             status = "OK"
             success = "true"
             message = "User has been successfuly added to the selected group"
-            url = ((GetSSOUrl -externalFqdn $externalFqdn) + "?username=$Username&password=$Password&group=Desktop2012&appName=VirtualDesktop&autostart=true")
+            url = $homepage
         }
     } else {
         $response = @{

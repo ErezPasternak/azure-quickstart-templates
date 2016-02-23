@@ -2,12 +2,19 @@
 param(
     [Parameter()][String]$EC_AdminUser = "ericom@ericom.local",
     [Parameter()][String]$EC_AdminPass = "Ericom123$",
-    [Parameter()][String]$WebsitePath = "C:\Website",
-    [Parameter()][String]$ServerPath = "C:\Server",
+    [Parameter()][String]$WebsitePath = "C:\DaaS-Portal\Website",
+    [Parameter()][String]$ServerPath = "C:\DaaS-Portal\Webserver",
     [Parameter()][String]$ServerPort = "2233",
     [Parameter()][String]$baseADGroupRDP = "DaaS-RDP",
     [Parameter()][String]$externalFqdn = "localhost"
 )
+try {
+    Unregister-ScheduledJob StartPSServer -Force -Confirm:$false
+} catch { }
+
+try {
+    Unregister-ScheduledJob MonitorPSServer -Force -Confirm:$false
+} catch { }
 
 $startServer = "Start-Server.ps1"
 $monitorServer = "Monitor-Server.ps1"
