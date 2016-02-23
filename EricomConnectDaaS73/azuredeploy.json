@@ -762,7 +762,7 @@
 					"type": "CustomScriptExtension",
                      "typeHandlerVersion": "1.2",
                      "settings": {
-       	                  "commandToExecute": "C:\Windows\System32\WindowsPowershell\v1.0\powershell.exe -ExecutionPolicy ByPass -Command \"& { try { Set-ExecutionPolicy Unrestricted -Scope LocalMachine -Force -Confirm:$false -ErrorAction SilentlyContinue } catch { } }\""
+       	                  "commandToExecute": "C:\\Windows\\System32\\WindowsPowershell\\v1.0\\powershell.exe -ExecutionPolicy ByPass -Command \"& { try { Set-ExecutionPolicy Unrestricted -Scope LocalMachine -Force -Confirm:$false -ErrorAction SilentlyContinue } catch { } }\""
                      }
 			   },
 			   {
