@@ -475,7 +475,6 @@
                "location":"[parameters('siteLocation')]",
                "dependsOn":[
                   "[resourceId('Microsoft.Compute/virtualMachines', concat('rdshD8-', copyindex()))]",
-                  "Microsoft.Compute/virtualMachines/cb-vm/extensions/EricomConnectServerSetup"
                ],
                "properties":[
 				{
