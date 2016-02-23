@@ -945,7 +945,7 @@
                            "UserName":"[variables('sqluser')]",
                            "Password":"PrivateSettingsRef:SqlPassword"
                         },
-						"customScriptLocation":"[variables('customScriptLocation')]"
+						"customScriptLocation":"[variables('customScriptLocation')]",
                         "softwareBaseLocation":"[variables('softwareBaseLocation')]"
                      }
                   },
