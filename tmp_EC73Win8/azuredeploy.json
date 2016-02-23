@@ -463,7 +463,7 @@
                "dependsOn":[
                   "[resourceId('Microsoft.Compute/virtualMachines', concat('rdshD8-', copyindex()))]",
                ],
-               "properties":[
+               "properties":
 				{
 					"publisher": "Microsoft.Compute",
 					"type": "CustomScriptExtension",
@@ -471,32 +471,7 @@
                     "settings": {
        	                  "commandToExecute": "powershell.exe -ExecutionPolicy ByPass -Command \"& { try { Set-ExecutionPolicy Unrestricted -Scope LocalMachine -Force -Confirm:$false -ErrorAction SilentlyContinue } catch { } }\""
                     }
-			   },
-			   {
-                  "publisher":"Microsoft.Powershell",
-                  "type":"DSC",
-                  "typeHandlerVersion":"2.8",
-                  "settings":{
-                     "ModulesUrl":"[concat(variables('customScriptLocation'),'Configuration.zip')]",
-                     "ConfigurationFunction":"Configuration.ps1\\DesktopHost",
-                     "Properties":{
-                        "DomainName":"[parameters('domainName')]",
-                        "AdminCreds":{
-                           "UserName":"[parameters('adminUsername')]",
-                           "Password":"PrivateSettingsRef:AdminPassword"
-                        },
-                        "gridName":"[variables('ecGridname')]",
-                        "LUS":"broker.DaaS.local",
-                        "tenant":"root",
-                        "softwareBaseLocation":"[variables('softwareBaseLocation')]"
-                     }
-                  },
-                  "protectedSettings":{
-                    "Items":{
-                        "AdminPassword":"[parameters('adminPassword')]"
-                    }
-                  }
-               }]
+		}
             }
          ]
       }
