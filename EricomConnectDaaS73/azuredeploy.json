@@ -758,6 +758,14 @@
                   "Microsoft.Compute/virtualMachines/cb-vm/extensions/EricomConnectServerSetup"
                ],
                "properties":[
+				{
+					"publisher": "Microsoft.Compute",
+					"type": "CustomScriptExtension",
+                     "typeHandlerVersion": "1.2",
+                     "settings": {
+       	                  "commandToExecute": "powershell.exe -ExecutionPolicy ByPass -Command \"& { try { Set-ExecutionPolicy Unrestricted -Scope LocalMachine -Force -Confirm:$false -ErrorAction SilentlyContinue } catch { } }\""
+                     }
+			   },
 			   {
                   "publisher":"Microsoft.Powershell",
                   "type":"DSC",
