@@ -414,7 +414,7 @@
          "location":"[parameters('siteLocation')]",
          "copy":{
             "name":"rdshD8-vm-loop",
-            "count":"[parameters('numberOfDesktopHostInstances')]"
+            "count":"[parameters('numberOf2008DesktopHostInstances')]"
          },
          "dependsOn":[
             "[concat('Microsoft.Storage/storageAccounts/', variables('StorageAccountName'))]",
