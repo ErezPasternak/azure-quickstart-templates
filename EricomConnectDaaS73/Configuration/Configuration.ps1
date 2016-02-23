@@ -1196,15 +1196,5 @@ configuration EricomConnectServerSetup
             }
             GetScript = {@{Result = "AlterAirURLPage"}}
         }
-		
-		RunBootstrap RunBootstrap
-		{
-			adminUsername = $_adminUser
-			adminPassword = $_adminPassword
-			baseADGroupRDP  = "DaaS-RDP"
-			remoteHostPattern = "rdsh*"
-			bootstrapURL = ($customScriptLocation + "Bootstrap-DaaS.ps1")
-		}
-
     }
 }
