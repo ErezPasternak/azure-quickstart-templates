@@ -946,7 +946,7 @@
                            "Password":"PrivateSettingsRef:SqlPassword"
                         },
 						"customScriptLocation":"[variables('customScriptLocation')]",
-                        "softwareBaseLocation":"[variables('softwareBaseLocation')]"
+						"softwareBaseLocation":"[variables('softwareBaseLocation')]"
                      }
                   },
                   "protectedSettings":{
