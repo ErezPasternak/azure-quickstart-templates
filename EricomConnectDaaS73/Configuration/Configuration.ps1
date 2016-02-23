@@ -431,6 +431,8 @@ configuration DesktopHost
 		}
 		
 		EnableRemoteDesktopForDomainUsers EnableRemoteDesktopForDomainUsers
+		{
+		}
 
         WindowsFeature RDS-RD-Server
         {
@@ -685,6 +687,8 @@ configuration ApplicationHost
 		}
 		
 		EnableRemoteDesktopForDomainUsers EnableRemoteDesktopForDomainUsers
+		{
+		}
 
         WindowsFeature RDS-RD-Server
         {
