@@ -35,7 +35,7 @@ angular.module('Desk', [])
                 username: 'User',
                 password: 'Password',
                 email: 'user@ericom.com',
-                url: 'https://an.ericom.com/daas.htm?username=demo21?password=Ericom123$&autostart=true',
+                url: 'https://an.ericom.com/portal.html',
             };
             $location.path('/access');
         }, function errorCallback(response) {
@@ -88,7 +88,7 @@ angular.module('Desk', [])
                 username: 'XXX',
                 password: 'XXX',
                 email: 'XXX@XXX.com',
-                url: 'https://an.ericom.com/daas.htm?username=demo21?password=Ericom123$&autostart=true',
+                url: 'https://an.ericom.com/portal.html',
             };
             $location.path('/access');
         }, function errorCallback(response) {
