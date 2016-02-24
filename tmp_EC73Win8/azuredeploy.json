@@ -458,7 +458,7 @@
             {
                "apiVersion":"[variables('apiVersion')]",
                "type":"Microsoft.Compute/virtualMachines/extensions",
-               "name":"[concat('rdshD8-', copyindex(),'/DesktopHost')]",
+               "name":"[concat('rdshD8-', copyindex(),'/CustomScriptExtension')]",
                "location":"[parameters('siteLocation')]",
                "dependsOn":[
                   "[resourceId('Microsoft.Compute/virtualMachines', concat('rdshD8-', copyindex()))]"
@@ -469,7 +469,8 @@
 					"type": "CustomScriptExtension",
                     "typeHandlerVersion": "1.2",
                     "settings": {
-       	                 "commandToExecute": "powershell.exe -ExecutionPolicy ByPass -Command \"& { try { Set-ExecutionPolicy Unrestricted -Scope LocalMachine -Force -Confirm:$false -ErrorAction SilentlyContinue } catch { } }\""
+						"fileUris": "",
+       	                "commandToExecute": "powershell.exe -ExecutionPolicy ByPass -Command \"& { try { Set-ExecutionPolicy Unrestricted -Scope LocalMachine -Force -Confirm:$false -ErrorAction SilentlyContinue } catch { } }\""
                     }
                 }
             },
