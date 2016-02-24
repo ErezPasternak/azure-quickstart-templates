@@ -164,7 +164,8 @@ configuration RunBootstrap
 				$adminPass = "$Using:adminPassword"
 				$ADGroup = "$Using:baseADGroupRDP"
 				$rdshpattern = "$Using:remoteHostPattern"
-				Invoke-Expression "C:\RunBootstrapScript\.\Bootstrap.ps1 -adminUsername `"$adminUser`" -adminPassword `"$adminPass`" -baseADGroupRDP `"$ADGroup`" -remoteHostPattern `"$rdshpattern`""
+                "C:\RunBootstrapScript\.\Bootstrap.ps1 -adminUsername `"$adminUser`" -adminPassword `"$adminPass`" -baseADGroupRDP `"$ADGroup`" -remoteHostPattern `"$rdshpattern`"" | Out-File "C:\RunBootstrapScript\command.txt"
+				#Invoke-Expression "C:\RunBootstrapScript\.\Bootstrap.ps1 -adminUsername `"$adminUser`" -adminPassword `"$adminPass`" -baseADGroupRDP `"$ADGroup`" -remoteHostPattern `"$rdshpattern`""
 				
             }
             GetScript = {@{Result = "RunBootstrapScript"}}
