@@ -1,0 +1,55 @@
+<section class="sops-sect access-desk cloud-desk clearfix">
+    <div class="cloud-desk-bg" style="background-image:url('layout/access-1.jpg')">
+        <div class="container container-compact">
+            <div class="row conf-row-1 row-eq-height">
+                <div class="col-sm-8 col-lg-9"></div>
+                <div class="col-sm-4 col-lg-3 rel cloud-dsk-out">
+                    <div class="cloud-dsk">
+                        <span class="thumb"><i class="icon-desk-c"></i></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="cloud-desk-front clearfix">
+        <div class="container container-compact rel">
+            <div class="row">
+                <div class="col-sm-8 col-md-8">
+                    <section class="message-el w-shad">
+                        
+                        <div class="title h2 weight-light act-color block-xs">
+                            Dear {{globals.currentUser.username}},
+                        </div>
+                         <h3 class="title block-md  weight-light gray-color"> 
+                        Your Registration is now done!
+                        </h3>
+                        <div class="pd-tbl pd-tbl-message block-md t-sz-16">
+                            <div class="pd-col addon">
+                                <span class="thumb"><i class="icon-login-1"></i></span>
+                            </div>
+                            <div class="pd-col cont">
+                                Your credentials are the following:<br>
+                                Username: <strong>{{accessData.username}}</strong><br>
+                                Password: <strong>{{accessData.password}}</strong>
+                            </div>
+                        </div>
+                        <div class="pd-tbl pd-tbl-message block-md t-sz-16" ng-if="accessData.email">
+                            <div class="pd-col addon">
+                                <span class="thumb"><i class="icon-mail_direct"></i></span>
+                            </div>
+                            <div class="pd-col cont" >
+                                An email has been sent to <strong>{{accessData.email}}</strong> with a link to your login page
+                            </div>
+                        </div>
+                        <div class="form-actions text-right block-sm">
+                        <a class="btn btn-submit btn-lg  rounded" ng-click="goToDesk()">
+                            Access Your Desktop
+                        </a>
+                        </div>
+                        
+                    </section>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
