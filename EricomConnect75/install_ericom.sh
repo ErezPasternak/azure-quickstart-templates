@@ -79,13 +79,13 @@ time sudo sed -i '$ a\greeter-show-manual-login=true' /usr/share/lightdm/lightdm
 time sudo domainjoin-cli join $DOMAIN $DOMAIN_ADMIN $DOMAIN_PWD
 
 # register this machine in the DNS
-new_ip_address=$(ifconfig eth0 | grep "inet addr:" | cut -d: -f2 | awk '{ print $1}')
-
-time nsupdatecmds=/var/tmp/nsupdatecmds
-time sudo echo "update delete $RemoteAgentAddress a" > $nsupdatecmds
-time sudo echo "update add $RemoteAgentAddress 3600 a $new_ip_address" >> $nsupdatecmds
-time sudo echo "send" >> $nsupdatecmds
-time sudo nsupdate $nsupdatecmds
+# new_ip_address=$(ifconfig eth0 | grep "inet addr:" | cut -d: -f2 | awk '{ print $1}')
+time sudo lw-update-dns
+# time nsupdatecmds=/var/tmp/nsupdatecmds
+# time sudo echo "update delete $RemoteAgentAddress a" > $nsupdatecmds
+# time sudo echo "update add $RemoteAgentAddress 3600 a $new_ip_address" >> $nsupdatecmds
+# time sudo echo "send" >> $nsupdatecmds
+# time sudo nsupdate $nsupdatecmds
 
 # time sudo ifconfig | grep -i "inet addr"
 
