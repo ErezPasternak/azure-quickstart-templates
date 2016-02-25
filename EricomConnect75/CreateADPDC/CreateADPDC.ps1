@@ -157,48 +157,5 @@
             }
             GetScript = {@{Result = "FixUPNSuffix"}}      
         }
-
-      #  Script FixLinuxMachine
-      #  {
-      #      TestScript = {
-      #          Test-Path "C:\linuxmachine"
-      #      }
-      #      SetScript ={               
-      #          $dc = "dc." + $Using:DomainName;
-      #          $domain = "$Using:DomainName";
-      #          $arguments = "$dc /config $domain /allowupdate 1" 
-      #          $configPath = "C:\Windows\system32\dnscmd.exe";               
-      #          $exitCode = (Start-Process -Filepath $configPath -ArgumentList "$arguments" -Wait -Passthru).ExitCode
-      #          New-Item -Path "C:\linuxmachine" -ItemType Directory 
-                
-       #     }
-       #     GetScript = {@{Result = "FixLinuxMachine"}}      
-       # }
-        
-       # Script FixDNS
-       # {
-       #     TestScript = {
-       #         Test-Path "C:\fixdns"
-       #     }
-       #     SetScript ={              
-       #         $dc = "dc." + $Using:DomainName;
-       #         $domain = "$Using:DomainName";
-       #         $arguments = "$dc /writebackfiles" 
-       #         $configPath = "C:\Windows\system32\dnscmd.exe";               
-       #         $exitCode = (Start-Process -Filepath $configPath -ArgumentList "$arguments" -Wait -Passthru).ExitCode
-       #         New-Item -Path "C:\fixdns" -ItemType Directory 
-                
-        #    }
-        #    GetScript = {@{Result = "FixDNS"}}      
-        #}
-        xDnsServerADZone addForwardADZone
-        {
-         Name = $DomainName
-         DynamicUpdate = "NonsecureAndSecure"
-         ReplicationScope = "Legacy"
-         ComputerName = "dc."+ $DomainName
-         Credential = $DomainCreds
-         Ensure = 'Present'
-        }
    }
 } 

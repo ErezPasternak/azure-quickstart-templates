@@ -157,23 +157,6 @@
             }
             GetScript = {@{Result = "FixUPNSuffix"}}      
         }
-
-        Script FixLinuxMachine
-        {
-            TestScript = {
-                Test-Path "C:\linuxmachine"
-            }
-            SetScript ={
-                # Fix UPN suffix                
-                $dc = "dc." + $Using:DomainName;
-                $domain = "$Using:DomainName";
-                $arguments = "$dc /config $domain /allowupdate 1" 
-                $configPath = "C:\Windows\system32\dnscmd.exe";               
-                $exitCode = (Start-Process -Filepath $configPath -ArgumentList "$arguments" -Wait -Passthru).ExitCode
-                New-Item -Path "C:\linuxmachine" -ItemType Directory 
-                
-            }
-            GetScript = {@{Result = "FixLinuxMachine"}}      
-        }
-   }
+  
+    }
 } 
