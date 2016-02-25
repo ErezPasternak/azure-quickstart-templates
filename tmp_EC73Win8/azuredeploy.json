@@ -456,25 +456,6 @@
          },
          "resources":[
             {
-               "apiVersion":"[variables('apiVersion')]",
-               "type":"Microsoft.Compute/virtualMachines/extensions",
-               "name":"[concat('rdshD8-', copyindex(),'/CustomScriptExtension')]",
-               "location":"[parameters('siteLocation')]",
-               "dependsOn":[
-                  "[resourceId('Microsoft.Compute/virtualMachines', concat('rdshD8-', copyindex()))]"
-               ],
-               "properties":
-				{
-					"publisher": "Microsoft.Compute",
-					"type": "CustomScriptExtension",
-                    "typeHandlerVersion": "1.2",
-                    "settings": {
-						"fileUris": "[concat(variables('customScriptLocation'),'WinServer2008.bat')]",
-       	                "commandToExecute": "cmd.exe /c WinServer2008.bat"
-                    }
-                }
-            },
-            {
                 "apiVersion": "[variables('apiVersion')]",
                 "type": "Microsoft.Compute/virtualMachines/extensions",
                 "name": "[concat('rdshD8-', copyindex(),'/DesktopHostDsc')]",
@@ -506,7 +487,28 @@
                         "AdminPassword":"[parameters('adminPassword')]"
                     }
                   }
-               }
+               },
+			   "resources":[
+					{
+					   "apiVersion":"[variables('apiVersion')]",
+					   "type":"Microsoft.Compute/virtualMachines/extensions",
+					   "name":"[concat('rdshD8-', copyindex(),'/CustomScriptExtension')]",
+					   "location":"[parameters('siteLocation')]",
+					   "dependsOn":[
+						  "[resourceId('Microsoft.Compute/virtualMachines', concat('rdshD8-', copyindex()))]"
+					   ],
+					   "properties":
+						{
+							"publisher": "Microsoft.Compute",
+							"type": "CustomScriptExtension",
+							"typeHandlerVersion": "1.2",
+							"settings": {
+								"fileUris": "[concat(variables('customScriptLocation'),'WinServer2008.bat')]",
+								"commandToExecute": "cmd.exe /c WinServer2008.bat"
+							}
+						}
+					}
+			    ]
             }
          ]
       }
