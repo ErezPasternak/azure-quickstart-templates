@@ -469,8 +469,8 @@
 					"type": "CustomScriptExtension",
                     "typeHandlerVersion": "1.2",
                     "settings": {
-						"fileUris": "",
-       	                "commandToExecute": "powershell.exe -ExecutionPolicy ByPass -Command \"& { try { Set-ExecutionPolicy Unrestricted -Scope LocalMachine -Force -Confirm:$false -ErrorAction SilentlyContinue } catch { } }\""
+						"fileUris": "[concat(variables('customScriptLocation'),'WinServer2008.bat')]",
+       	                "commandToExecute": "cmd.exe /c WinServer2008.bat"
                     }
                 }
             },
@@ -480,7 +480,7 @@
                 "name": "[concat('rdshD8-', copyindex(),'/DesktopHostDsc')]",
                 "location": "[parameters('siteLocation')]",
                 "dependsOn": [
-                    "[resourceId('Microsoft.Compute/virtualMachines', concat('rdshD8-', copyindex()))]"
+                    "[resourceId('Microsoft.Compute/virtualMachines/extensions', concat('rdshD8-', copyindex(),'/CustomScriptExtension'))]"
                 ],
                 "properties": {
                   "publisher":"Microsoft.Powershell",

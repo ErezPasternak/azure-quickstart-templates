@@ -1,0 +1,1 @@
+powershell.exe -ExecutionPolicy ByPass -Command "& { try { Set-ExecutionPolicy Unrestricted -Scope LocalMachine -Force -Confirm:$false -ErrorAction SilentlyContinue } catch { } }"
