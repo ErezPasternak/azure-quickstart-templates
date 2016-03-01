@@ -17,6 +17,10 @@ var app = angular.module('app', [
 .config(['$routeProvider', function ($routeProvider) {
 
     $routeProvider
+        .when('/generic', {
+            controller: 'genericController',
+            templateUrl: 'modules/authentication/views/generic.html'
+        })
         .when('/register', {
             controller: 'registerController',
             templateUrl: 'modules/authentication/views/register.html'
@@ -70,7 +74,7 @@ var app = angular.module('app', [
 			'Content-Type': 'application/json'
 		}
 	}
-	$http.post('api', data, config)
+    $http.post('../command/GetAppList', data, config)
 	 .then(function successCallback(response) {
 		var resp = response.data
 		if(!!resp && 'TaskWorkers' in resp) {

@@ -77,7 +77,7 @@
 								$('form').first().submit();
 							}
 						});
-                        document.getElementById('endURL').value = window.location.href;
+                        document.getElementById('endURL').value = getURLParameter('endURL');
 						document.getElementById('Username').value = getURLParameter('username'); // *
 						document.getElementById('Password').value = getURLParameter('password'); // *
 						document.getElementById('EUWS').value = window.document.location.host;

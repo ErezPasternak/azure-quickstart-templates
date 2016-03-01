@@ -456,61 +456,25 @@
          },
          "resources":[
             {
-                "apiVersion": "[variables('apiVersion')]",
-                "type": "Microsoft.Compute/virtualMachines/extensions",
-                "name": "[concat('rdshD8-', copyindex(),'/DesktopHostDsc')]",
-                "location": "[parameters('siteLocation')]",
-                "dependsOn": [
-                    "[concat('Microsoft.Compute/virtualMachines/extensions/','rdshD8-', copyindex(),'/CustomScriptExtension')]"
+                "apiVersion":"[variables('apiVersion')]",
+                "type":"Microsoft.Compute/virtualMachines/extensions",
+                "name":"[concat('rdshD8-', copyindex(),'/CustomScriptExtension')]",
+                "location":"[parameters('siteLocation')]",
+                "dependsOn":[
+                    "[resourceId('Microsoft.Compute/virtualMachines', concat('rdshD8-', copyindex()))]"
                 ],
-                "properties": {
-                  "publisher":"Microsoft.Powershell",
-                  "type":"DSC",
-                  "typeHandlerVersion":"2.8",
-                  "settings":{
-                     "ModulesUrl":"[concat(variables('customScriptLocation'),'Configuration.zip')]",
-                     "ConfigurationFunction":"Configuration.ps1\\DesktopHost",
-                     "Properties":{
-                        "DomainName":"[parameters('domainName')]",
-                        "AdminCreds":{
-                           "UserName":"[parameters('adminUsername')]",
-                           "Password":"PrivateSettingsRef:AdminPassword"
-                        },
-                        "gridName":"[variables('ecGridname')]",
-                        "LUS":"broker.DaaS.local",
-                        "tenant":"root",
-                        "softwareBaseLocation":"[variables('softwareBaseLocation')]"
-                     }
-                  },
-                  "protectedSettings":{
-                    "Items":{
-                        "AdminPassword":"[parameters('adminPassword')]"
+                "properties":
+                {
+                    "publisher": "Microsoft.Compute",
+                    "type": "CustomScriptExtension",
+                    "typeHandlerVersion": "1.2",
+                    "settings": {
+                        "fileUris": "[concat(variables('customScriptLocation'),'WinServer2008.bat')]",
+                        "commandToExecute": "cmd.exe /c WinServer2008.bat"
                     }
-                  }
-               },
-			   "resources":[
-					{
-					   "apiVersion":"[variables('apiVersion')]",
-					   "type":"Microsoft.Compute/virtualMachines/extensions",
-					   "name":"[concat('rdshD8-', copyindex(),'/CustomScriptExtension')]",
-					   "location":"[parameters('siteLocation')]",
-					   "dependsOn":[
-						  "[resourceId('Microsoft.Compute/virtualMachines', concat('rdshD8-', copyindex()))]"
-					   ],
-					   "properties":
-						{
-							"publisher": "Microsoft.Compute",
-							"type": "CustomScriptExtension",
-							"typeHandlerVersion": "1.2",
-							"settings": {
-								"fileUris": "[concat(variables('customScriptLocation'),'WinServer2008.bat')]",
-								"commandToExecute": "cmd.exe /c WinServer2008.bat"
-							}
-						}
-					}
-			    ]
+                }
             }
-         ]
+        ]
       }
    ]
 }

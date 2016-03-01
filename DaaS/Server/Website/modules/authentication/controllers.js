@@ -98,4 +98,45 @@ angular.module(['Authentication'])
             }
         ];
   
+})
+.controller('genericController', function ($scope, $rootScope, $location, $http, AuthenticationService, Page, ApplicationService, $window) {
+    $rootScope.compactWidthPage = true;
+
+    Page.setTitle('Service Provider Desktop as a Service (DaaS) Portal');
+
+
+    $scope.sendCall = function () {
+        $scope.dataLoading = true;
+
+        var data = {
+            command: 'Generic'
+        };
+        var config = {
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        }
+        $http.post('../command/Generic', data, config)
+            .then(function successCallback(response) {
+                // let's do something with the result
+                $scope.dataLoading = false;
+            }, function errorCallback(response) {
+                $scope.dataLoading = false;
+                // error
+            });
+    };
+
+    //caurusel
+    $scope.myInterval = 8500;
+    $scope.noWrapSlides = false;
+    $scope.slides = [
+        {
+            image: 'layout/slide-1.jpg',
+            id: 0
+        }, {
+            image: 'layout/slide-2.jpg',
+            id: 1
+        }
+    ];
+
 });

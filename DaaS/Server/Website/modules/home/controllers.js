@@ -31,7 +31,7 @@ angular.module('Desk', [])
                 'Content-Type': 'application/json'
             }
         }
-        $http.post('api', data, config)
+        $http.post('../command/AssignUser', data, config)
             .then(function successCallback(response) {
             $rootScope.isAccessDesk =true;
             // set data to access page
@@ -95,7 +95,7 @@ angular.module('Desk', [])
                 'Content-Type': 'application/json'
             }
         }
-        $http.post('api', data, config)
+        $http.post('../command/CustomDesk', data, config)
             .then(function successCallback(response) {
             $rootScope.isAccessDesk =true;
             // set data to access page

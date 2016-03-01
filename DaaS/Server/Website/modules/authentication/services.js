@@ -19,7 +19,7 @@ angular.module('Authentication')
                 }
             }
             
-            $http.post('api', data, config)
+            $http.post('../command/AuthUser', data, config)
              .then(function successCallback(response) {
                callback(response.data);  
             }, function errorCallback(response) {
@@ -60,7 +60,7 @@ angular.module('Authentication')
                 }
             }
             
-            $http.post('api', data, config)
+            $http.post('../command/CreateUser', data, config)
              .then(function successCallback(response) {
                callback(response.data);  
             }, function errorCallback(response) {
@@ -101,7 +101,7 @@ angular.module('Authentication')
 		
 		service.GetAllApplications = function (groups, callback) {
             var data = {
-				command: 'Get-AppList',
+				command: 'GetAppList',
 				groups:groups
             };
             var config = {
@@ -109,7 +109,7 @@ angular.module('Authentication')
                     'Content-Type': 'application/json'
                 }
             }
-            $http.post('api', data, config)
+		    $http.post('../command/GetAppList', data, config)
              .then(function successCallback(response, storage) {
                 callback(response.data);
             }, function errorCallback(response) {
@@ -120,7 +120,7 @@ angular.module('Authentication')
 		
 		service.GetDefaultApplications = function (callback) {
             var data = {
-				command: 'Get-AppList',
+				command: 'GetAppList',
 				groups: "TaskWorkers,KnowledgeWorkers,MobileWorkers"
             };
             var config = {
@@ -129,7 +129,7 @@ angular.module('Authentication')
                 }
             }
             
-            $http.post('api', data, config)
+		    $http.post('../command/GetAppList', data, config)
              .then(function successCallback(response) {
                callback(response.data);  
             }, function errorCallback(response) {
@@ -140,7 +140,7 @@ angular.module('Authentication')
 		
 		service.GetCustomApplications = function (callback) {
             var data = {
-				command: 'Get-AppList',
+				command: 'GetAppList',
 				groups: "Office,Internet,Multimedia"
             };
             var config = {
@@ -149,7 +149,7 @@ angular.module('Authentication')
                 }
             }
             
-            $http.post('api', data, config)
+		    $http.post('../command/GetAppList', data, config)
              .then(function successCallback(response) {
                callback(response.data);  
             }, function errorCallback(response) {
