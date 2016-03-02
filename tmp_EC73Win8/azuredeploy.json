@@ -246,9 +246,6 @@
             "name":"rdshD8-nif-loop",
             "count":"[parameters('numberOf2008DesktopHostInstances')]"
          },
-         "dependsOn":[
-            "Microsoft.Network/loadBalancers/loadBalancer"
-         ],
          "properties":{
             "ipConfigurations":[
                {
