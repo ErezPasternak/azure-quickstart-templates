@@ -247,7 +247,7 @@
             "count":"[parameters('numberOf2008DesktopHostInstances')]"
          },
          "dependsOn":[
-            "Microsoft.Resources/deployments/updatevnetdns"
+            "Microsoft.Network/loadBalancers/loadBalancer"
          ],
          "properties":{
             "ipConfigurations":[
