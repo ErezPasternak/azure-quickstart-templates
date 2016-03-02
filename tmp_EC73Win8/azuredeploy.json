@@ -321,9 +321,9 @@
                     "type": "CustomScriptExtension",
                     "typeHandlerVersion": "1.4",
                     "settings": {
-                        "fileUris": ["[concat(variables('customScriptLocation'),'WinServer2008.bat')]"]
-					},
-                    "commandToExecute": "cmd.exe /c WinServer2008.bat"                    
+                        "fileUris": ["[concat(variables('customScriptLocation'),'WinServer2008.bat')]"],					
+						"commandToExecute": "cmd.exe /c WinServer2008.bat"                    
+					}
                 }
             }
         ]
