@@ -1,6 +1,6 @@
 ![Ericom::Access Done Right](http://www.ericom.com/imgs/home/EricomLogo2.jpg "Ericom Logo") 
 
-### Deploy **Ericom Connect** (Beta) on a Multiple Virtual Machines Environment
+### Deploy **Ericom Connect 7.5.1 ** (Beta) on a Multiple Virtual Machines Environment
 
 [![Deploy to Azure](http://azuredeploy.net/deploybutton.png)](https://azuredeploy.net/)
 
