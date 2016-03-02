@@ -396,7 +396,7 @@ configuration ApplicationHost
             Ensure = "Present" 
             Path  = "C:\EricomAccessServer64.msi"
             Name = "Ericom Access Server"
-            ProductId = "F340EF5E-D4D8-4FB8-AE87-11459D65ED7F"
+            ProductId = "2E4CBE53-4ABD-4DB5-AD32-E50DDC4410AA"
             Arguments = ""
             LogPath = "C:\log-eas.txt"
             DependsOn = "[Script]DownloadAccessServerMSI"
