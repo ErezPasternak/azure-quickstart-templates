@@ -79,8 +79,9 @@
       },
       "rdshVmSize":{
          "type":"string",
-         "defaultValue":"Standard_D2",
+         "defaultValue":"Standard_D1",
          "allowedValues":[
+            "Standard_D1",
             "Standard_D2",
             "Standard_D3",
             "Standard_DS3",
@@ -101,8 +102,9 @@
       },
       "LinuxVmSize":{
          "type":"string",
-         "defaultValue":"Standard_D2",
+         "defaultValue":"Standard_D1",
          "allowedValues":[
+            "Standard_D1",
             "Standard_D2",
             "Standard_D3",
             "Standard_DS3",
