@@ -10,29 +10,14 @@ RAWSaddress=$4
 TenantInfo=$5
 RemoteAgentAddress=$6
 
-#    "command" : "[concat('bash install_ericom.sh ', variables('domain'),' ', variables('domainAdmin'),' ', variables('domainPwd'),' ', variables('rAWSaddress'),' ', variables('remoteAgentAddress'),' ', variables('tenantInfo'))]"
-echo "DOMAIN: $DOMAIN"
-echo "ADMIN:  $DOMAIN_ADMIN"
-echo "PWD: $DOMAIN_PWD"
-echo "RAWSaddress: $RAWSaddress"
-echo "RemoteAgentAddress: $RemoteAgentAddress"
-echo "TenantInfo: $TenantInfo"
-
-time sudo apt-get -y install language-pack-UTF-8
-
 # define variable of applicaiton to launch in the desktop.  can use xfce4-session or firefox for example
-XRDP_APP=xfce4-session
+XRDP_APP=firefox
 
 # install QT
 time sudo apt-get -y install qt5-default
 
 # install firefix, 
 time sudo apt-get -y install firefox
-
-# install chrome,
-# time wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
-# time sudo dpkg -i google-chrome-stable_current_amd64.deb
-# time sudo apt-get -y --force-yes install -f
 
 # install xfce window manager
 time sudo apt-get -y install xfce4 xfce4-goodies
@@ -67,10 +52,6 @@ time sudo dpkg -i likewise-open-gui_6.1.0.406-0ubuntu5.1_amd64.deb
 #install unzip 
 time sudo apt-get -y install unzip
 
-# time sudo perl -pi.bak -E's/^hosts:.*files mdns4_minimal .NOTFOUND=return. dns$/hosts: files dns [NOTFOUND=return]/'   /etc/nsswitch.conf
-
-# /etc/init.d/networking restart
-
 # append w/o using redirection
 
 time sudo sed -i '$ a\allow-guest=false' /usr/share/lightdm/lightdm.conf.d/50-ubuntu.conf
@@ -79,15 +60,7 @@ time sudo sed -i '$ a\greeter-show-manual-login=true' /usr/share/lightdm/lightdm
 time sudo domainjoin-cli join $DOMAIN $DOMAIN_ADMIN $DOMAIN_PWD
 
 # register this machine in the DNS
-# new_ip_address=$(ifconfig eth0 | grep "inet addr:" | cut -d: -f2 | awk '{ print $1}')
 time sudo lw-update-dns
-# time nsupdatecmds=/var/tmp/nsupdatecmds
-# time sudo echo "update delete $RemoteAgentAddress a" > $nsupdatecmds
-# time sudo echo "update add $RemoteAgentAddress 3600 a $new_ip_address" >> $nsupdatecmds
-# time sudo echo "send" >> $nsupdatecmds
-# time sudo nsupdate $nsupdatecmds
-
-# time sudo ifconfig | grep -i "inet addr"
 
 #download Ericom AccessServer and Remote Agent
 if [ ! -f ericom-connect-remote-host_x64.deb.zip ]
