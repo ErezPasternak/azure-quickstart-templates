@@ -297,7 +297,8 @@ configuration ApplicationHost
         [String]$softwareBaseLocation
         
     ) 
-
+    Import-DscResource -ModuleName xActiveDirectory, xComputerManagement, cChoco
+    
     $_adminUser = $adminCreds.UserName
     $domainCreds = New-Object System.Management.Automation.PSCredential ("$domainName\$_adminUser", $adminCreds.Password)
     $_adminPassword = [Runtime.InteropServices.Marshal]::PtrToStringAuto([Runtime.InteropServices.Marshal]::SecureStringToBSTR( (ConvertTo-SecureString ($adminCreds.Password | ConvertFrom-SecureString)) ))
@@ -323,7 +324,41 @@ configuration ApplicationHost
             Name = "RDS-RD-Server"
         }
 	
-		 
+		cChocoInstaller installChoco
+        {
+            InstallDir = "c:\choco"
+        }
+        
+        cChocoPackageInstaller installChrome
+        {
+            Name = "googlechrome"
+            DependsOn = "[cChocoInstaller]installChoco"
+        }
+        
+        cChocoPackageInstaller installFirefox
+        {
+            Name = "firefox"
+            DependsOn = "[cChocoInstaller]installChoco"
+        }
+ 
+        cChocoPackageInstaller install7zip
+        {
+            Name = "7zip.install"
+            DependsOn = "[cChocoInstaller]installChoco"
+        }
+        
+        cChocoPackageInstaller installadobereader
+        {
+            Name = "adobereader"
+            DependsOn = "[cChocoInstaller]installChoco"
+        }
+ 
+        cChocoPackageInstaller installdropbox
+        {
+            Name = "dropbox"
+            DependsOn = "[cChocoInstaller]installChoco"
+        }
+ 
 	    Script DownloadGridMSI
         {
             TestScript = {
