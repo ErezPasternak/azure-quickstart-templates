@@ -157,7 +157,8 @@
       "linuxImagePublisher":"Canonical",
       "linuxImageOffer":"UbuntuServer",
       "tenantInfo":"root",
-      "command":"[concat('bash install_ericom.sh ', parameters('domainName'),' ', parameters('adminUsername'),' ', parameters('adminPassword'),' broker.',parameters('domainName'),' ', variables('tenantInfo'))]"
+      "LinuxApp": "firfox",
+      "command":"[concat('bash install_ericom.sh ', parameters('domainName'),' ', parameters('adminUsername'),' ', parameters('adminPassword'),' broker.',parameters('domainName'),' ', variables('tenantInfo'),' ' ,variables('LinuxApp'))]"
    },
    "resources":[
       {
