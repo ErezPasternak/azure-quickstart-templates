@@ -488,13 +488,7 @@ configuration ApplicationHost
             DependsOn = "[cChocoInstaller]installChoco"
         }
         
-        cChocoPackageInstaller installFirefox
-        {
-            Name = "firefox"
-            DependsOn = "[cChocoInstaller]installChoco"
-        }
- 
-        cChocoPackageInstaller install7zip
+       cChocoPackageInstaller install7zip
         {
             Name = "7zip.install"
             DependsOn = "[cChocoInstaller]installChoco"
