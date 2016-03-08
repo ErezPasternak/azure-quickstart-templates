@@ -81,7 +81,7 @@
       "ESGNetBIOSName2":{
          "Description":"NetBIOS name of the 2nd ESG (upto 15 characters)",
          "Type":"String",
-         "Default":"ESG22",
+         "Default":"ESG2",
          "MinLength":"1",
          "MaxLength":"15",
          "AllowedPattern":"[a-zA-Z0-9]+"
@@ -102,7 +102,7 @@
          "MaxLength":"15",
          "AllowedPattern":"[a-zA-Z0-9]+"
       },
-      "RdshdNetBIOSName":{
+      "RdshdNetName":{
          "Description":"NetBIOS name of the RDSH server For Desktops   (upto 15 characters)",
          "Type":"String",
          "Default":"Rdshd",
@@ -110,7 +110,7 @@
          "MaxLength":"15",
          "AllowedPattern":"[a-zA-Z0-9]+"
       },
-      "RdshaNetBIOSName":{
+      "RdshaNetName":{
          "Description":"NetBIOS name of the RDSH server For Applications   (upto 15 characters)",
          "Type":"String",
          "Default":"Rdsha",

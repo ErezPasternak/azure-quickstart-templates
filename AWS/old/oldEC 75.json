@@ -58,18 +58,18 @@
       "MaxLength": "15",
       "AllowedPattern": "[a-zA-Z0-9]+"
     },
-    "RDSHD-0NetBIOSName": {
+    "RDSHDName": {
       "Description": "NetBIOS name of the RDSH server For Desktops   (upto 15 characters)",
       "Type": "String",
-      "Default": "rdshd-0",
+      "Default": "rdshd",
       "MinLength": "1",
       "MaxLength": "15",
       "AllowedPattern": "[a-zA-Z0-9]+"
     },
-    "RDSHA-0NetBIOSName": {
+    "RDSHAName": {
       "Description": "NetBIOS name of the RDSH server For Applications   (upto 15 characters)",
       "Type": "String",
-      "Default": "rdsha-0",
+      "Default": "rdsha",
       "MinLength": "1",
       "MaxLength": "15",
       "AllowedPattern": "[a-zA-Z0-9]+"
