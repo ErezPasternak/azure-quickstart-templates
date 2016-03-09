@@ -1,0 +1,5194 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "(000B) - This template deploys a Windows based web application stack and PowerShell DSC Pull Server infrastructure across two availability zones. Instances are bootstrapped both by CloudFormation and within Windows by pulling desired configurations from the DSC Pull Server.",
+  "Parameters": {
+    "KeyPairName": {
+      "Description": "Public/private key pairs allow you to securely connect to your instance after it launches",
+      "Type": "AWS::EC2::KeyPair::KeyName"
+    },
+    "NATInstanceType": {
+      "Description": "Amazon EC2 instance type for the NAT Instances",
+      "Type": "String",
+      "Default": "t2.small",
+      "AllowedValues": [
+        "t2.small",
+        "t2.medium"
+      ]
+    },
+    "WindowsInstanceType": {
+      "Description": "Amazon EC2 instance type for the Windows Instances",
+      "Type": "String",
+      "Default": "m3.xlarge",
+      "AllowedValues": [
+        "m1.small",
+        "m1.medium",
+        "m1.large",
+        "m2.xlarge",
+        "m2.2xlarge",
+        "m2.4xlarge",
+        "m3.xlarge",
+        "c1.medium",
+        "c1.xlarge"
+      ]
+    },
+    "PullServerInstanceType": {
+      "Description": "Amazon EC2 instance type for the PowerShell DSC Pull Servers",
+      "Type": "String",
+      "Default": "t2.medium",
+      "AllowedValues": [
+        "t2.micro",
+        "t2.small",
+        "t2.medium"
+      ]
+    },
+    "DomainDNSName": {
+      "Description": "DNS Domain for the AD Domain (example.com)",
+      "Type": "String",
+      "Default": "test.local"
+    },
+    "DomainNetBiosName": {
+      "Description": "Netbios name for the domain (EXAMPLE)",
+      "Type": "String",
+      "Default": "test"
+    },
+    "AdminPassword": {
+      "Description": "Password for the Administrator user account",
+      "Type": "String",
+      "NoEcho": "true",
+      "Default": "Password123"
+    },
+    "PullServer1PrivateIp": {
+      "Description": "Fixed private IP for the first DSC Pull server located in AZ1",
+      "Type": "String",
+      "Default": "10.0.0.15"
+    },
+    "PullServer2PrivateIp": {
+      "Description": "Fixed private IP for the first DSC Pull server located in AZ2",
+      "Type": "String",
+      "Default": "10.0.64.15"
+    },
+    "ADServer1PrivateIp": {
+      "Description": "Fixed private IP for the first Domain Controller located in AZ1",
+      "Type": "String",
+      "Default": "10.0.0.10"
+    },
+    "ADServer2PrivateIp": {
+      "Description": "Fixed private IP for the Domain Controller located in AZ2",
+      "Type": "String",
+      "Default": "10.0.64.10"
+    },
+    "DMZ1CIDR": {
+      "Description": "CIDR Block for the Public DMZ Subnet located in AZ1",
+      "Type": "String",
+      "Default": "10.0.32.0/20",
+      "AllowedPattern": "[a-zA-Z0-9]+\\..+"
+    },
+    "DMZ2CIDR": {
+      "Description": "CIDR Block for the Public DMZ Subnet located in AZ2",
+      "Type": "String",
+      "Default": "10.0.96.0/20",
+      "AllowedPattern": "[a-zA-Z0-9]+\\..+"
+    },
+    "PrivateSubnet1CIDR": {
+      "Description": "CIDR Block for Private Subnet 1 located in AZ1",
+      "Type": "String",
+      "Default": "10.0.0.0/19",
+      "AllowedPattern": "[a-zA-Z0-9]+\\..+"
+    },
+    "PrivateSubnet2CIDR": {
+      "Description": "CIDR Block for Private Subnet 2 located in AZ2",
+      "Type": "String",
+      "Default": "10.0.64.0/19",
+      "AllowedPattern": "[a-zA-Z0-9]+\\..+"
+    },
+    "VPCCIDR": {
+      "Description": "CIDR Block for the VPC",
+      "Type": "String",
+      "Default": "10.0.0.0/16",
+      "AllowedPattern": "[a-zA-Z0-9]+\\..+"
+    }
+  },
+  "Mappings": {
+    "AWSInstanceType2Arch": {
+      "m1.small": {
+        "Arch": "64"
+      },
+      "t2.micro": {
+        "Arch": "64"
+      },
+      "t2.small": {
+        "Arch": "64"
+      },
+      "t2.medium": {
+        "Arch": "64"
+      },
+      "m2.2xlarge": {
+        "Arch": "64"
+      },
+      "m2.4xlarge": {
+        "Arch": "64"
+      },
+      "m3.medium": {
+        "Arch": "64"
+      },
+      "m3.large": {
+        "Arch": "64"
+      },
+      "m3.xlarge": {
+        "Arch": "64"
+      },
+      "m3.2xlarge": {
+        "Arch": "64"
+      },
+      "c1.medium": {
+        "Arch": "64"
+      },
+      "c1.xlarge": {
+        "Arch": "64"
+      }
+    },
+    "AWSRegionArch2AMI": {
+      "us-east-1": {
+        "64": "ami-3586ac5f"
+      },
+      "us-west-2": {
+        "64": "ami-df8767bf"
+      },
+      "us-west-1": {
+        "64": "ami-95fd8bf5"
+      },
+      "eu-west-1": {
+        "64": "ami-8519a9f6"
+      },
+      "eu-central-1": {
+        "64": "ami-5dd2c931"
+      },
+      "ap-southeast-1": {
+        "64": "ami-9801cffb"
+      },
+      "ap-northeast-1": {
+        "64": "ami-14b8bc7a"
+      },
+      "sa-east-1": {
+        "64": "ami-828e0dee"
+      },
+      "ap-southeast-2": {
+        "64": "ami-d31dd3bd"
+      }
+    },
+    "AWSRegionArchNatAMI": {
+      "us-east-1": {
+        "64": "ami-4c9e4b24"
+      },
+      "us-west-2": {
+        "64": "ami-bb69128b"
+      },
+      "us-west-1": {
+        "64": "ami-2b2b296e"
+      },
+      "eu-west-1": {
+        "64": "ami-3760b040"
+      },
+      "eu-central-1": {
+        "64": "ami-204c7a3d"
+      },
+      "ap-southeast-1": {
+        "64": "ami-b082dae2"
+      },
+      "ap-southeast-2": {
+        "64": "ami-996402a3"
+      },
+      "ap-northeast-1": {
+        "64": "ami-55c29e54"
+      },
+      "sa-east-1": {
+        "64": "ami-b972dba4"
+      }
+    }
+  },
+  "Resources": {
+    "EC2Role": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "Service": [
+                  "ec2.amazonaws.com"
+                ]
+              },
+              "Action": [
+                "sts:AssumeRole"
+              ]
+            }
+          ]
+        },
+        "Path": "/",
+        "Policies": [
+          {
+            "PolicyName": "EC2RolePolicy",
+            "PolicyDocument": {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "elasticloadbalancing:DescribeLoadBalancers",
+                    "ec2:DescribeInstances",
+                    "elasticloadbalancing:RegisterInstancesWithLoadBalancer"
+                  ],
+                  "Resource": [
+                    "*"
+                  ]
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "Metadata": {
+        "AWS::CloudFormation::Designer": {
+          "id": "401bcb16-da50-4975-a52b-6723f3b9ab57"
+        }
+      }
+    },
+    "EC2RoleInstanceProfile": {
+      "Type": "AWS::IAM::InstanceProfile",
+      "Properties": {
+        "Path": "/",
+        "Roles": [
+          {
+            "Ref": "EC2Role"
+          }
+        ]
+      },
+      "Metadata": {
+        "AWS::CloudFormation::Designer": {
+          "id": "0dbb1855-2711-4553-8187-50a5a3cbb573"
+        }
+      }
+    },
+    "VPC": {
+      "Type": "AWS::EC2::VPC",
+      "Properties": {
+        "CidrBlock": {
+          "Ref": "VPCCIDR"
+        },
+        "Tags": [
+          {
+            "Key": "Application",
+            "Value": {
+              "Ref": "AWS::StackName"
+            }
+          },
+          {
+            "Key": "Network",
+            "Value": "Public"
+          }
+        ]
+      },
+      "Metadata": {
+        "AWS::CloudFormation::Designer": {
+          "id": "c42f950f-6016-4ccd-babd-ccd5ff471571"
+        }
+      }
+    },
+    "DMZ1Subnet": {
+      "Type": "AWS::EC2::Subnet",
+      "Properties": {
+        "VpcId": {
+          "Ref": "VPC"
+        },
+        "CidrBlock": {
+          "Ref": "DMZ1CIDR"
+        },
+        "AvailabilityZone": {
+          "Fn::Select": [
+            0,
+            {
+              "Fn::GetAZs": ""
+            }
+          ]
+        },
+        "Tags": [
+          {
+            "Key": "Application",
+            "Value": {
+              "Ref": "AWS::StackName"
+            }
+          },
+          {
+            "Key": "Network",
+            "Value": "Public"
+          },
+          {
+            "Key": "Role",
+            "Value": "DMZ 1 Subnet"
+          }
+        ]
+      },
+      "Metadata": {
+        "AWS::CloudFormation::Designer": {
+          "id": "df6cd2f6-41a3-4f06-b983-fc29500053b9"
+        }
+      }
+    },
+    "DMZ2Subnet": {
+      "Type": "AWS::EC2::Subnet",
+      "Properties": {
+        "VpcId": {
+          "Ref": "VPC"
+        },
+        "CidrBlock": {
+          "Ref": "DMZ2CIDR"
+        },
+        "AvailabilityZone": {
+          "Fn::Select": [
+            1,
+            {
+              "Fn::GetAZs": ""
+            }
+          ]
+        },
+        "Tags": [
+          {
+            "Key": "Application",
+            "Value": {
+              "Ref": "AWS::StackName"
+            }
+          },
+          {
+            "Key": "Network",
+            "Value": "Public"
+          },
+          {
+            "Key": "Role",
+            "Value": "DMZ 2 Subnet"
+          }
+        ]
+      },
+      "Metadata": {
+        "AWS::CloudFormation::Designer": {
+          "id": "a743c482-38c4-4c4f-9936-978d6766ee8f"
+        }
+      }
+    },
+    "PrivateSubnet1": {
+      "Type": "AWS::EC2::Subnet",
+      "Properties": {
+        "VpcId": {
+          "Ref": "VPC"
+        },
+        "CidrBlock": {
+          "Ref": "PrivateSubnet1CIDR"
+        },
+        "AvailabilityZone": {
+          "Fn::Select": [
+            0,
+            {
+              "Fn::GetAZs": ""
+            }
+          ]
+        },
+        "Tags": [
+          {
+            "Key": "Application",
+            "Value": {
+              "Ref": "AWS::StackName"
+            }
+          },
+          {
+            "Key": "Network",
+            "Value": "Private"
+          },
+          {
+            "Key": "Role",
+            "Value": "Private Subnet 1"
+          }
+        ]
+      },
+      "Metadata": {
+        "AWS::CloudFormation::Designer": {
+          "id": "e1eaa1c4-5d83-418d-8a2e-8f94d4a6220d"
+        }
+      }
+    },
+    "PrivateSubnet2": {
+      "Type": "AWS::EC2::Subnet",
+      "Properties": {
+        "VpcId": {
+          "Ref": "VPC"
+        },
+        "CidrBlock": {
+          "Ref": "PrivateSubnet2CIDR"
+        },
+        "AvailabilityZone": {
+          "Fn::Select": [
+            1,
+            {
+              "Fn::GetAZs": ""
+            }
+          ]
+        },
+        "Tags": [
+          {
+            "Key": "Application",
+            "Value": {
+              "Ref": "AWS::StackName"
+            }
+          },
+          {
+            "Key": "Network",
+            "Value": "Private"
+          },
+          {
+            "Key": "Role",
+            "Value": "Private Subnet 2"
+          }
+        ]
+      },
+      "Metadata": {
+        "AWS::CloudFormation::Designer": {
+          "id": "98d9801f-1513-4f8b-944d-844ed67e3a9f"
+        }
+      }
+    },
+    "InternetGateway": {
+      "Type": "AWS::EC2::InternetGateway",
+      "Properties": {
+        "Tags": [
+          {
+            "Key": "Application",
+            "Value": {
+              "Ref": "AWS::StackName"
+            }
+          },
+          {
+            "Key": "Network",
+            "Value": "Public"
+          }
+        ]
+      },
+      "Metadata": {
+        "AWS::CloudFormation::Designer": {
+          "id": "1896d492-129d-435a-b72d-e4d6afed37aa"
+        }
+      }
+    },
+    "AttachGateway": {
+      "Type": "AWS::EC2::VPCGatewayAttachment",
+      "Properties": {
+        "VpcId": {
+          "Ref": "VPC"
+        },
+        "InternetGatewayId": {
+          "Ref": "InternetGateway"
+        }
+      },
+      "Metadata": {
+        "AWS::CloudFormation::Designer": {
+          "id": "0136a1d4-0ad8-446a-b5f8-25b32f950bb1"
+        }
+      }
+    },
+    "DMZRouteTable": {
+      "Type": "AWS::EC2::RouteTable",
+      "Properties": {
+        "VpcId": {
+          "Ref": "VPC"
+        },
+        "Tags": [
+          {
+            "Key": "Application",
+            "Value": {
+              "Ref": "AWS::StackName"
+            }
+          },
+          {
+            "Key": "Network",
+            "Value": "DMZ"
+          }
+        ]
+      },
+      "Metadata": {
+        "AWS::CloudFormation::Designer": {
+          "id": "aead53e1-acb6-4721-8f23-c1a1e29facc7"
+        }
+      }
+    },
+    "DMZRoute": {
+      "Type": "AWS::EC2::Route",
+      "Properties": {
+        "RouteTableId": {
+          "Ref": "DMZRouteTable"
+        },
+        "DestinationCidrBlock": "0.0.0.0/0",
+        "GatewayId": {
+          "Ref": "InternetGateway"
+        }
+      },
+      "Metadata": {
+        "AWS::CloudFormation::Designer": {
+          "id": "df401bcc-7d09-4fd7-9480-ebaa1c1ae18a"
+        }
+      }
+    },
+    "DMZ1SubnetRouteTableAssociation": {
+      "Type": "AWS::EC2::SubnetRouteTableAssociation",
+      "Properties": {
+        "SubnetId": {
+          "Ref": "DMZ1Subnet"
+        },
+        "RouteTableId": {
+          "Ref": "DMZRouteTable"
+        }
+      },
+      "Metadata": {
+        "AWS::CloudFormation::Designer": {
+          "id": "aa2a9c03-c58d-4e55-b046-328b14e534bf"
+        }
+      }
+    },
+    "DMZ2SubnetRouteTableAssociation": {
+      "Type": "AWS::EC2::SubnetRouteTableAssociation",
+      "Properties": {
+        "SubnetId": {
+          "Ref": "DMZ2Subnet"
+        },
+        "RouteTableId": {
+          "Ref": "DMZRouteTable"
+        }
+      },
+      "Metadata": {
+        "AWS::CloudFormation::Designer": {
+          "id": "99c28be6-fbf3-483d-902b-1f26477687bd"
+        }
+      }
+    },
+    "PrivateRouteTable1": {
+      "Type": "AWS::EC2::RouteTable",
+      "Properties": {
+        "VpcId": {
+          "Ref": "VPC"
+        },
+        "Tags": [
+          {
+            "Key": "Application",
+            "Value": {
+              "Ref": "AWS::StackName"
+            }
+          },
+          {
+            "Key": "Network",
+            "Value": "AZ1 Private"
+          }
+        ]
+      },
+      "Metadata": {
+        "AWS::CloudFormation::Designer": {
+          "id": "5541225a-7396-4e7e-999b-c506a9ae4962"
+        }
+      }
+    },
+    "PrivateRouteTable2": {
+      "Type": "AWS::EC2::RouteTable",
+      "Properties": {
+        "VpcId": {
+          "Ref": "VPC"
+        },
+        "Tags": [
+          {
+            "Key": "Application",
+            "Value": {
+              "Ref": "AWS::StackName"
+            }
+          },
+          {
+            "Key": "Network",
+            "Value": "AZ2 Private"
+          }
+        ]
+      },
+      "Metadata": {
+        "AWS::CloudFormation::Designer": {
+          "id": "06b3f071-fc8b-4cb9-8d2f-e5f0595f007b"
+        }
+      }
+    },
+    "PrivateRoute": {
+      "Type": "AWS::EC2::Route",
+      "Properties": {
+        "RouteTableId": {
+          "Ref": "PrivateRouteTable1"
+        },
+        "DestinationCidrBlock": "0.0.0.0/0",
+        "InstanceId": {
+          "Ref": "NAT1"
+        }
+      },
+      "Metadata": {
+        "AWS::CloudFormation::Designer": {
+          "id": "23928ba6-c4bd-4723-8c05-0c6970201fbf"
+        }
+      }
+    },
+    "PrivateRoute2": {
+      "Type": "AWS::EC2::Route",
+      "Properties": {
+        "RouteTableId": {
+          "Ref": "PrivateRouteTable2"
+        },
+        "DestinationCidrBlock": "0.0.0.0/0",
+        "InstanceId": {
+          "Ref": "NAT2"
+        }
+      },
+      "Metadata": {
+        "AWS::CloudFormation::Designer": {
+          "id": "a5f99ea5-2236-4c95-b5f5-2e73ee0c1f0d"
+        }
+      }
+    },
+    "PrivateSubnetRouteTableAssociation1": {
+      "Type": "AWS::EC2::SubnetRouteTableAssociation",
+      "Properties": {
+        "SubnetId": {
+          "Ref": "PrivateSubnet1"
+        },
+        "RouteTableId": {
+          "Ref": "PrivateRouteTable1"
+        }
+      },
+      "Metadata": {
+        "AWS::CloudFormation::Designer": {
+          "id": "0b38e380-f0ab-4ef7-a089-b17d7884f7fd"
+        }
+      }
+    },
+    "PrivateSubnetRouteTableAssociation2": {
+      "Type": "AWS::EC2::SubnetRouteTableAssociation",
+      "Properties": {
+        "SubnetId": {
+          "Ref": "PrivateSubnet2"
+        },
+        "RouteTableId": {
+          "Ref": "PrivateRouteTable2"
+        }
+      },
+      "Metadata": {
+        "AWS::CloudFormation::Designer": {
+          "id": "e17d7638-0978-4a9d-934a-262b96994ca4"
+        }
+      }
+    },
+    "RdgwEIP1": {
+      "Type": "AWS::EC2::EIP",
+      "Properties": {
+        "Domain": "vpc",
+        "InstanceId": {
+          "Ref": "ESG1"
+        }
+      },
+      "Metadata": {
+        "AWS::CloudFormation::Designer": {
+          "id": "8249b934-2d9d-404e-b87d-958af3023943"
+        }
+      }
+    },
+    "RdgwEIP2": {
+      "Type": "AWS::EC2::EIP",
+      "Properties": {
+        "Domain": "vpc",
+        "InstanceId": {
+          "Ref": "ESG2"
+        }
+      },
+      "Metadata": {
+        "AWS::CloudFormation::Designer": {
+          "id": "0cd696c2-1be7-4c93-a77e-2466eea6c625"
+        }
+      }
+    },
+    "NAT1": {
+      "Type": "AWS::EC2::Instance",
+      "Properties": {
+        "ImageId": {
+          "Fn::FindInMap": [
+            "AWSRegionArchNatAMI",
+            {
+              "Ref": "AWS::Region"
+            },
+            {
+              "Fn::FindInMap": [
+                "AWSInstanceType2Arch",
+                {
+                  "Ref": "NATInstanceType"
+                },
+                "Arch"
+              ]
+            }
+          ]
+        },
+        "InstanceType": {
+          "Ref": "NATInstanceType"
+        },
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "NAT1"
+          }
+        ],
+        "NetworkInterfaces": [
+          {
+            "GroupSet": [
+              {
+                "Ref": "NATSecurityGroup"
+              }
+            ],
+            "AssociatePublicIpAddress": "true",
+            "DeviceIndex": "0",
+            "DeleteOnTermination": "true",
+            "SubnetId": {
+              "Ref": "DMZ1Subnet"
+            }
+          }
+        ],
+        "KeyName": {
+          "Ref": "KeyPairName"
+        },
+        "SourceDestCheck": "false"
+      },
+      "Metadata": {
+        "AWS::CloudFormation::Designer": {
+          "id": "01dc4349-9337-4862-97cb-a48a2d12c609"
+        }
+      }
+    },
+    "NAT2": {
+      "Type": "AWS::EC2::Instance",
+      "Properties": {
+        "ImageId": {
+          "Fn::FindInMap": [
+            "AWSRegionArchNatAMI",
+            {
+              "Ref": "AWS::Region"
+            },
+            {
+              "Fn::FindInMap": [
+                "AWSInstanceType2Arch",
+                {
+                  "Ref": "NATInstanceType"
+                },
+                "Arch"
+              ]
+            }
+          ]
+        },
+        "InstanceType": {
+          "Ref": "NATInstanceType"
+        },
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "NAT2"
+          }
+        ],
+        "NetworkInterfaces": [
+          {
+            "GroupSet": [
+              {
+                "Ref": "NATSecurityGroup"
+              }
+            ],
+            "AssociatePublicIpAddress": "true",
+            "DeviceIndex": "0",
+            "DeleteOnTermination": "true",
+            "SubnetId": {
+              "Ref": "DMZ2Subnet"
+            }
+          }
+        ],
+        "KeyName": {
+          "Ref": "KeyPairName"
+        },
+        "SourceDestCheck": "false"
+      },
+      "Metadata": {
+        "AWS::CloudFormation::Designer": {
+          "id": "58a20f03-05ea-44b7-9f00-fa8314da8cf4"
+        }
+      }
+    },
+    "Pull1": {
+      "Type": "AWS::EC2::Instance",
+      "DependsOn": "NAT1",
+      "Metadata": {
+        "AWS::CloudFormation::Init": {
+          "configSets": {
+            "config": [
+              "setup",
+              "rename",
+              "bootstrapPullSvc",
+              "buildConfigs",
+              "finalize"
+            ]
+          },
+          "setup": {
+            "files": {
+              "c:\\cfn\\cfn-hup.conf": {
+                "content": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "[main]\n",
+                      "stack=",
+                      {
+                        "Ref": "AWS::StackName"
+                      },
+                      "\n",
+                      "region=",
+                      {
+                        "Ref": "AWS::Region"
+                      },
+                      "\n"
+                    ]
+                  ]
+                }
+              },
+              "c:\\cfn\\hooks.d\\cfn-auto-reloader.conf": {
+                "content": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "[cfn-auto-reloader-hook]\n",
+                      "triggers=post.update\n",
+                      "path=Resources.Pull1.Metadata.AWS::CloudFormation::Init\n",
+                      "action=cfn-init.exe -v -c config -s ",
+                      {
+                        "Ref": "AWS::StackId"
+                      },
+                      " -r Pull1",
+                      " --region ",
+                      {
+                        "Ref": "AWS::Region"
+                      },
+                      "\n"
+                    ]
+                  ]
+                }
+              },
+              "c:\\cfn\\scripts\\CreatePullServer.ps1": {
+                "source": "https://s3.amazonaws.com/quickstart-reference/microsoft/powershelldsc/latest/scripts/CreatePullServer.ps1"
+              },
+              "c:\\cfn\\scripts\\MasterConfig.ps1": {
+                "source": "https://s3.amazonaws.com/quickstart-reference/microsoft/powershelldsc/latest/scripts/MasterConfig.ps1"
+              },
+              "c:\\cfn\\scripts\\New-DSCPullServerCertificate.ps1": {
+                "source": "https://s3.amazonaws.com/quickstart-reference/microsoft/powershelldsc/latest/scripts/New-DSCPullServerCertificate.ps1"
+              },
+              "c:\\cfn\\scripts\\Get-EC2InstanceGuid.psm1": {
+                "source": "https://s3.amazonaws.com/quickstart-reference/microsoft/powershelldsc/latest/scripts/Get-EC2InstanceGuid.psm1"
+              },
+              "c:\\cfn\\scripts\\IPHelper.psm1": {
+                "source": "https://s3.amazonaws.com/quickstart-reference/microsoft/powershelldsc/latest/scripts/IPHelper.psm1"
+              },
+              "C:\\Program Files\\WindowsPowerShell\\DscService\\Modules\\xPSDesiredStateConfiguration_2.0.zip": {
+                "source": "https://s3.amazonaws.com/quickstart-reference/microsoft/powershelldsc/latest/scripts/modules/xPSDesiredStateConfiguration-3.0.0.1.zip"
+              },
+              "C:\\Program Files\\WindowsPowerShell\\DscService\\Modules\\xNetworking_2.1.zip": {
+                "source": "https://s3.amazonaws.com/quickstart-reference/microsoft/powershelldsc/latest/scripts/modules/xNetworking_2.1.zip"
+              },
+              "C:\\Program Files\\WindowsPowerShell\\DscService\\Modules\\xComputerManagement_1.2.zip": {
+                "source": "https://s3.amazonaws.com/quickstart-reference/microsoft/powershelldsc/latest/scripts/modules/xComputerManagement_1.2.zip"
+              },
+              "C:\\Program Files\\WindowsPowerShell\\DscService\\Modules\\xActiveDirectory_2.0.zip": {
+                "source": "https://s3.amazonaws.com/quickstart-reference/microsoft/powershelldsc/latest/scripts/modules/xActiveDirectory_2.0.zip"
+              },
+              "c:\\cfn\\scripts\\Unzip-Archive.ps1": {
+                "source": "https://s3.amazonaws.com/quickstart-reference/microsoft/utilities/latest/scripts/Unzip-Archive.ps1"
+              },
+              "c:\\cfn\\modules\\AWSQuickStart.zip": {
+                "source": "https://s3.amazonaws.com/quickstart-reference/microsoft/utilities/latest/scripts/AWSQuickStart.zip"
+              },
+              "c:\\cfn\\scripts\\CreateWaitHandle.ps1": {
+                "source": "https://s3.amazonaws.com/quickstart-reference/microsoft/utilities/latest/scripts/CreateWaitHandle.ps1"
+              },
+              "c:\\cfn\\scripts\\Reset-LocalAdminPassword.ps1": {
+                "source": "https://s3.amazonaws.com/quickstart-reference/microsoft/powershelldsc/latest/scripts/Reset-LocalAdminPassword.ps1"
+              }
+            },
+            "services": {
+              "windows": {
+                "cfn-hup": {
+                  "enabled": "true",
+                  "ensureRunning": "true",
+                  "files": [
+                    "c:\\cfn\\cfn-hup.conf",
+                    "c:\\cfn\\hooks.d\\cfn-auto-reloader.conf"
+                  ]
+                }
+              }
+            },
+            "commands": {
+              "a-set-execution-policy": {
+                "command": "powershell.exe -command Set-ExecutionPolicy RemoteSigned -Force",
+                "waitAfterCompletion": "0"
+              },
+              "b-unpack-quickstart-module": {
+                "command": "powershell.exe -command c:\\cfn\\scripts\\Unzip-Archive.ps1 -Source c:\\cfn\\modules\\AWSQuickStart.zip -Destination C:\\Windows\\system32\\WindowsPowerShell\\v1.0\\Modules\\",
+                "waitAfterCompletion": "0"
+              },
+              "c-create-waithandle": {
+                "command": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "powershell.exe -command \"c:\\cfn\\scripts\\CreateWaitHandle.ps1 -Handle '",
+                      {
+                        "Ref": "Pull1WaitHandle"
+                      },
+                      "'\""
+                    ]
+                  ]
+                },
+                "waitAfterCompletion": "0"
+              },
+              "d-unzip-modules": {
+                "command": "powershell.exe -command \"Get-ChildItem 'C:\\Program Files\\WindowsPowerShell\\DscService\\Modules' *.zip | Foreach-Object { c:\\cfn\\scripts\\unzip-archive.ps1 -source $_.fullname -destination 'C:\\Program Files\\WindowsPowerShell\\Modules'}\"",
+                "waitAfterCompletion": "0"
+              },
+              "e-create-cert": {
+                "command": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "powershell.exe -Command c:\\cfn\\scripts\\New-DSCPullServerCertificate.ps1 -Password ",
+                      {
+                        "Ref": "AdminPassword"
+                      },
+                      " -Region ",
+                      {
+                        "Ref": "AWS::Region"
+                      },
+                      " -VpcId ",
+                      {
+                        "Ref": "VPC"
+                      }
+                    ]
+                  ]
+                },
+                "waitAfterCompletion": "0"
+              }
+            }
+          },
+          "rename": {
+            "commands": {
+              "a-reset-local-admin": {
+                "command": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "powershell.exe -command C:\\cfn\\scripts\\Reset-LocalAdminPassword.ps1 -password '",
+                      {
+                        "Ref": "AdminPassword"
+                      },
+                      "'"
+                    ]
+                  ]
+                },
+                "waitAfterCompletion": "0"
+              },
+              "b-rename-computer": {
+                "command": "powershell.exe -Command Rename-Computer -NewName Pull1 -Restart",
+                "waitAfterCompletion": "forever"
+              }
+            }
+          },
+          "bootstrapPullSvc": {
+            "commands": {
+              "a-create-pullserver": {
+                "command": "powershell.exe -Command c:\\cfn\\scripts\\CreatePullServer.ps1",
+                "waitAfterCompletion": "0"
+              },
+              "b-checksum-resources": {
+                "command": "powershell.exe -command \"Get-ChildItem 'C:\\Program Files\\WindowsPowerShell\\DscService\\Modules' *.zip | Foreach-Object { new-dscchecksum $_.fullname}\"",
+                "waitAfterCompletion": "0"
+              }
+            }
+          },
+          "buildConfigs": {
+            "commands": {
+              "a-build-checksum-mof": {
+                "command": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "powershell.exe -Command c:\\cfn\\scripts\\MasterConfig.ps1 -DomainDNSName ",
+                      {
+                        "Ref": "DomainDNSName"
+                      },
+                      " -DomainNetBiosName ",
+                      {
+                        "Ref": "DomainNetBiosName"
+                      },
+                      " -AdminPassword '",
+                      {
+                        "Ref": "AdminPassword"
+                      },
+                      "' -ADServer1PrivateIp ",
+                      {
+                        "Ref": "ADServer1PrivateIp"
+                      },
+                      " -ADServer2PrivateIp ",
+                      {
+                        "Ref": "ADServer2PrivateIp"
+                      },
+                      " -PrivateSubnet1CIDR ",
+                      {
+                        "Ref": "PrivateSubnet1CIDR"
+                      },
+                      " -PrivateSubnet2CIDR ",
+                      {
+                        "Ref": "PrivateSubnet2CIDR"
+                      },
+                      " -DMZ1CIDR ",
+                      {
+                        "Ref": "DMZ1CIDR"
+                      },
+                      " -DMZ2CIDR ",
+                      {
+                        "Ref": "DMZ2CIDR"
+                      },
+                      " -Region ",
+                      {
+                        "Ref": "AWS::Region"
+                      },
+                      " -VpcId ",
+                      {
+                        "Ref": "VPC"
+                      }
+                    ]
+                  ]
+                },
+                "waitAfterCompletion": "0"
+              }
+            }
+          },
+          "finalize": {
+            "commands": {
+              "a-add-fw-exception": {
+                "command": "powershell.exe -command New-NetFirewallRule -DisplayName WinRM -Direction Inbound -Action Allow -LocalPort 5985 -Protocol tcp",
+                "waitAfterCompletion": "0"
+              },
+              "b-write-status": {
+                "command": "powershell.exe -command Write-AWSQuickStartStatus",
+                "waitAfterCompletion": "0"
+              }
+            }
+          }
+        },
+        "AWS::CloudFormation::Designer": {
+          "id": "de7d09fe-8f7d-49c2-a4dc-19778523318c"
+        }
+      },
+      "Properties": {
+        "ImageId": {
+          "Fn::FindInMap": [
+            "AWSRegionArch2AMI",
+            {
+              "Ref": "AWS::Region"
+            },
+            {
+              "Fn::FindInMap": [
+                "AWSInstanceType2Arch",
+                {
+                  "Ref": "PullServerInstanceType"
+                },
+                "Arch"
+              ]
+            }
+          ]
+        },
+        "InstanceType": {
+          "Ref": "PullServerInstanceType"
+        },
+        "SubnetId": {
+          "Ref": "PrivateSubnet1"
+        },
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "PULL1"
+          }
+        ],
+        "SecurityGroupIds": [
+          {
+            "Ref": "PullServerGroup"
+          },
+          {
+            "Ref": "DomainMemberSG"
+          }
+        ],
+        "IamInstanceProfile": {
+          "Ref": "EC2RoleInstanceProfile"
+        },
+        "PrivateIpAddress": {
+          "Ref": "PullServer1PrivateIp"
+        },
+        "KeyName": {
+          "Ref": "KeyPairName"
+        },
+        "UserData": {
+          "Fn::Base64": {
+            "Fn::Join": [
+              "",
+              [
+                "<script>\n",
+                "cfn-init.exe -v -c config -s ",
+                {
+                  "Ref": "AWS::StackId"
+                },
+                " -r Pull1",
+                " --region ",
+                {
+                  "Ref": "AWS::Region"
+                },
+                "\n",
+                "</script>\n"
+              ]
+            ]
+          }
+        }
+      }
+    },
+    "Pull2": {
+      "Type": "AWS::EC2::Instance",
+      "DependsOn": "BRKR2WaitCondition",
+      "Metadata": {
+        "AWS::CloudFormation::Init": {
+          "configSets": {
+            "config": [
+              "setup",
+              "rename",
+              "bootstrapPullSvc",
+              "buildConfigs",
+              "finalize"
+            ]
+          },
+          "setup": {
+            "files": {
+              "c:\\cfn\\cfn-hup.conf": {
+                "content": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "[main]\n",
+                      "stack=",
+                      {
+                        "Ref": "AWS::StackName"
+                      },
+                      "\n",
+                      "region=",
+                      {
+                        "Ref": "AWS::Region"
+                      },
+                      "\n"
+                    ]
+                  ]
+                }
+              },
+              "c:\\cfn\\hooks.d\\cfn-auto-reloader.conf": {
+                "content": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "[cfn-auto-reloader-hook]\n",
+                      "triggers=post.update\n",
+                      "path=Resources.Pull2.Metadata.AWS::CloudFormation::Init\n",
+                      "action=cfn-init.exe -v -c config -s ",
+                      {
+                        "Ref": "AWS::StackId"
+                      },
+                      " -r Pull2",
+                      " --region ",
+                      {
+                        "Ref": "AWS::Region"
+                      },
+                      "\n"
+                    ]
+                  ]
+                }
+              },
+              "c:\\cfn\\scripts\\CreatePullServer.ps1": {
+                "source": "https://s3.amazonaws.com/quickstart-reference/microsoft/powershelldsc/latest/scripts/CreatePullServer.ps1"
+              },
+              "c:\\cfn\\scripts\\MasterConfig.ps1": {
+                "source": "https://s3.amazonaws.com/quickstart-reference/microsoft/powershelldsc/latest/scripts/MasterConfig.ps1"
+              },
+              "c:\\cfn\\scripts\\Install-DSCPullServerCertificate.ps1": {
+                "source": "https://s3.amazonaws.com/quickstart-reference/microsoft/powershelldsc/latest/scripts/Install-DSCPullServerCertificate.ps1"
+              },
+              "c:\\cfn\\scripts\\Register-PullServer.ps1": {
+                "source": "https://s3.amazonaws.com/quickstart-reference/microsoft/powershelldsc/latest/scripts/Register-PullServer.ps1"
+              },
+              "c:\\cfn\\scripts\\Get-EC2InstanceGuid.psm1": {
+                "source": "https://s3.amazonaws.com/quickstart-reference/microsoft/powershelldsc/latest/scripts/Get-EC2InstanceGuid.psm1"
+              },
+              "c:\\cfn\\scripts\\IPHelper.psm1": {
+                "source": "https://s3.amazonaws.com/quickstart-reference/microsoft/powershelldsc/latest/scripts/IPHelper.psm1"
+              },
+              "C:\\Program Files\\WindowsPowerShell\\DscService\\Modules\\xPSDesiredStateConfiguration_2.0.zip": {
+                "source": "https://s3.amazonaws.com/quickstart-reference/microsoft/powershelldsc/latest/scripts/modules/xPSDesiredStateConfiguration-3.0.0.1.zip"
+              },
+              "C:\\Program Files\\WindowsPowerShell\\DscService\\Modules\\xNetworking_2.1.zip": {
+                "source": "https://s3.amazonaws.com/quickstart-reference/microsoft/powershelldsc/latest/scripts/modules/xNetworking_2.1.zip"
+              },
+              "C:\\Program Files\\WindowsPowerShell\\DscService\\Modules\\xComputerManagement_1.2.zip": {
+                "source": "https://s3.amazonaws.com/quickstart-reference/microsoft/powershelldsc/latest/scripts/modules/xComputerManagement_1.2.zip"
+              },
+              "C:\\Program Files\\WindowsPowerShell\\DscService\\Modules\\xActiveDirectory_2.0.zip": {
+                "source": "https://s3.amazonaws.com/quickstart-reference/microsoft/powershelldsc/latest/scripts/modules/xActiveDirectory_2.0.zip"
+              },
+              "c:\\cfn\\scripts\\Unzip-Archive.ps1": {
+                "source": "https://s3.amazonaws.com/quickstart-reference/microsoft/utilities/latest/scripts/Unzip-Archive.ps1"
+              },
+              "c:\\cfn\\modules\\AWSQuickStart.zip": {
+                "source": "https://s3.amazonaws.com/quickstart-reference/microsoft/utilities/latest/scripts/AWSQuickStart.zip"
+              },
+              "c:\\cfn\\scripts\\CreateWaitHandle.ps1": {
+                "source": "https://s3.amazonaws.com/quickstart-reference/microsoft/utilities/latest/scripts/CreateWaitHandle.ps1"
+              },
+              "c:\\cfn\\scripts\\Invoke-PerformRequiredConfigurationChecks.ps1": {
+                "source": "https://s3.amazonaws.com/quickstart-reference/microsoft/powershelldsc/latest/scripts/Invoke-PerformRequiredConfigurationChecks.ps1"
+              },
+              "c:\\cfn\\scripts\\Reset-LocalAdminPassword.ps1": {
+                "source": "https://s3.amazonaws.com/quickstart-reference/microsoft/powershelldsc/latest/scripts/Reset-LocalAdminPassword.ps1"
+              }
+            },
+            "services": {
+              "windows": {
+                "cfn-hup": {
+                  "enabled": "true",
+                  "ensureRunning": "true",
+                  "files": [
+                    "c:\\cfn\\cfn-hup.conf",
+                    "c:\\cfn\\hooks.d\\cfn-auto-reloader.conf"
+                  ]
+                }
+              }
+            },
+            "commands": {
+              "a-set-execution-policy": {
+                "command": "powershell.exe -command Set-ExecutionPolicy RemoteSigned -Force",
+                "waitAfterCompletion": "0"
+              },
+              "b-unpack-quickstart-module": {
+                "command": "powershell.exe -command c:\\cfn\\scripts\\Unzip-Archive.ps1 -Source c:\\cfn\\modules\\AWSQuickStart.zip -Destination C:\\Windows\\system32\\WindowsPowerShell\\v1.0\\Modules\\",
+                "waitAfterCompletion": "0"
+              },
+              "c-create-waithandle": {
+                "command": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "powershell.exe -command \"c:\\cfn\\scripts\\CreateWaitHandle.ps1 -Handle '",
+                      {
+                        "Ref": "Pull2WaitHandle"
+                      },
+                      "'\""
+                    ]
+                  ]
+                },
+                "waitAfterCompletion": "0"
+              },
+              "d-create-folder": {
+                "command": "powershell.exe -command New-Item -ItemType Directory -Path c:\\inetpub\\wwwroot",
+                "waitAfterCompletion": "0"
+              },
+              "e-unzip-modules": {
+                "command": "powershell.exe -command \"Get-ChildItem 'C:\\Program Files\\WindowsPowerShell\\DscService\\Modules' *.zip | Foreach-Object { c:\\cfn\\scripts\\unzip-archive.ps1 -source $_.fullname -destination 'C:\\Program Files\\WindowsPowerShell\\Modules'}\"",
+                "waitAfterCompletion": "0"
+              },
+              "f-install-cert": {
+                "command": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "powershell.exe -command c:\\cfn\\scripts\\Install-DSCPullServerCertificate.ps1 -Password '",
+                      {
+                        "Ref": "AdminPassword"
+                      },
+                      "' -PullServer1PrivateIp ",
+                      {
+                        "Ref": "PullServer1PrivateIp"
+                      },
+                      " -InstanceName PULL2"
+                    ]
+                  ]
+                },
+                "waitAfterCompletion": "0"
+              }
+            }
+          },
+          "rename": {
+            "commands": {
+              "a-reset-local-admin": {
+                "command": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "powershell.exe -command C:\\cfn\\scripts\\Reset-LocalAdminPassword.ps1 -password '",
+                      {
+                        "Ref": "AdminPassword"
+                      },
+                      "'"
+                    ]
+                  ]
+                },
+                "waitAfterCompletion": "0"
+              },
+              "b-rename-computer": {
+                "command": "powershell.exe -Command Rename-Computer -NewName Pull2 -Restart",
+                "waitAfterCompletion": "forever"
+              }
+            }
+          },
+          "bootstrapPullSvc": {
+            "commands": {
+              "a-create-pullserver": {
+                "command": "powershell.exe -Command c:\\cfn\\scripts\\CreatePullServer.ps1",
+                "waitAfterCompletion": "0"
+              },
+              "b-checksum-resources": {
+                "command": "powershell.exe -command \"Get-ChildItem 'C:\\Program Files\\WindowsPowerShell\\DscService\\Modules' *.zip | Foreach-Object { new-dscchecksum $_.fullname}\"",
+                "waitAfterCompletion": "0"
+              }
+            }
+          },
+          "buildConfigs": {
+            "commands": {
+              "a-build-checksum-mof": {
+                "command": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "powershell.exe -Command c:\\cfn\\scripts\\MasterConfig.ps1 -DomainDNSName ",
+                      {
+                        "Ref": "DomainDNSName"
+                      },
+                      " -DomainNetBiosName ",
+                      {
+                        "Ref": "DomainNetBiosName"
+                      },
+                      " -AdminPassword '",
+                      {
+                        "Ref": "AdminPassword"
+                      },
+                      "' -ADServer1PrivateIp ",
+                      {
+                        "Ref": "ADServer1PrivateIp"
+                      },
+                      " -ADServer2PrivateIp ",
+                      {
+                        "Ref": "ADServer2PrivateIp"
+                      },
+                      " -PrivateSubnet1CIDR ",
+                      {
+                        "Ref": "PrivateSubnet1CIDR"
+                      },
+                      " -PrivateSubnet2CIDR ",
+                      {
+                        "Ref": "PrivateSubnet2CIDR"
+                      },
+                      " -DMZ1CIDR ",
+                      {
+                        "Ref": "DMZ1CIDR"
+                      },
+                      " -DMZ2CIDR ",
+                      {
+                        "Ref": "DMZ2CIDR"
+                      },
+                      " -Region ",
+                      {
+                        "Ref": "AWS::Region"
+                      },
+                      " -VpcId ",
+                      {
+                        "Ref": "VPC"
+                      }
+                    ]
+                  ]
+                },
+                "waitAfterCompletion": "0"
+              }
+            }
+          },
+          "finalize": {
+            "commands": {
+              "a-add-fw-exception": {
+                "command": "powershell.exe -command New-NetFirewallRule -DisplayName WinRM -Direction Inbound -Action Allow -LocalPort 5985 -Protocol tcp",
+                "waitAfterCompletion": "0"
+              },
+              "b-register-pull-server": {
+                "command": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "powershell.exe -Command c:\\cfn\\scripts\\Register-PullServer.ps1 -Region ",
+                      {
+                        "Ref": "AWS::Region"
+                      },
+                      " -VpcId ",
+                      {
+                        "Ref": "VPC"
+                      }
+                    ]
+                  ]
+                },
+                "waitAfterCompletion": "0"
+              },
+              "c-write-status": {
+                "command": "powershell.exe -command Write-AWSQuickStartStatus",
+                "waitAfterCompletion": "0"
+              }
+            }
+          }
+        },
+        "AWS::CloudFormation::Designer": {
+          "id": "9071659a-70f9-4f13-aa0b-dad67bac2e12"
+        }
+      },
+      "Properties": {
+        "ImageId": {
+          "Fn::FindInMap": [
+            "AWSRegionArch2AMI",
+            {
+              "Ref": "AWS::Region"
+            },
+            {
+              "Fn::FindInMap": [
+                "AWSInstanceType2Arch",
+                {
+                  "Ref": "PullServerInstanceType"
+                },
+                "Arch"
+              ]
+            }
+          ]
+        },
+        "InstanceType": {
+          "Ref": "PullServerInstanceType"
+        },
+        "SubnetId": {
+          "Ref": "PrivateSubnet2"
+        },
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "PULL2"
+          }
+        ],
+        "SecurityGroupIds": [
+          {
+            "Ref": "PullServerGroup"
+          },
+          {
+            "Ref": "DomainMemberSG"
+          }
+        ],
+        "IamInstanceProfile": {
+          "Ref": "EC2RoleInstanceProfile"
+        },
+        "PrivateIpAddress": {
+          "Ref": "PullServer2PrivateIp"
+        },
+        "KeyName": {
+          "Ref": "KeyPairName"
+        },
+        "UserData": {
+          "Fn::Base64": {
+            "Fn::Join": [
+              "",
+              [
+                "<script>\n",
+                "cfn-init.exe -v -c config -s ",
+                {
+                  "Ref": "AWS::StackId"
+                },
+                " -r Pull2",
+                " --region ",
+                {
+                  "Ref": "AWS::Region"
+                },
+                "\n",
+                "</script>\n"
+              ]
+            ]
+          }
+        }
+      }
+    },
+    "DC1": {
+      "Type": "AWS::EC2::Instance",
+      "DependsOn": "Pull1WaitCondition",
+      "Metadata": {
+        "AWS::CloudFormation::Init": {
+          "configSets": {
+            "config": [
+              "setup",
+              "rename",
+              "bootstrapDSC",
+              "invokePull",
+              "finalize"
+            ]
+          },
+          "setup": {
+            "files": {
+              "c:\\cfn\\cfn-hup.conf": {
+                "content": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "[main]\n",
+                      "stack=",
+                      {
+                        "Ref": "AWS::StackName"
+                      },
+                      "\n",
+                      "region=",
+                      {
+                        "Ref": "AWS::Region"
+                      },
+                      "\n"
+                    ]
+                  ]
+                }
+              },
+              "c:\\cfn\\hooks.d\\cfn-auto-reloader.conf": {
+                "content": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "[cfn-auto-reloader-hook]\n",
+                      "triggers=post.update\n",
+                      "path=Resources.DC1.Metadata.AWS::CloudFormation::Init\n",
+                      "action=cfn-init.exe -v -c config -s ",
+                      {
+                        "Ref": "AWS::StackId"
+                      },
+                      " -r DC1",
+                      " --region ",
+                      {
+                        "Ref": "AWS::Region"
+                      },
+                      "\n"
+                    ]
+                  ]
+                }
+              },
+              "c:\\cfn\\scripts\\Unzip-Archive.ps1": {
+                "source": "https://s3.amazonaws.com/quickstart-reference/microsoft/utilities/latest/scripts/Unzip-Archive.ps1"
+              },
+              "c:\\cfn\\modules\\AWSQuickStart.zip": {
+                "source": "https://s3.amazonaws.com/quickstart-reference/microsoft/utilities/latest/scripts/AWSQuickStart.zip"
+              },
+              "c:\\cfn\\scripts\\CreateWaitHandle.ps1": {
+                "source": "https://s3.amazonaws.com/quickstart-reference/microsoft/utilities/latest/scripts/CreateWaitHandle.ps1"
+              },
+              "c:\\cfn\\scripts\\Invoke-PerformRequiredConfigurationChecks.ps1": {
+                "source": "https://s3.amazonaws.com/quickstart-reference/microsoft/powershelldsc/latest/scripts/Invoke-PerformRequiredConfigurationChecks.ps1"
+              },
+              "c:\\cfn\\scripts\\SetPullMode.ps1": {
+                "source": "https://s3.amazonaws.com/quickstart-reference/microsoft/powershelldsc/latest/scripts/SetPullMode.ps1"
+              },
+              "c:\\cfn\\scripts\\Reset-LocalAdminPassword.ps1": {
+                "source": "https://s3.amazonaws.com/quickstart-reference/microsoft/powershelldsc/latest/scripts/Reset-LocalAdminPassword.ps1"
+              },
+              "c:\\cfn\\scripts\\Install-DSCPullServerCertificate.ps1": {
+                "source": "https://s3.amazonaws.com/quickstart-reference/microsoft/powershelldsc/latest/scripts/Install-DSCPullServerCertificate.ps1"
+              },
+              "c:\\cfn\\scripts\\Get-EC2InstanceGuid.psm1": {
+                "source": "https://s3.amazonaws.com/quickstart-reference/microsoft/powershelldsc/latest/scripts/Get-EC2InstanceGuid.psm1"
+              }
+            },
+            "services": {
+              "windows": {
+                "cfn-hup": {
+                  "enabled": "true",
+                  "ensureRunning": "true",
+                  "files": [
+                    "c:\\cfn\\cfn-hup.conf",
+                    "c:\\cfn\\hooks.d\\cfn-auto-reloader.conf"
+                  ]
+                }
+              }
+            },
+            "commands": {
+              "a-set-execution-policy": {
+                "command": "powershell.exe -command Set-ExecutionPolicy RemoteSigned -Force",
+                "waitAfterCompletion": "0"
+              },
+              "b-unpack-quickstart-module": {
+                "command": "powershell.exe -command c:\\cfn\\scripts\\Unzip-Archive.ps1 -Source c:\\cfn\\modules\\AWSQuickStart.zip -Destination C:\\Windows\\system32\\WindowsPowerShell\\v1.0\\Modules\\",
+                "waitAfterCompletion": "0"
+              },
+              "c-create-waithandle": {
+                "command": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "powershell.exe -command \"c:\\cfn\\scripts\\CreateWaitHandle.ps1 -Handle '",
+                      {
+                        "Ref": "DC1WaitHandle"
+                      },
+                      "'\""
+                    ]
+                  ]
+                },
+                "waitAfterCompletion": "0"
+              }
+            }
+          },
+          "rename": {
+            "commands": {
+              "a-reset-local-admin": {
+                "command": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "powershell.exe -command C:\\cfn\\scripts\\Reset-LocalAdminPassword.ps1 -password '",
+                      {
+                        "Ref": "AdminPassword"
+                      },
+                      "'"
+                    ]
+                  ]
+                },
+                "waitAfterCompletion": "0"
+              },
+              "b-rename-computer": {
+                "command": "powershell.exe -Command Rename-Computer -NewName DC1 -Restart",
+                "waitAfterCompletion": "forever"
+              }
+            }
+          },
+          "bootstrapDSC": {
+            "commands": {
+              "a-install-cert": {
+                "command": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "powershell.exe -command c:\\cfn\\scripts\\Install-DSCPullServerCertificate.ps1 -Password '",
+                      {
+                        "Ref": "AdminPassword"
+                      },
+                      "' -PullServer1PrivateIp ",
+                      {
+                        "Ref": "PullServer1PrivateIp"
+                      }
+                    ]
+                  ]
+                },
+                "waitAfterCompletion": "0"
+              },
+              "b-set-dsc-pull-mode": {
+                "command": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "powershell.exe -Command c:\\cfn\\scripts\\SetPullMode.ps1 -Instance DC1",
+                      " -Region ",
+                      {
+                        "Ref": "AWS::Region"
+                      },
+                      " -VpcId ",
+                      {
+                        "Ref": "VPC"
+                      }
+                    ]
+                  ]
+                },
+                "waitAfterCompletion": "0"
+              }
+            }
+          },
+          "invokePull": {
+            "commands": {
+              "a-pull-dsc-config": {
+                "command": "powershell.exe -Command c:\\cfn\\scripts\\Invoke-PerformRequiredConfigurationChecks.ps1",
+                "waitAfterCompletion": "forever"
+              }
+            }
+          },
+          "finalize": {
+            "commands": {
+              "a-write-status": {
+                "command": "powershell.exe -command Write-AWSQuickStartStatus",
+                "waitAfterCompletion": "0"
+              }
+            }
+          }
+        },
+        "AWS::CloudFormation::Designer": {
+          "id": "90ee5d90-e505-4741-9d14-d4003f618f83"
+        }
+      },
+      "Properties": {
+        "ImageId": {
+          "Fn::FindInMap": [
+            "AWSRegionArch2AMI",
+            {
+              "Ref": "AWS::Region"
+            },
+            {
+              "Fn::FindInMap": [
+                "AWSInstanceType2Arch",
+                {
+                  "Ref": "WindowsInstanceType"
+                },
+                "Arch"
+              ]
+            }
+          ]
+        },
+        "InstanceType": {
+          "Ref": "WindowsInstanceType"
+        },
+        "SubnetId": {
+          "Ref": "PrivateSubnet1"
+        },
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "DC1"
+          },
+          {
+            "Key": "guid",
+            "Value": "ef7cd161-8db3-42e3-bee0-78c262f94903"
+          }
+        ],
+        "BlockDeviceMappings": [
+          {
+            "DeviceName": "/dev/sda1",
+            "Ebs": {
+              "VolumeSize": "100",
+              "VolumeType": "gp2"
+            }
+          }
+        ],
+        "SecurityGroupIds": [
+          {
+            "Ref": "DomainController1SG"
+          },
+          {
+            "Ref": "TargetNode"
+          }
+        ],
+        "IamInstanceProfile": {
+          "Ref": "EC2RoleInstanceProfile"
+        },
+        "PrivateIpAddress": {
+          "Ref": "ADServer1PrivateIp"
+        },
+        "KeyName": {
+          "Ref": "KeyPairName"
+        },
+        "UserData": {
+          "Fn::Base64": {
+            "Fn::Join": [
+              "",
+              [
+                "<script>\n",
+                "cfn-init.exe -v -c config -s ",
+                {
+                  "Ref": "AWS::StackId"
+                },
+                " -r DC1",
+                " --region ",
+                {
+                  "Ref": "AWS::Region"
+                },
+                "\n",
+                "</script>\n"
+              ]
+            ]
+          }
+        }
+      }
+    },
+    "DC2": {
+      "Type": "AWS::EC2::Instance",
+      "DependsOn": "DC1WaitCondition",
+      "Metadata": {
+        "AWS::CloudFormation::Init": {
+          "configSets": {
+            "config": [
+              "setup",
+              "rename",
+              "bootstrapDSC",
+              "invokePull",
+              "finalize"
+            ]
+          },
+          "setup": {
+            "files": {
+              "c:\\cfn\\cfn-hup.conf": {
+                "content": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "[main]\n",
+                      "stack=",
+                      {
+                        "Ref": "AWS::StackName"
+                      },
+                      "\n",
+                      "region=",
+                      {
+                        "Ref": "AWS::Region"
+                      },
+                      "\n"
+                    ]
+                  ]
+                }
+              },
+              "c:\\cfn\\hooks.d\\cfn-auto-reloader.conf": {
+                "content": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "[cfn-auto-reloader-hook]\n",
+                      "triggers=post.update\n",
+                      "path=Resources.DC2.Metadata.AWS::CloudFormation::Init\n",
+                      "action=cfn-init.exe -v -c config -s ",
+                      {
+                        "Ref": "AWS::StackId"
+                      },
+                      " -r DC2",
+                      " --region ",
+                      {
+                        "Ref": "AWS::Region"
+                      },
+                      "\n"
+                    ]
+                  ]
+                }
+              },
+              "c:\\cfn\\scripts\\Unzip-Archive.ps1": {
+                "source": "https://s3.amazonaws.com/quickstart-reference/microsoft/utilities/latest/scripts/Unzip-Archive.ps1"
+              },
+              "c:\\cfn\\modules\\AWSQuickStart.zip": {
+                "source": "https://s3.amazonaws.com/quickstart-reference/microsoft/utilities/latest/scripts/AWSQuickStart.zip"
+              },
+              "c:\\cfn\\scripts\\CreateWaitHandle.ps1": {
+                "source": "https://s3.amazonaws.com/quickstart-reference/microsoft/utilities/latest/scripts/CreateWaitHandle.ps1"
+              },
+              "c:\\cfn\\scripts\\Invoke-PerformRequiredConfigurationChecks.ps1": {
+                "source": "https://s3.amazonaws.com/quickstart-reference/microsoft/powershelldsc/latest/scripts/Invoke-PerformRequiredConfigurationChecks.ps1"
+              },
+              "c:\\cfn\\scripts\\SetPullMode.ps1": {
+                "source": "https://s3.amazonaws.com/quickstart-reference/microsoft/powershelldsc/latest/scripts/SetPullMode.ps1"
+              },
+              "c:\\cfn\\scripts\\Reset-LocalAdminPassword.ps1": {
+                "source": "https://s3.amazonaws.com/quickstart-reference/microsoft/powershelldsc/latest/scripts/Reset-LocalAdminPassword.ps1"
+              },
+              "c:\\cfn\\scripts\\Install-DSCPullServerCertificate.ps1": {
+                "source": "https://s3.amazonaws.com/quickstart-reference/microsoft/powershelldsc/latest/scripts/Install-DSCPullServerCertificate.ps1"
+              },
+              "c:\\cfn\\scripts\\Get-EC2InstanceGuid.psm1": {
+                "source": "https://s3.amazonaws.com/quickstart-reference/microsoft/powershelldsc/latest/scripts/Get-EC2InstanceGuid.psm1"
+              }
+            },
+            "services": {
+              "windows": {
+                "cfn-hup": {
+                  "enabled": "true",
+                  "ensureRunning": "true",
+                  "files": [
+                    "c:\\cfn\\cfn-hup.conf",
+                    "c:\\cfn\\hooks.d\\cfn-auto-reloader.conf"
+                  ]
+                }
+              }
+            },
+            "commands": {
+              "a-set-execution-policy": {
+                "command": "powershell.exe -command Set-ExecutionPolicy RemoteSigned -Force",
+                "waitAfterCompletion": "0"
+              },
+              "b-unpack-quickstart-module": {
+                "command": "powershell.exe -command c:\\cfn\\scripts\\Unzip-Archive.ps1 -Source c:\\cfn\\modules\\AWSQuickStart.zip -Destination C:\\Windows\\system32\\WindowsPowerShell\\v1.0\\Modules\\",
+                "waitAfterCompletion": "0"
+              },
+              "c-create-waithandle": {
+                "command": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "powershell.exe -command \"c:\\cfn\\scripts\\CreateWaitHandle.ps1 -Handle '",
+                      {
+                        "Ref": "DC2WaitHandle"
+                      },
+                      "'\""
+                    ]
+                  ]
+                },
+                "waitAfterCompletion": "0"
+              }
+            }
+          },
+          "rename": {
+            "commands": {
+              "a-reset-local-admin": {
+                "command": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "powershell.exe -command C:\\cfn\\scripts\\Reset-LocalAdminPassword.ps1 -password '",
+                      {
+                        "Ref": "AdminPassword"
+                      },
+                      "'"
+                    ]
+                  ]
+                },
+                "waitAfterCompletion": "0"
+              },
+              "b-rename-computer": {
+                "command": "powershell.exe -Command Rename-Computer -NewName DC2 -Restart",
+                "waitAfterCompletion": "forever"
+              }
+            }
+          },
+          "bootstrapDSC": {
+            "commands": {
+              "a-install-cert": {
+                "command": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "powershell.exe -command c:\\cfn\\scripts\\Install-DSCPullServerCertificate.ps1 -Password '",
+                      {
+                        "Ref": "AdminPassword"
+                      },
+                      "' -PullServer1PrivateIp ",
+                      {
+                        "Ref": "PullServer1PrivateIp"
+                      }
+                    ]
+                  ]
+                },
+                "waitAfterCompletion": "0"
+              },
+              "b-set-dsc-pull-mode": {
+                "command": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "powershell.exe -Command c:\\cfn\\scripts\\SetPullMode.ps1 -Instance DC2",
+                      " -Region ",
+                      {
+                        "Ref": "AWS::Region"
+                      },
+                      " -VpcId ",
+                      {
+                        "Ref": "VPC"
+                      }
+                    ]
+                  ]
+                },
+                "waitAfterCompletion": "0"
+              }
+            }
+          },
+          "invokePull": {
+            "commands": {
+              "a-pull-dsc-config": {
+                "command": "powershell.exe -Command c:\\cfn\\scripts\\Invoke-PerformRequiredConfigurationChecks.ps1",
+                "waitAfterCompletion": "forever"
+              }
+            }
+          },
+          "finalize": {
+            "commands": {
+              "a-write-status": {
+                "command": "powershell.exe -command Write-AWSQuickStartStatus",
+                "waitAfterCompletion": "0"
+              }
+            }
+          }
+        },
+        "AWS::CloudFormation::Designer": {
+          "id": "be42c1dc-4097-46f5-b5e6-862d61e49d0a"
+        }
+      },
+      "Properties": {
+        "ImageId": {
+          "Fn::FindInMap": [
+            "AWSRegionArch2AMI",
+            {
+              "Ref": "AWS::Region"
+            },
+            {
+              "Fn::FindInMap": [
+                "AWSInstanceType2Arch",
+                {
+                  "Ref": "WindowsInstanceType"
+                },
+                "Arch"
+              ]
+            }
+          ]
+        },
+        "InstanceType": {
+          "Ref": "WindowsInstanceType"
+        },
+        "SubnetId": {
+          "Ref": "PrivateSubnet2"
+        },
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "DC2"
+          },
+          {
+            "Key": "guid",
+            "Value": "481b2c9c-84f3-41c7-a9a6-492ed5c2ddd2"
+          }
+        ],
+        "BlockDeviceMappings": [
+          {
+            "DeviceName": "/dev/sda1",
+            "Ebs": {
+              "VolumeSize": "100",
+              "VolumeType": "gp2"
+            }
+          }
+        ],
+        "SecurityGroupIds": [
+          {
+            "Ref": "DomainController2SG"
+          },
+          {
+            "Ref": "TargetNode"
+          }
+        ],
+        "IamInstanceProfile": {
+          "Ref": "EC2RoleInstanceProfile"
+        },
+        "PrivateIpAddress": {
+          "Ref": "ADServer2PrivateIp"
+        },
+        "KeyName": {
+          "Ref": "KeyPairName"
+        },
+        "UserData": {
+          "Fn::Base64": {
+            "Fn::Join": [
+              "",
+              [
+                "<script>\n",
+                "cfn-init.exe -v -c config -s ",
+                {
+                  "Ref": "AWS::StackId"
+                },
+                " -r DC2",
+                " --region ",
+                {
+                  "Ref": "AWS::Region"
+                },
+                "\n",
+                "</script>\n"
+              ]
+            ]
+          }
+        }
+      }
+    },
+    "ESG1": {
+      "Type": "AWS::EC2::Instance",
+      "DependsOn": "DC1WaitCondition",
+      "Metadata": {
+        "AWS::CloudFormation::Init": {
+          "configSets": {
+            "config": [
+              "setup",
+              "rename",
+              "bootstrapDSC",
+              "invokePull",
+              "finalize"
+            ]
+          },
+          "setup": {
+            "files": {
+              "c:\\cfn\\cfn-hup.conf": {
+                "content": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "[main]\n",
+                      "stack=",
+                      {
+                        "Ref": "AWS::StackName"
+                      },
+                      "\n",
+                      "region=",
+                      {
+                        "Ref": "AWS::Region"
+                      },
+                      "\n"
+                    ]
+                  ]
+                }
+              },
+              "c:\\cfn\\hooks.d\\cfn-auto-reloader.conf": {
+                "content": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "[cfn-auto-reloader-hook]\n",
+                      "triggers=post.update\n",
+                      "path=Resources.ESG1.Metadata.AWS::CloudFormation::Init\n",
+                      "action=cfn-init.exe -v -c config -s ",
+                      {
+                        "Ref": "AWS::StackId"
+                      },
+                      " -r ESG1",
+                      " --region ",
+                      {
+                        "Ref": "AWS::Region"
+                      },
+                      "\n"
+                    ]
+                  ]
+                }
+              },
+              "c:\\cfn\\scripts\\Unzip-Archive.ps1": {
+                "source": "https://s3.amazonaws.com/quickstart-reference/microsoft/utilities/latest/scripts/Unzip-Archive.ps1"
+              },
+              "c:\\cfn\\modules\\AWSQuickStart.zip": {
+                "source": "https://s3.amazonaws.com/quickstart-reference/microsoft/utilities/latest/scripts/AWSQuickStart.zip"
+              },
+              "c:\\cfn\\scripts\\CreateWaitHandle.ps1": {
+                "source": "https://s3.amazonaws.com/quickstart-reference/microsoft/utilities/latest/scripts/CreateWaitHandle.ps1"
+              },
+              "c:\\cfn\\scripts\\Invoke-PerformRequiredConfigurationChecks.ps1": {
+                "source": "https://s3.amazonaws.com/quickstart-reference/microsoft/powershelldsc/latest/scripts/Invoke-PerformRequiredConfigurationChecks.ps1"
+              },
+              "c:\\cfn\\scripts\\SetPullMode.ps1": {
+                "source": "https://s3.amazonaws.com/quickstart-reference/microsoft/powershelldsc/latest/scripts/SetPullMode.ps1"
+              },
+              "c:\\cfn\\scripts\\Reset-LocalAdminPassword.ps1": {
+                "source": "https://s3.amazonaws.com/quickstart-reference/microsoft/powershelldsc/latest/scripts/Reset-LocalAdminPassword.ps1"
+              },
+              "c:\\cfn\\scripts\\Install-DSCPullServerCertificate.ps1": {
+                "source": "https://s3.amazonaws.com/quickstart-reference/microsoft/powershelldsc/latest/scripts/Install-DSCPullServerCertificate.ps1"
+              },
+              "c:\\cfn\\scripts\\Get-EC2InstanceGuid.psm1": {
+                "source": "https://s3.amazonaws.com/quickstart-reference/microsoft/powershelldsc/latest/scripts/Get-EC2InstanceGuid.psm1"
+              }
+            },
+            "services": {
+              "windows": {
+                "cfn-hup": {
+                  "enabled": "true",
+                  "ensureRunning": "true",
+                  "files": [
+                    "c:\\cfn\\cfn-hup.conf",
+                    "c:\\cfn\\hooks.d\\cfn-auto-reloader.conf"
+                  ]
+                }
+              }
+            },
+            "commands": {
+              "a-set-execution-policy": {
+                "command": "powershell.exe -command Set-ExecutionPolicy RemoteSigned -Force",
+                "waitAfterCompletion": "0"
+              },
+              "b-unpack-quickstart-module": {
+                "command": "powershell.exe -command c:\\cfn\\scripts\\Unzip-Archive.ps1 -Source c:\\cfn\\modules\\AWSQuickStart.zip -Destination C:\\Windows\\system32\\WindowsPowerShell\\v1.0\\Modules\\",
+                "waitAfterCompletion": "0"
+              },
+              "c-create-waithandle": {
+                "command": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "powershell.exe -command \"c:\\cfn\\scripts\\CreateWaitHandle.ps1 -Handle '",
+                      {
+                        "Ref": "ESG1WaitHandle"
+                      },
+                      "'\""
+                    ]
+                  ]
+                },
+                "waitAfterCompletion": "0"
+              }
+            }
+          },
+          "rename": {
+            "commands": {
+              "a-reset-local-admin": {
+                "command": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "powershell.exe -command C:\\cfn\\scripts\\Reset-LocalAdminPassword.ps1 -password '",
+                      {
+                        "Ref": "AdminPassword"
+                      },
+                      "'"
+                    ]
+                  ]
+                },
+                "waitAfterCompletion": "0"
+              },
+              "b-execute-powershell-script-RenameComputer": {
+                "command": "powershell.exe -Command Rename-Computer -NewName ESG1 -Restart",
+                "waitAfterCompletion": "forever"
+              }
+            }
+          },
+          "bootstrapDSC": {
+            "commands": {
+              "a-install-cert": {
+                "command": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "powershell.exe -command c:\\cfn\\scripts\\Install-DSCPullServerCertificate.ps1 -Password '",
+                      {
+                        "Ref": "AdminPassword"
+                      },
+                      "' -PullServer1PrivateIp ",
+                      {
+                        "Ref": "PullServer1PrivateIp"
+                      }
+                    ]
+                  ]
+                },
+                "waitAfterCompletion": "0"
+              },
+              "b-set-dsc-pull-mode": {
+                "command": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "powershell.exe -Command c:\\cfn\\scripts\\SetPullMode.ps1 -Instance ESG1",
+                      " -Region ",
+                      {
+                        "Ref": "AWS::Region"
+                      },
+                      " -VpcId ",
+                      {
+                        "Ref": "VPC"
+                      }
+                    ]
+                  ]
+                },
+                "waitAfterCompletion": "0"
+              }
+            }
+          },
+          "invokePull": {
+            "commands": {
+              "a-pull-dsc-config": {
+                "command": "powershell.exe -Command c:\\cfn\\scripts\\Invoke-PerformRequiredConfigurationChecks.ps1",
+                "waitAfterCompletion": "forever"
+              }
+            }
+          },
+          "finalize": {
+            "commands": {
+              "a-write-status": {
+                "command": "powershell.exe -command Write-AWSQuickStartStatus",
+                "waitAfterCompletion": "0"
+              }
+            }
+          }
+        },
+        "AWS::CloudFormation::Designer": {
+          "id": "c72ef4ac-9e00-4944-8791-aa0ed5ee24d0"
+        }
+      },
+      "Properties": {
+        "ImageId": {
+          "Fn::FindInMap": [
+            "AWSRegionArch2AMI",
+            {
+              "Ref": "AWS::Region"
+            },
+            {
+              "Fn::FindInMap": [
+                "AWSInstanceType2Arch",
+                {
+                  "Ref": "WindowsInstanceType"
+                },
+                "Arch"
+              ]
+            }
+          ]
+        },
+        "InstanceType": {
+          "Ref": "WindowsInstanceType"
+        },
+        "SubnetId": {
+          "Ref": "DMZ1Subnet"
+        },
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "ESG1"
+          },
+          {
+            "Key": "guid",
+            "Value": "7e92b294-5ff5-462e-9ffc-a5951698b594"
+          }
+        ],
+        "BlockDeviceMappings": [
+          {
+            "DeviceName": "/dev/sda1",
+            "Ebs": {
+              "VolumeSize": "50",
+              "VolumeType": "gp2"
+            }
+          }
+        ],
+        "SecurityGroupIds": [
+          {
+            "Ref": "RDGWSecurityGroup"
+          },
+          {
+            "Ref": "DomainMemberSG"
+          },
+          {
+            "Ref": "TargetNode"
+          }
+        ],
+        "IamInstanceProfile": {
+          "Ref": "EC2RoleInstanceProfile"
+        },
+        "KeyName": {
+          "Ref": "KeyPairName"
+        },
+        "UserData": {
+          "Fn::Base64": {
+            "Fn::Join": [
+              "",
+              [
+                "<script>\n",
+                "cfn-init.exe -v -c config -s ",
+                {
+                  "Ref": "AWS::StackId"
+                },
+                " -r ESG1",
+                " --region ",
+                {
+                  "Ref": "AWS::Region"
+                },
+                "\n",
+                "</script>\n"
+              ]
+            ]
+          }
+        }
+      }
+    },
+    "ESG2": {
+      "Type": "AWS::EC2::Instance",
+      "DependsOn": "DC1WaitCondition",
+      "Metadata": {
+        "AWS::CloudFormation::Init": {
+          "configSets": {
+            "config": [
+              "setup",
+              "rename",
+              "bootstrapDSC",
+              "invokePull",
+              "finalize"
+            ]
+          },
+          "setup": {
+            "files": {
+              "c:\\cfn\\cfn-hup.conf": {
+                "content": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "[main]\n",
+                      "stack=",
+                      {
+                        "Ref": "AWS::StackName"
+                      },
+                      "\n",
+                      "region=",
+                      {
+                        "Ref": "AWS::Region"
+                      },
+                      "\n"
+                    ]
+                  ]
+                }
+              },
+              "c:\\cfn\\hooks.d\\cfn-auto-reloader.conf": {
+                "content": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "[cfn-auto-reloader-hook]\n",
+                      "triggers=post.update\n",
+                      "path=Resources.ESG2.Metadata.AWS::CloudFormation::Init\n",
+                      "action=cfn-init.exe -v -c config -s ",
+                      {
+                        "Ref": "AWS::StackId"
+                      },
+                      " -r ESG2",
+                      " --region ",
+                      {
+                        "Ref": "AWS::Region"
+                      },
+                      "\n"
+                    ]
+                  ]
+                }
+              },
+              "c:\\cfn\\scripts\\Unzip-Archive.ps1": {
+                "source": "https://s3.amazonaws.com/quickstart-reference/microsoft/utilities/latest/scripts/Unzip-Archive.ps1"
+              },
+              "c:\\cfn\\modules\\AWSQuickStart.zip": {
+                "source": "https://s3.amazonaws.com/quickstart-reference/microsoft/utilities/latest/scripts/AWSQuickStart.zip"
+              },
+              "c:\\cfn\\scripts\\CreateWaitHandle.ps1": {
+                "source": "https://s3.amazonaws.com/quickstart-reference/microsoft/utilities/latest/scripts/CreateWaitHandle.ps1"
+              },
+              "c:\\cfn\\scripts\\Invoke-PerformRequiredConfigurationChecks.ps1": {
+                "source": "https://s3.amazonaws.com/quickstart-reference/microsoft/powershelldsc/latest/scripts/Invoke-PerformRequiredConfigurationChecks.ps1"
+              },
+              "c:\\cfn\\scripts\\SetPullMode.ps1": {
+                "source": "https://s3.amazonaws.com/quickstart-reference/microsoft/powershelldsc/latest/scripts/SetPullMode.ps1"
+              },
+              "c:\\cfn\\scripts\\Reset-LocalAdminPassword.ps1": {
+                "source": "https://s3.amazonaws.com/quickstart-reference/microsoft/powershelldsc/latest/scripts/Reset-LocalAdminPassword.ps1"
+              },
+              "c:\\cfn\\scripts\\Install-DSCPullServerCertificate.ps1": {
+                "source": "https://s3.amazonaws.com/quickstart-reference/microsoft/powershelldsc/latest/scripts/Install-DSCPullServerCertificate.ps1"
+              },
+              "c:\\cfn\\scripts\\Get-EC2InstanceGuid.psm1": {
+                "source": "https://s3.amazonaws.com/quickstart-reference/microsoft/powershelldsc/latest/scripts/Get-EC2InstanceGuid.psm1"
+              }
+            },
+            "services": {
+              "windows": {
+                "cfn-hup": {
+                  "enabled": "true",
+                  "ensureRunning": "true",
+                  "files": [
+                    "c:\\cfn\\cfn-hup.conf",
+                    "c:\\cfn\\hooks.d\\cfn-auto-reloader.conf"
+                  ]
+                }
+              }
+            },
+            "commands": {
+              "a-set-execution-policy": {
+                "command": "powershell.exe -command Set-ExecutionPolicy RemoteSigned -Force",
+                "waitAfterCompletion": "0"
+              },
+              "b-unpack-quickstart-module": {
+                "command": "powershell.exe -command c:\\cfn\\scripts\\Unzip-Archive.ps1 -Source c:\\cfn\\modules\\AWSQuickStart.zip -Destination C:\\Windows\\system32\\WindowsPowerShell\\v1.0\\Modules\\",
+                "waitAfterCompletion": "0"
+              },
+              "c-create-waithandle": {
+                "command": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "powershell.exe -command \"c:\\cfn\\scripts\\CreateWaitHandle.ps1 -Handle '",
+                      {
+                        "Ref": "ESG2WaitHandle"
+                      },
+                      "'\""
+                    ]
+                  ]
+                },
+                "waitAfterCompletion": "0"
+              }
+            }
+          },
+          "rename": {
+            "commands": {
+              "a-reset-local-admin": {
+                "command": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "powershell.exe -command C:\\cfn\\scripts\\Reset-LocalAdminPassword.ps1 -password '",
+                      {
+                        "Ref": "AdminPassword"
+                      },
+                      "'"
+                    ]
+                  ]
+                },
+                "waitAfterCompletion": "0"
+              },
+              "b-execute-powershell-script-RenameComputer": {
+                "command": "powershell.exe -Command Rename-Computer -NewName ESG2 -Restart",
+                "waitAfterCompletion": "forever"
+              }
+            }
+          },
+          "bootstrapDSC": {
+            "commands": {
+              "a-install-cert": {
+                "command": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "powershell.exe -command c:\\cfn\\scripts\\Install-DSCPullServerCertificate.ps1 -Password '",
+                      {
+                        "Ref": "AdminPassword"
+                      },
+                      "' -PullServer1PrivateIp ",
+                      {
+                        "Ref": "PullServer1PrivateIp"
+                      }
+                    ]
+                  ]
+                },
+                "waitAfterCompletion": "0"
+              },
+              "b-set-dsc-pull-mode": {
+                "command": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "powershell.exe -Command c:\\cfn\\scripts\\SetPullMode.ps1 -Instance ESG2",
+                      " -Region ",
+                      {
+                        "Ref": "AWS::Region"
+                      },
+                      " -VpcId ",
+                      {
+                        "Ref": "VPC"
+                      }
+                    ]
+                  ]
+                },
+                "waitAfterCompletion": "0"
+              }
+            }
+          },
+          "invokePull": {
+            "commands": {
+              "a-pull-dsc-config": {
+                "command": "powershell.exe -Command c:\\cfn\\scripts\\Invoke-PerformRequiredConfigurationChecks.ps1",
+                "waitAfterCompletion": "forever"
+              }
+            }
+          },
+          "finalize": {
+            "commands": {
+              "a-write-status": {
+                "command": "powershell.exe -command Write-AWSQuickStartStatus",
+                "waitAfterCompletion": "0"
+              }
+            }
+          }
+        },
+        "AWS::CloudFormation::Designer": {
+          "id": "53012870-0724-4c47-8c10-20a578bd64fe"
+        }
+      },
+      "Properties": {
+        "ImageId": {
+          "Fn::FindInMap": [
+            "AWSRegionArch2AMI",
+            {
+              "Ref": "AWS::Region"
+            },
+            {
+              "Fn::FindInMap": [
+                "AWSInstanceType2Arch",
+                {
+                  "Ref": "WindowsInstanceType"
+                },
+                "Arch"
+              ]
+            }
+          ]
+        },
+        "InstanceType": {
+          "Ref": "WindowsInstanceType"
+        },
+        "SubnetId": {
+          "Ref": "DMZ2Subnet"
+        },
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "ESG2"
+          },
+          {
+            "Key": "guid",
+            "Value": "f1c34709-318f-4bb1-9a4e-7a1e47cfddfd"
+          }
+        ],
+        "BlockDeviceMappings": [
+          {
+            "DeviceName": "/dev/sda1",
+            "Ebs": {
+              "VolumeSize": "50",
+              "VolumeType": "gp2"
+            }
+          }
+        ],
+        "SecurityGroupIds": [
+          {
+            "Ref": "RDGWSecurityGroup"
+          },
+          {
+            "Ref": "DomainMemberSG"
+          },
+          {
+            "Ref": "TargetNode"
+          }
+        ],
+        "IamInstanceProfile": {
+          "Ref": "EC2RoleInstanceProfile"
+        },
+        "KeyName": {
+          "Ref": "KeyPairName"
+        },
+        "UserData": {
+          "Fn::Base64": {
+            "Fn::Join": [
+              "",
+              [
+                "<script>\n",
+                "cfn-init.exe -v -c config -s ",
+                {
+                  "Ref": "AWS::StackId"
+                },
+                " -r ESG2",
+                " --region ",
+                {
+                  "Ref": "AWS::Region"
+                },
+                "\n",
+                "</script>\n"
+              ]
+            ]
+          }
+        }
+      }
+    },
+    "BRKR1": {
+      "Type": "AWS::EC2::Instance",
+      "DependsOn": "DC1WaitCondition",
+      "Metadata": {
+        "AWS::CloudFormation::Init": {
+          "configSets": {
+            "config": [
+              "setup",
+              "rename",
+              "bootstrapDSC",
+              "invokePull",
+              "finalize"
+            ]
+          },
+          "setup": {
+            "files": {
+              "c:\\cfn\\cfn-hup.conf": {
+                "content": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "[main]\n",
+                      "stack=",
+                      {
+                        "Ref": "AWS::StackName"
+                      },
+                      "\n",
+                      "region=",
+                      {
+                        "Ref": "AWS::Region"
+                      },
+                      "\n"
+                    ]
+                  ]
+                }
+              },
+              "c:\\cfn\\hooks.d\\cfn-auto-reloader.conf": {
+                "content": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "[cfn-auto-reloader-hook]\n",
+                      "triggers=post.update\n",
+                      "path=Resources.BRKR1.Metadata.AWS::CloudFormation::Init\n",
+                      "action=cfn-init.exe -v -c config -s ",
+                      {
+                        "Ref": "AWS::StackId"
+                      },
+                      " -r BRKR1",
+                      " --region ",
+                      {
+                        "Ref": "AWS::Region"
+                      },
+                      "\n"
+                    ]
+                  ]
+                }
+              },
+              "c:\\cfn\\scripts\\Unzip-Archive.ps1": {
+                "source": "https://s3.amazonaws.com/quickstart-reference/microsoft/utilities/latest/scripts/Unzip-Archive.ps1"
+              },
+              "c:\\cfn\\modules\\AWSQuickStart.zip": {
+                "source": "https://s3.amazonaws.com/quickstart-reference/microsoft/utilities/latest/scripts/AWSQuickStart.zip"
+              },
+              "c:\\cfn\\scripts\\CreateWaitHandle.ps1": {
+                "source": "https://s3.amazonaws.com/quickstart-reference/microsoft/utilities/latest/scripts/CreateWaitHandle.ps1"
+              },
+              "c:\\cfn\\scripts\\Invoke-PerformRequiredConfigurationChecks.ps1": {
+                "source": "https://s3.amazonaws.com/quickstart-reference/microsoft/powershelldsc/latest/scripts/Invoke-PerformRequiredConfigurationChecks.ps1"
+              },
+              "c:\\cfn\\scripts\\SetPullMode.ps1": {
+                "source": "https://s3.amazonaws.com/quickstart-reference/microsoft/powershelldsc/latest/scripts/SetPullMode.ps1"
+              },
+              "c:\\cfn\\scripts\\Reset-LocalAdminPassword.ps1": {
+                "source": "https://s3.amazonaws.com/quickstart-reference/microsoft/powershelldsc/latest/scripts/Reset-LocalAdminPassword.ps1"
+              },
+              "c:\\cfn\\scripts\\Install-DSCPullServerCertificate.ps1": {
+                "source": "https://s3.amazonaws.com/quickstart-reference/microsoft/powershelldsc/latest/scripts/Install-DSCPullServerCertificate.ps1"
+              },
+              "c:\\cfn\\scripts\\Get-EC2InstanceGuid.psm1": {
+                "source": "https://s3.amazonaws.com/quickstart-reference/microsoft/powershelldsc/latest/scripts/Get-EC2InstanceGuid.psm1"
+              }
+            },
+            "services": {
+              "windows": {
+                "cfn-hup": {
+                  "enabled": "true",
+                  "ensureRunning": "true",
+                  "files": [
+                    "c:\\cfn\\cfn-hup.conf",
+                    "c:\\cfn\\hooks.d\\cfn-auto-reloader.conf"
+                  ]
+                }
+              }
+            },
+            "commands": {
+              "a-set-execution-policy": {
+                "command": "powershell.exe -command Set-ExecutionPolicy RemoteSigned -Force",
+                "waitAfterCompletion": "0"
+              },
+              "b-unpack-quickstart-module": {
+                "command": "powershell.exe -command c:\\cfn\\scripts\\Unzip-Archive.ps1 -Source c:\\cfn\\modules\\AWSQuickStart.zip -Destination C:\\Windows\\system32\\WindowsPowerShell\\v1.0\\Modules\\",
+                "waitAfterCompletion": "0"
+              },
+              "c-create-waithandle": {
+                "command": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "powershell.exe -command \"c:\\cfn\\scripts\\CreateWaitHandle.ps1 -Handle '",
+                      {
+                        "Ref": "BRKR1WaitHandle"
+                      },
+                      "'\""
+                    ]
+                  ]
+                },
+                "waitAfterCompletion": "0"
+              }
+            }
+          },
+          "rename": {
+            "commands": {
+              "a-reset-local-admin": {
+                "command": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "powershell.exe -command C:\\cfn\\scripts\\Reset-LocalAdminPassword.ps1 -password '",
+                      {
+                        "Ref": "AdminPassword"
+                      },
+                      "'"
+                    ]
+                  ]
+                },
+                "waitAfterCompletion": "0"
+              },
+              "b-execute-powershell-script-RenameComputer": {
+                "command": "powershell.exe -Command Rename-Computer -NewName BRKR1 -Restart",
+                "waitAfterCompletion": "forever"
+              }
+            }
+          },
+          "bootstrapDSC": {
+            "commands": {
+              "a-install-cert": {
+                "command": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "powershell.exe -command c:\\cfn\\scripts\\Install-DSCPullServerCertificate.ps1 -Password '",
+                      {
+                        "Ref": "AdminPassword"
+                      },
+                      "' -PullServer1PrivateIp ",
+                      {
+                        "Ref": "PullServer1PrivateIp"
+                      }
+                    ]
+                  ]
+                },
+                "waitAfterCompletion": "0"
+              },
+              "b-set-dsc-pull-mode": {
+                "command": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "powershell.exe -Command c:\\cfn\\scripts\\SetPullMode.ps1 -Instance BRKR1",
+                      " -Region ",
+                      {
+                        "Ref": "AWS::Region"
+                      },
+                      " -VpcId ",
+                      {
+                        "Ref": "VPC"
+                      }
+                    ]
+                  ]
+                },
+                "waitAfterCompletion": "0"
+              }
+            }
+          },
+          "invokePull": {
+            "commands": {
+              "a-pull-dsc-config": {
+                "command": "powershell.exe -Command c:\\cfn\\scripts\\Invoke-PerformRequiredConfigurationChecks.ps1",
+                "waitAfterCompletion": "forever"
+              }
+            }
+          },
+          "finalize": {
+            "commands": {
+              "a-write-status": {
+                "command": "powershell.exe -command Write-AWSQuickStartStatus",
+                "waitAfterCompletion": "0"
+              }
+            }
+          }
+        },
+        "AWS::CloudFormation::Designer": {
+          "id": "4ce56bb6-57b3-434a-8c84-82fac5bfe838"
+        }
+      },
+      "Properties": {
+        "ImageId": {
+          "Fn::FindInMap": [
+            "AWSRegionArch2AMI",
+            {
+              "Ref": "AWS::Region"
+            },
+            {
+              "Fn::FindInMap": [
+                "AWSInstanceType2Arch",
+                {
+                  "Ref": "WindowsInstanceType"
+                },
+                "Arch"
+              ]
+            }
+          ]
+        },
+        "InstanceType": {
+          "Ref": "WindowsInstanceType"
+        },
+        "SubnetId": {
+          "Ref": "PrivateSubnet1"
+        },
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "BRKR1"
+          },
+          {
+            "Key": "guid",
+            "Value": "ed0125c5-0d2b-4ca0-9354-ba261a9bc676"
+          }
+        ],
+        "BlockDeviceMappings": [
+          {
+            "DeviceName": "/dev/sda1",
+            "Ebs": {
+              "VolumeSize": "50",
+              "VolumeType": "gp2"
+            }
+          }
+        ],
+        "SecurityGroupIds": [
+          {
+            "Ref": "DomainMemberSG"
+          },
+          {
+            "Ref": "TargetNode"
+          },
+          {
+            "Ref": "IISWebGroup"
+          }
+        ],
+        "IamInstanceProfile": {
+          "Ref": "EC2RoleInstanceProfile"
+        },
+        "KeyName": {
+          "Ref": "KeyPairName"
+        },
+        "UserData": {
+          "Fn::Base64": {
+            "Fn::Join": [
+              "",
+              [
+                "<script>\n",
+                "cfn-init.exe -v -c config -s ",
+                {
+                  "Ref": "AWS::StackId"
+                },
+                " -r BRKR1",
+                " --region ",
+                {
+                  "Ref": "AWS::Region"
+                },
+                "\n",
+                "</script>\n"
+              ]
+            ]
+          }
+        }
+      }
+    },
+    "BRKR2": {
+      "Type": "AWS::EC2::Instance",
+      "DependsOn": "DC1WaitCondition",
+      "Metadata": {
+        "AWS::CloudFormation::Init": {
+          "configSets": {
+            "config": [
+              "setup",
+              "rename",
+              "bootstrapDSC",
+              "invokePull",
+              "finalize"
+            ]
+          },
+          "setup": {
+            "files": {
+              "c:\\cfn\\cfn-hup.conf": {
+                "content": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "[main]\n",
+                      "stack=",
+                      {
+                        "Ref": "AWS::StackName"
+                      },
+                      "\n",
+                      "region=",
+                      {
+                        "Ref": "AWS::Region"
+                      },
+                      "\n"
+                    ]
+                  ]
+                }
+              },
+              "c:\\cfn\\hooks.d\\cfn-auto-reloader.conf": {
+                "content": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "[cfn-auto-reloader-hook]\n",
+                      "triggers=post.update\n",
+                      "path=Resources.BRKR2.Metadata.AWS::CloudFormation::Init\n",
+                      "action=cfn-init.exe -v -c config -s ",
+                      {
+                        "Ref": "AWS::StackId"
+                      },
+                      " -r BRKR2",
+                      " --region ",
+                      {
+                        "Ref": "AWS::Region"
+                      },
+                      "\n"
+                    ]
+                  ]
+                }
+              },
+              "c:\\cfn\\scripts\\Unzip-Archive.ps1": {
+                "source": "https://s3.amazonaws.com/quickstart-reference/microsoft/utilities/latest/scripts/Unzip-Archive.ps1"
+              },
+              "c:\\cfn\\modules\\AWSQuickStart.zip": {
+                "source": "https://s3.amazonaws.com/quickstart-reference/microsoft/utilities/latest/scripts/AWSQuickStart.zip"
+              },
+              "c:\\cfn\\scripts\\CreateWaitHandle.ps1": {
+                "source": "https://s3.amazonaws.com/quickstart-reference/microsoft/utilities/latest/scripts/CreateWaitHandle.ps1"
+              },
+              "c:\\cfn\\scripts\\Invoke-PerformRequiredConfigurationChecks.ps1": {
+                "source": "https://s3.amazonaws.com/quickstart-reference/microsoft/powershelldsc/latest/scripts/Invoke-PerformRequiredConfigurationChecks.ps1"
+              },
+              "c:\\cfn\\scripts\\SetPullMode.ps1": {
+                "source": "https://s3.amazonaws.com/quickstart-reference/microsoft/powershelldsc/latest/scripts/SetPullMode.ps1"
+              },
+              "c:\\cfn\\scripts\\Reset-LocalAdminPassword.ps1": {
+                "source": "https://s3.amazonaws.com/quickstart-reference/microsoft/powershelldsc/latest/scripts/Reset-LocalAdminPassword.ps1"
+              },
+              "c:\\cfn\\scripts\\Install-DSCPullServerCertificate.ps1": {
+                "source": "https://s3.amazonaws.com/quickstart-reference/microsoft/powershelldsc/latest/scripts/Install-DSCPullServerCertificate.ps1"
+              },
+              "c:\\cfn\\scripts\\Get-EC2InstanceGuid.psm1": {
+                "source": "https://s3.amazonaws.com/quickstart-reference/microsoft/powershelldsc/latest/scripts/Get-EC2InstanceGuid.psm1"
+              }
+            },
+            "services": {
+              "windows": {
+                "cfn-hup": {
+                  "enabled": "true",
+                  "ensureRunning": "true",
+                  "files": [
+                    "c:\\cfn\\cfn-hup.conf",
+                    "c:\\cfn\\hooks.d\\cfn-auto-reloader.conf"
+                  ]
+                }
+              }
+            },
+            "commands": {
+              "a-set-execution-policy": {
+                "command": "powershell.exe -command Set-ExecutionPolicy RemoteSigned -Force",
+                "waitAfterCompletion": "0"
+              },
+              "b-unpack-quickstart-module": {
+                "command": "powershell.exe -command c:\\cfn\\scripts\\Unzip-Archive.ps1 -Source c:\\cfn\\modules\\AWSQuickStart.zip -Destination C:\\Windows\\system32\\WindowsPowerShell\\v1.0\\Modules\\",
+                "waitAfterCompletion": "0"
+              },
+              "c-create-waithandle": {
+                "command": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "powershell.exe -command \"c:\\cfn\\scripts\\CreateWaitHandle.ps1 -Handle '",
+                      {
+                        "Ref": "BRKR2WaitHandle"
+                      },
+                      "'\""
+                    ]
+                  ]
+                },
+                "waitAfterCompletion": "0"
+              }
+            }
+          },
+          "rename": {
+            "commands": {
+              "a-reset-local-admin": {
+                "command": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "powershell.exe -command C:\\cfn\\scripts\\Reset-LocalAdminPassword.ps1 -password '",
+                      {
+                        "Ref": "AdminPassword"
+                      },
+                      "'"
+                    ]
+                  ]
+                },
+                "waitAfterCompletion": "0"
+              },
+              "b-execute-powershell-script-RenameComputer": {
+                "command": "powershell.exe -Command Rename-Computer -NewName BRKR2 -Restart",
+                "waitAfterCompletion": "forever"
+              }
+            }
+          },
+          "bootstrapDSC": {
+            "commands": {
+              "a-install-cert": {
+                "command": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "powershell.exe -command c:\\cfn\\scripts\\Install-DSCPullServerCertificate.ps1 -Password '",
+                      {
+                        "Ref": "AdminPassword"
+                      },
+                      "' -PullServer1PrivateIp ",
+                      {
+                        "Ref": "PullServer1PrivateIp"
+                      }
+                    ]
+                  ]
+                },
+                "waitAfterCompletion": "0"
+              },
+              "b-set-dsc-pull-mode": {
+                "command": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "powershell.exe -Command c:\\cfn\\scripts\\SetPullMode.ps1 -Instance BRKR2",
+                      " -Region ",
+                      {
+                        "Ref": "AWS::Region"
+                      },
+                      " -VpcId ",
+                      {
+                        "Ref": "VPC"
+                      }
+                    ]
+                  ]
+                },
+                "waitAfterCompletion": "0"
+              }
+            }
+          },
+          "invokePull": {
+            "commands": {
+              "a-pull-dsc-config": {
+                "command": "powershell.exe -Command c:\\cfn\\scripts\\Invoke-PerformRequiredConfigurationChecks.ps1",
+                "waitAfterCompletion": "forever"
+              }
+            }
+          },
+          "finalize": {
+            "commands": {
+              "a-write-status": {
+                "command": "powershell.exe -command Write-AWSQuickStartStatus",
+                "waitAfterCompletion": "0"
+              }
+            }
+          }
+        },
+        "AWS::CloudFormation::Designer": {
+          "id": "3c187df0-0e59-488d-bef4-b18bbd39ce59"
+        }
+      },
+      "Properties": {
+        "ImageId": {
+          "Fn::FindInMap": [
+            "AWSRegionArch2AMI",
+            {
+              "Ref": "AWS::Region"
+            },
+            {
+              "Fn::FindInMap": [
+                "AWSInstanceType2Arch",
+                {
+                  "Ref": "WindowsInstanceType"
+                },
+                "Arch"
+              ]
+            }
+          ]
+        },
+        "InstanceType": {
+          "Ref": "WindowsInstanceType"
+        },
+        "SubnetId": {
+          "Ref": "PrivateSubnet2"
+        },
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "BRKR2"
+          },
+          {
+            "Key": "guid",
+            "Value": "17cab80f-778d-43fa-93ad-67feb2bb3d11"
+          }
+        ],
+        "BlockDeviceMappings": [
+          {
+            "DeviceName": "/dev/sda1",
+            "Ebs": {
+              "VolumeSize": "50",
+              "VolumeType": "gp2"
+            }
+          }
+        ],
+        "SecurityGroupIds": [
+          {
+            "Ref": "DomainMemberSG"
+          },
+          {
+            "Ref": "TargetNode"
+          },
+          {
+            "Ref": "IISWebGroup"
+          }
+        ],
+        "IamInstanceProfile": {
+          "Ref": "EC2RoleInstanceProfile"
+        },
+        "KeyName": {
+          "Ref": "KeyPairName"
+        },
+        "UserData": {
+          "Fn::Base64": {
+            "Fn::Join": [
+              "",
+              [
+                "<script>\n",
+                "cfn-init.exe -v -c config -s ",
+                {
+                  "Ref": "AWS::StackId"
+                },
+                " -r BRKR2",
+                " --region ",
+                {
+                  "Ref": "AWS::Region"
+                },
+                "\n",
+                "</script>\n"
+              ]
+            ]
+          }
+        }
+      }
+    },
+    "DSCLoadBalancer": {
+      "Type": "AWS::ElasticLoadBalancing::LoadBalancer",
+      "DependsOn": [
+        "Pull1"
+      ],
+      "Properties": {
+        "Subnets": [
+          {
+            "Ref": "PrivateSubnet1"
+          },
+          {
+            "Ref": "PrivateSubnet2"
+          }
+        ],
+        "Scheme": "internal",
+        "Instances": [
+          {
+            "Ref": "Pull1"
+          }
+        ],
+        "Listeners": [
+          {
+            "LoadBalancerPort": "8080",
+            "InstancePort": "8080",
+            "Protocol": "TCP"
+          }
+        ],
+        "SecurityGroups": [
+          {
+            "Ref": "ELBGroup"
+          }
+        ],
+        "HealthCheck": {
+          "Target": "TCP:8080",
+          "HealthyThreshold": "10",
+          "UnhealthyThreshold": "2",
+          "Interval": "30",
+          "Timeout": "5"
+        }
+      },
+      "Metadata": {
+        "AWS::CloudFormation::Designer": {
+          "id": "ef89b044-f795-4bf8-86a2-4b61d1f250b3"
+        }
+      }
+    },
+    "ESG1WaitCondition": {
+      "Type": "AWS::CloudFormation::WaitCondition",
+      "DependsOn": "ESG1",
+      "Properties": {
+        "Handle": {
+          "Ref": "ESG1WaitHandle"
+        },
+        "Timeout": "3000"
+      },
+      "Metadata": {
+        "AWS::CloudFormation::Designer": {
+          "id": "4d65ad0a-a3b8-4315-9448-c4ecac70d119"
+        }
+      }
+    },
+    "ESG1WaitHandle": {
+      "Type": "AWS::CloudFormation::WaitConditionHandle",
+      "Metadata": {
+        "AWS::CloudFormation::Designer": {
+          "id": "62502381-a870-45f3-80b7-04cb09cde20a"
+        }
+      }
+    },
+    "ESG2WaitCondition": {
+      "Type": "AWS::CloudFormation::WaitCondition",
+      "DependsOn": "ESG2",
+      "Properties": {
+        "Handle": {
+          "Ref": "ESG2WaitHandle"
+        },
+        "Timeout": "3000"
+      },
+      "Metadata": {
+        "AWS::CloudFormation::Designer": {
+          "id": "5752ef1e-3e3c-4d6e-842a-2a07bfc35316"
+        }
+      }
+    },
+    "ESG2WaitHandle": {
+      "Type": "AWS::CloudFormation::WaitConditionHandle",
+      "Metadata": {
+        "AWS::CloudFormation::Designer": {
+          "id": "7a42f6bd-876e-4ff8-9d00-4eceb686d6e0"
+        }
+      }
+    },
+    "BRKR1WaitCondition": {
+      "Type": "AWS::CloudFormation::WaitCondition",
+      "DependsOn": "BRKR1",
+      "Properties": {
+        "Handle": {
+          "Ref": "BRKR1WaitHandle"
+        },
+        "Timeout": "3000"
+      },
+      "Metadata": {
+        "AWS::CloudFormation::Designer": {
+          "id": "23c9ce06-519c-48b5-827a-0578119558d6"
+        }
+      }
+    },
+    "BRKR1WaitHandle": {
+      "Type": "AWS::CloudFormation::WaitConditionHandle",
+      "Metadata": {
+        "AWS::CloudFormation::Designer": {
+          "id": "a07eb4b5-7a48-45ed-bd34-1f4202523e00"
+        }
+      }
+    },
+    "BRKR2WaitCondition": {
+      "Type": "AWS::CloudFormation::WaitCondition",
+      "DependsOn": "BRKR2",
+      "Properties": {
+        "Handle": {
+          "Ref": "BRKR2WaitHandle"
+        },
+        "Timeout": "3000"
+      },
+      "Metadata": {
+        "AWS::CloudFormation::Designer": {
+          "id": "af21afe6-be70-494d-a06c-39ca2bf25cab"
+        }
+      }
+    },
+    "BRKR2WaitHandle": {
+      "Type": "AWS::CloudFormation::WaitConditionHandle",
+      "Metadata": {
+        "AWS::CloudFormation::Designer": {
+          "id": "a16ab2b7-32ca-4257-81fe-779d26e09036"
+        }
+      }
+    },
+    "Pull1WaitCondition": {
+      "Type": "AWS::CloudFormation::WaitCondition",
+      "DependsOn": "Pull1",
+      "Properties": {
+        "Handle": {
+          "Ref": "Pull1WaitHandle"
+        },
+        "Timeout": "3000"
+      },
+      "Metadata": {
+        "AWS::CloudFormation::Designer": {
+          "id": "ee0a92a8-7187-4a4a-bf11-0c0b3698b612"
+        }
+      }
+    },
+    "Pull1WaitHandle": {
+      "Type": "AWS::CloudFormation::WaitConditionHandle",
+      "Metadata": {
+        "AWS::CloudFormation::Designer": {
+          "id": "2ba24f8b-9216-4a48-a14a-0a75d2b1c829"
+        }
+      }
+    },
+    "Pull2WaitCondition": {
+      "Type": "AWS::CloudFormation::WaitCondition",
+      "DependsOn": "Pull2",
+      "Properties": {
+        "Handle": {
+          "Ref": "Pull2WaitHandle"
+        },
+        "Timeout": "3000"
+      },
+      "Metadata": {
+        "AWS::CloudFormation::Designer": {
+          "id": "b9add35c-8303-4e0f-96a8-913cefbea414"
+        }
+      }
+    },
+    "Pull2WaitHandle": {
+      "Type": "AWS::CloudFormation::WaitConditionHandle",
+      "Metadata": {
+        "AWS::CloudFormation::Designer": {
+          "id": "7c24a36d-7c8a-4c0d-ae9c-e2dd92f1e70d"
+        }
+      }
+    },
+    "DC1WaitCondition": {
+      "Type": "AWS::CloudFormation::WaitCondition",
+      "DependsOn": "DC1",
+      "Properties": {
+        "Handle": {
+          "Ref": "DC1WaitHandle"
+        },
+        "Timeout": "3000"
+      },
+      "Metadata": {
+        "AWS::CloudFormation::Designer": {
+          "id": "8166c2b5-b8ef-4f96-9062-3a26eb9b9b36"
+        }
+      }
+    },
+    "DC1WaitHandle": {
+      "Type": "AWS::CloudFormation::WaitConditionHandle",
+      "Metadata": {
+        "AWS::CloudFormation::Designer": {
+          "id": "6a9f37b1-7abf-4078-a1cf-0e2f9f54db1d"
+        }
+      }
+    },
+    "DC2WaitCondition": {
+      "Type": "AWS::CloudFormation::WaitCondition",
+      "DependsOn": "DC1",
+      "Properties": {
+        "Handle": {
+          "Ref": "DC2WaitHandle"
+        },
+        "Timeout": "3000"
+      },
+      "Metadata": {
+        "AWS::CloudFormation::Designer": {
+          "id": "eff836cf-14aa-4f07-b783-e71791ea1d95"
+        }
+      }
+    },
+    "DC2WaitHandle": {
+      "Type": "AWS::CloudFormation::WaitConditionHandle",
+      "Metadata": {
+        "AWS::CloudFormation::Designer": {
+          "id": "6c897d45-2fff-4445-8ec4-c804cd6d5ce5"
+        }
+      }
+    },
+    "NATSecurityGroup": {
+      "Type": "AWS::EC2::SecurityGroup",
+      "Properties": {
+        "GroupDescription": "Enables SSH access to NAT1 in AZ1 via port 22 and outbound internet access via private subnets",
+        "VpcId": {
+          "Ref": "VPC"
+        },
+        "SecurityGroupIngress": [
+          {
+            "IpProtocol": "tcp",
+            "FromPort": "22",
+            "ToPort": "22",
+            "CidrIp": "0.0.0.0/0"
+          },
+          {
+            "IpProtocol": "icmp",
+            "FromPort": "-1",
+            "ToPort": "-1",
+            "CidrIp": "0.0.0.0/0"
+          },
+          {
+            "IpProtocol": "-1",
+            "FromPort": "1",
+            "ToPort": "65535",
+            "CidrIp": {
+              "Ref": "PrivateSubnet1CIDR"
+            }
+          },
+          {
+            "IpProtocol": "icmp",
+            "FromPort": "-1",
+            "ToPort": "-1",
+            "CidrIp": {
+              "Ref": "PrivateSubnet1CIDR"
+            }
+          },
+          {
+            "IpProtocol": "-1",
+            "FromPort": "1",
+            "ToPort": "65535",
+            "CidrIp": {
+              "Ref": "PrivateSubnet2CIDR"
+            }
+          },
+          {
+            "IpProtocol": "icmp",
+            "FromPort": "-1",
+            "ToPort": "-1",
+            "CidrIp": {
+              "Ref": "PrivateSubnet2CIDR"
+            }
+          }
+        ]
+      },
+      "Metadata": {
+        "AWS::CloudFormation::Designer": {
+          "id": "ec976a25-e117-4505-8705-09b39dd07b69"
+        }
+      }
+    },
+    "RDGWSecurityGroup": {
+      "Type": "AWS::EC2::SecurityGroup",
+      "Properties": {
+        "GroupDescription": "Enable RDP access from the Internet",
+        "VpcId": {
+          "Ref": "VPC"
+        },
+        "SecurityGroupIngress": [
+          {
+            "IpProtocol": "tcp",
+            "FromPort": "3389",
+            "ToPort": "3389",
+            "CidrIp": "0.0.0.0/0"
+          },
+          {
+            "IpProtocol": "icmp",
+            "FromPort": "-1",
+            "ToPort": "-1",
+            "CidrIp": "0.0.0.0/0"
+          }
+        ]
+      },
+      "Metadata": {
+        "AWS::CloudFormation::Designer": {
+          "id": "52a162d2-54a4-4eb3-a676-994a177d43a4"
+        }
+      }
+    },
+    "ELBGroup": {
+      "Type": "AWS::EC2::SecurityGroup",
+      "Properties": {
+        "GroupDescription": "Enable access to HTTP via ELB",
+        "VpcId": {
+          "Ref": "VPC"
+        },
+        "SecurityGroupIngress": [
+          {
+            "IpProtocol": "tcp",
+            "FromPort": "8080",
+            "ToPort": "8080",
+            "CidrIp": {
+              "Ref": "VPCCIDR"
+            }
+          }
+        ]
+      },
+      "Metadata": {
+        "AWS::CloudFormation::Designer": {
+          "id": "0ac9ef93-2b8c-45a9-878b-9b45c2dc16ae"
+        }
+      }
+    },
+    "IISWebGroup": {
+      "Type": "AWS::EC2::SecurityGroup",
+      "Properties": {
+        "GroupDescription": "Enable Access to IIS Web Servers",
+        "VpcId": {
+          "Ref": "VPC"
+        },
+        "SecurityGroupIngress": [
+          {
+            "IpProtocol": "tcp",
+            "FromPort": "80",
+            "ToPort": "80",
+            "CidrIp": {
+              "Ref": "VPCCIDR"
+            }
+          }
+        ]
+      },
+      "Metadata": {
+        "AWS::CloudFormation::Designer": {
+          "id": "8ce33261-ec83-470e-91de-8b265845fa38"
+        }
+      }
+    },
+    "PullServerGroup": {
+      "Type": "AWS::EC2::SecurityGroup",
+      "DependsOn": "ELBGroup",
+      "Properties": {
+        "GroupDescription": "Enable Access to DSC Pull Servers",
+        "VpcId": {
+          "Ref": "VPC"
+        },
+        "SecurityGroupIngress": [
+          {
+            "IpProtocol": "tcp",
+            "FromPort": "3389",
+            "ToPort": "3389",
+            "CidrIp": {
+              "Ref": "VPCCIDR"
+            }
+          },
+          {
+            "IpProtocol": "tcp",
+            "FromPort": "5985",
+            "ToPort": "5985",
+            "CidrIp": {
+              "Ref": "VPCCIDR"
+            }
+          },
+          {
+            "IpProtocol": "tcp",
+            "FromPort": "80",
+            "ToPort": "80",
+            "SourceSecurityGroupId": {
+              "Ref": "TargetNode"
+            }
+          },
+          {
+            "IpProtocol": "tcp",
+            "FromPort": "80",
+            "ToPort": "80",
+            "CidrIp": {
+              "Fn::Join": [
+                "",
+                [
+                  {
+                    "Ref": "PullServer1PrivateIp"
+                  },
+                  "/32"
+                ]
+              ]
+            }
+          },
+          {
+            "IpProtocol": "tcp",
+            "FromPort": "80",
+            "ToPort": "80",
+            "CidrIp": {
+              "Fn::Join": [
+                "",
+                [
+                  {
+                    "Ref": "PullServer2PrivateIp"
+                  },
+                  "/32"
+                ]
+              ]
+            }
+          },
+          {
+            "IpProtocol": "tcp",
+            "FromPort": "8080",
+            "ToPort": "8080",
+            "SourceSecurityGroupId": {
+              "Ref": "TargetNode"
+            }
+          },
+          {
+            "IpProtocol": "tcp",
+            "FromPort": "8080",
+            "ToPort": "8080",
+            "SourceSecurityGroupId": {
+              "Ref": "ELBGroup"
+            }
+          },
+          {
+            "IpProtocol": "tcp",
+            "FromPort": "9080",
+            "ToPort": "9080",
+            "SourceSecurityGroupId": {
+              "Ref": "TargetNode"
+            }
+          },
+          {
+            "IpProtocol": "tcp",
+            "FromPort": "9080",
+            "ToPort": "9080",
+            "SourceSecurityGroupId": {
+              "Ref": "ELBGroup"
+            }
+          },
+          {
+            "IpProtocol": "icmp",
+            "FromPort": "-1",
+            "ToPort": "-1",
+            "CidrIp": {
+              "Ref": "VPCCIDR"
+            }
+          }
+        ]
+      },
+      "Metadata": {
+        "AWS::CloudFormation::Designer": {
+          "id": "f3b47cfc-217f-4716-abf6-b57de96d05fa"
+        }
+      }
+    },
+    "TargetNode": {
+      "Type": "AWS::EC2::SecurityGroup",
+      "Properties": {
+        "GroupDescription": "DSC Target Nodes Source Group",
+        "VpcId": {
+          "Ref": "VPC"
+        }
+      },
+      "Metadata": {
+        "AWS::CloudFormation::Designer": {
+          "id": "15007e34-2320-43a1-9ffe-c7cf541b5750"
+        }
+      }
+    },
+    "DomainController1SG": {
+      "Type": "AWS::EC2::SecurityGroup",
+      "Properties": {
+        "GroupDescription": "Domain Controller 1",
+        "VpcId": {
+          "Ref": "VPC"
+        },
+        "SecurityGroupIngress": [
+          {
+            "IpProtocol": "tcp",
+            "FromPort": "5985",
+            "ToPort": "5985",
+            "CidrIp": {
+              "Ref": "VPCCIDR"
+            }
+          },
+          {
+            "IpProtocol": "-1",
+            "FromPort": "1",
+            "ToPort": "65535",
+            "CidrIp": {
+              "Fn::Join": [
+                "",
+                [
+                  {
+                    "Ref": "ADServer2PrivateIp"
+                  },
+                  "/32"
+                ]
+              ]
+            }
+          },
+          {
+            "IpProtocol": "udp",
+            "FromPort": "123",
+            "ToPort": "123",
+            "SourceSecurityGroupId": {
+              "Ref": "DomainMemberSG"
+            }
+          },
+          {
+            "IpProtocol": "tcp",
+            "FromPort": "135",
+            "ToPort": "135",
+            "SourceSecurityGroupId": {
+              "Ref": "DomainMemberSG"
+            }
+          },
+          {
+            "IpProtocol": "tcp",
+            "FromPort": "9389",
+            "ToPort": "9389",
+            "SourceSecurityGroupId": {
+              "Ref": "DomainMemberSG"
+            }
+          },
+          {
+            "IpProtocol": "udp",
+            "FromPort": "138",
+            "ToPort": "138",
+            "SourceSecurityGroupId": {
+              "Ref": "DomainMemberSG"
+            }
+          },
+          {
+            "IpProtocol": "tcp",
+            "FromPort": "445",
+            "ToPort": "445",
+            "SourceSecurityGroupId": {
+              "Ref": "DomainMemberSG"
+            }
+          },
+          {
+            "IpProtocol": "udp",
+            "FromPort": "445",
+            "ToPort": "445",
+            "SourceSecurityGroupId": {
+              "Ref": "DomainMemberSG"
+            }
+          },
+          {
+            "IpProtocol": "udp",
+            "FromPort": "464",
+            "ToPort": "464",
+            "SourceSecurityGroupId": {
+              "Ref": "DomainMemberSG"
+            }
+          },
+          {
+            "IpProtocol": "tcp",
+            "FromPort": "464",
+            "ToPort": "464",
+            "SourceSecurityGroupId": {
+              "Ref": "DomainMemberSG"
+            }
+          },
+          {
+            "IpProtocol": "tcp",
+            "FromPort": "49152",
+            "ToPort": "65535",
+            "SourceSecurityGroupId": {
+              "Ref": "DomainMemberSG"
+            }
+          },
+          {
+            "IpProtocol": "udp",
+            "FromPort": "49152",
+            "ToPort": "65535",
+            "SourceSecurityGroupId": {
+              "Ref": "DomainMemberSG"
+            }
+          },
+          {
+            "IpProtocol": "tcp",
+            "FromPort": "389",
+            "ToPort": "389",
+            "SourceSecurityGroupId": {
+              "Ref": "DomainMemberSG"
+            }
+          },
+          {
+            "IpProtocol": "udp",
+            "FromPort": "389",
+            "ToPort": "389",
+            "SourceSecurityGroupId": {
+              "Ref": "DomainMemberSG"
+            }
+          },
+          {
+            "IpProtocol": "tcp",
+            "FromPort": "636",
+            "ToPort": "636",
+            "SourceSecurityGroupId": {
+              "Ref": "DomainMemberSG"
+            }
+          },
+          {
+            "IpProtocol": "tcp",
+            "FromPort": "3268",
+            "ToPort": "3268",
+            "SourceSecurityGroupId": {
+              "Ref": "DomainMemberSG"
+            }
+          },
+          {
+            "IpProtocol": "tcp",
+            "FromPort": "3269",
+            "ToPort": "3269",
+            "SourceSecurityGroupId": {
+              "Ref": "DomainMemberSG"
+            }
+          },
+          {
+            "IpProtocol": "tcp",
+            "FromPort": "53",
+            "ToPort": "53",
+            "SourceSecurityGroupId": {
+              "Ref": "DomainMemberSG"
+            }
+          },
+          {
+            "IpProtocol": "udp",
+            "FromPort": "53",
+            "ToPort": "53",
+            "SourceSecurityGroupId": {
+              "Ref": "DomainMemberSG"
+            }
+          },
+          {
+            "IpProtocol": "tcp",
+            "FromPort": "88",
+            "ToPort": "88",
+            "SourceSecurityGroupId": {
+              "Ref": "DomainMemberSG"
+            }
+          },
+          {
+            "IpProtocol": "udp",
+            "FromPort": "88",
+            "ToPort": "88",
+            "SourceSecurityGroupId": {
+              "Ref": "DomainMemberSG"
+            }
+          },
+          {
+            "IpProtocol": "tcp",
+            "FromPort": "3389",
+            "ToPort": "3389",
+            "CidrIp": {
+              "Ref": "VPCCIDR"
+            }
+          },
+          {
+            "IpProtocol": "icmp",
+            "FromPort": "-1",
+            "ToPort": "-1",
+            "CidrIp": {
+              "Ref": "DMZ1CIDR"
+            }
+          }
+        ]
+      },
+      "Metadata": {
+        "AWS::CloudFormation::Designer": {
+          "id": "c1ec019d-86f7-4bd5-9397-621931ba9f9f"
+        }
+      }
+    },
+    "DomainController2SG": {
+      "Type": "AWS::EC2::SecurityGroup",
+      "Properties": {
+        "GroupDescription": "Domain Controller 2",
+        "VpcId": {
+          "Ref": "VPC"
+        },
+        "SecurityGroupIngress": [
+          {
+            "IpProtocol": "tcp",
+            "FromPort": "5985",
+            "ToPort": "5985",
+            "CidrIp": {
+              "Ref": "VPCCIDR"
+            }
+          },
+          {
+            "IpProtocol": "-1",
+            "FromPort": "1",
+            "ToPort": "65535",
+            "CidrIp": {
+              "Fn::Join": [
+                "",
+                [
+                  {
+                    "Ref": "ADServer1PrivateIp"
+                  },
+                  "/32"
+                ]
+              ]
+            }
+          },
+          {
+            "IpProtocol": "udp",
+            "FromPort": "123",
+            "ToPort": "123",
+            "SourceSecurityGroupId": {
+              "Ref": "DomainMemberSG"
+            }
+          },
+          {
+            "IpProtocol": "tcp",
+            "FromPort": "135",
+            "ToPort": "135",
+            "SourceSecurityGroupId": {
+              "Ref": "DomainMemberSG"
+            }
+          },
+          {
+            "IpProtocol": "tcp",
+            "FromPort": "9389",
+            "ToPort": "9389",
+            "SourceSecurityGroupId": {
+              "Ref": "DomainMemberSG"
+            }
+          },
+          {
+            "IpProtocol": "udp",
+            "FromPort": "138",
+            "ToPort": "138",
+            "SourceSecurityGroupId": {
+              "Ref": "DomainMemberSG"
+            }
+          },
+          {
+            "IpProtocol": "tcp",
+            "FromPort": "445",
+            "ToPort": "445",
+            "SourceSecurityGroupId": {
+              "Ref": "DomainMemberSG"
+            }
+          },
+          {
+            "IpProtocol": "udp",
+            "FromPort": "445",
+            "ToPort": "445",
+            "SourceSecurityGroupId": {
+              "Ref": "DomainMemberSG"
+            }
+          },
+          {
+            "IpProtocol": "udp",
+            "FromPort": "464",
+            "ToPort": "464",
+            "SourceSecurityGroupId": {
+              "Ref": "DomainMemberSG"
+            }
+          },
+          {
+            "IpProtocol": "tcp",
+            "FromPort": "464",
+            "ToPort": "464",
+            "SourceSecurityGroupId": {
+              "Ref": "DomainMemberSG"
+            }
+          },
+          {
+            "IpProtocol": "tcp",
+            "FromPort": "49152",
+            "ToPort": "65535",
+            "SourceSecurityGroupId": {
+              "Ref": "DomainMemberSG"
+            }
+          },
+          {
+            "IpProtocol": "udp",
+            "FromPort": "49152",
+            "ToPort": "65535",
+            "SourceSecurityGroupId": {
+              "Ref": "DomainMemberSG"
+            }
+          },
+          {
+            "IpProtocol": "tcp",
+            "FromPort": "389",
+            "ToPort": "389",
+            "SourceSecurityGroupId": {
+              "Ref": "DomainMemberSG"
+            }
+          },
+          {
+            "IpProtocol": "udp",
+            "FromPort": "389",
+            "ToPort": "389",
+            "SourceSecurityGroupId": {
+              "Ref": "DomainMemberSG"
+            }
+          },
+          {
+            "IpProtocol": "tcp",
+            "FromPort": "636",
+            "ToPort": "636",
+            "SourceSecurityGroupId": {
+              "Ref": "DomainMemberSG"
+            }
+          },
+          {
+            "IpProtocol": "tcp",
+            "FromPort": "3268",
+            "ToPort": "3268",
+            "SourceSecurityGroupId": {
+              "Ref": "DomainMemberSG"
+            }
+          },
+          {
+            "IpProtocol": "tcp",
+            "FromPort": "3269",
+            "ToPort": "3269",
+            "SourceSecurityGroupId": {
+              "Ref": "DomainMemberSG"
+            }
+          },
+          {
+            "IpProtocol": "tcp",
+            "FromPort": "53",
+            "ToPort": "53",
+            "SourceSecurityGroupId": {
+              "Ref": "DomainMemberSG"
+            }
+          },
+          {
+            "IpProtocol": "udp",
+            "FromPort": "53",
+            "ToPort": "53",
+            "SourceSecurityGroupId": {
+              "Ref": "DomainMemberSG"
+            }
+          },
+          {
+            "IpProtocol": "tcp",
+            "FromPort": "88",
+            "ToPort": "88",
+            "SourceSecurityGroupId": {
+              "Ref": "DomainMemberSG"
+            }
+          },
+          {
+            "IpProtocol": "udp",
+            "FromPort": "88",
+            "ToPort": "88",
+            "SourceSecurityGroupId": {
+              "Ref": "DomainMemberSG"
+            }
+          },
+          {
+            "IpProtocol": "tcp",
+            "FromPort": "3389",
+            "ToPort": "3389",
+            "CidrIp": {
+              "Ref": "VPCCIDR"
+            }
+          },
+          {
+            "IpProtocol": "icmp",
+            "FromPort": "-1",
+            "ToPort": "-1",
+            "CidrIp": {
+              "Ref": "DMZ1CIDR"
+            }
+          }
+        ]
+      },
+      "Metadata": {
+        "AWS::CloudFormation::Designer": {
+          "id": "f3bb4a08-e883-414e-a53f-5450ca9d0136"
+        }
+      }
+    },
+    "DomainMemberSG": {
+      "Type": "AWS::EC2::SecurityGroup",
+      "Properties": {
+        "GroupDescription": "Domain Members",
+        "VpcId": {
+          "Ref": "VPC"
+        },
+        "SecurityGroupIngress": [
+          {
+            "IpProtocol": "tcp",
+            "FromPort": "53",
+            "ToPort": "53",
+            "CidrIp": {
+              "Ref": "PrivateSubnet1CIDR"
+            }
+          },
+          {
+            "IpProtocol": "tcp",
+            "FromPort": "3389",
+            "ToPort": "3389",
+            "CidrIp": {
+              "Ref": "VPCCIDR"
+            }
+          },
+          {
+            "IpProtocol": "tcp",
+            "FromPort": "445",
+            "ToPort": "445",
+            "CidrIp": {
+              "Ref": "PrivateSubnet1CIDR"
+            }
+          },
+          {
+            "IpProtocol": "tcp",
+            "FromPort": "139",
+            "ToPort": "139",
+            "CidrIp": {
+              "Ref": "PrivateSubnet1CIDR"
+            }
+          },
+          {
+            "IpProtocol": "udp",
+            "FromPort": "53",
+            "ToPort": "53",
+            "CidrIp": {
+              "Ref": "PrivateSubnet1CIDR"
+            }
+          },
+          {
+            "IpProtocol": "tcp",
+            "FromPort": "49152",
+            "ToPort": "65535",
+            "CidrIp": {
+              "Ref": "PrivateSubnet1CIDR"
+            }
+          },
+          {
+            "IpProtocol": "udp",
+            "FromPort": "49152",
+            "ToPort": "65535",
+            "CidrIp": {
+              "Ref": "PrivateSubnet1CIDR"
+            }
+          }
+        ]
+      },
+      "Metadata": {
+        "AWS::CloudFormation::Designer": {
+          "id": "46196135-d036-4ed0-b161-3b771c7c36d8"
+        }
+      }
+    }
+  },
+  "Outputs": {
+    "ESG1ElasticIP": {
+      "Value": {
+        "Ref": "RdgwEIP1"
+      },
+      "Description": "Elastic IP address of the first Remote Desktop Gateway in AZ1"
+    },
+    "ESG2ElasticIP": {
+      "Value": {
+        "Ref": "RdgwEIP2"
+      },
+      "Description": "Elastic IP address of the Remote Desktop Gateway in AZ2"
+    },
+    "PullServerFQDN": {
+      "Value": {
+        "Fn::Join": [
+          "",
+          [
+            {
+              "Fn::GetAtt": [
+                "DSCLoadBalancer",
+                "DNSName"
+              ]
+            }
+          ]
+        ]
+      },
+      "Description": "FQDN of the ELB for PowerShell DSC Pull Servers"
+    }
+  },
+  "Metadata": {
+    "AWS::CloudFormation::Designer": {
+      "6c897d45-2fff-4445-8ec4-c804cd6d5ce5": {
+        "size": {
+          "width": 60,
+          "height": 60
+        },
+        "position": {
+          "x": 60,
+          "y": 1200
+        },
+        "z": 1,
+        "embeds": []
+      },
+      "6a9f37b1-7abf-4078-a1cf-0e2f9f54db1d": {
+        "size": {
+          "width": 60,
+          "height": 60
+        },
+        "position": {
+          "x": 180,
+          "y": 1200
+        },
+        "z": 1,
+        "embeds": []
+      },
+      "7c24a36d-7c8a-4c0d-ae9c-e2dd92f1e70d": {
+        "size": {
+          "width": 60,
+          "height": 60
+        },
+        "position": {
+          "x": 300,
+          "y": 1200
+        },
+        "z": 1,
+        "embeds": []
+      },
+      "2ba24f8b-9216-4a48-a14a-0a75d2b1c829": {
+        "size": {
+          "width": 60,
+          "height": 60
+        },
+        "position": {
+          "x": 420,
+          "y": 1200
+        },
+        "z": 1,
+        "embeds": []
+      },
+      "a16ab2b7-32ca-4257-81fe-779d26e09036": {
+        "size": {
+          "width": 60,
+          "height": 60
+        },
+        "position": {
+          "x": 540,
+          "y": 1200
+        },
+        "z": 1,
+        "embeds": []
+      },
+      "a07eb4b5-7a48-45ed-bd34-1f4202523e00": {
+        "size": {
+          "width": 60,
+          "height": 60
+        },
+        "position": {
+          "x": 660,
+          "y": 1200
+        },
+        "z": 1,
+        "embeds": []
+      },
+      "7a42f6bd-876e-4ff8-9d00-4eceb686d6e0": {
+        "size": {
+          "width": 60,
+          "height": 60
+        },
+        "position": {
+          "x": 780,
+          "y": 1200
+        },
+        "z": 1,
+        "embeds": []
+      },
+      "62502381-a870-45f3-80b7-04cb09cde20a": {
+        "size": {
+          "width": 60,
+          "height": 60
+        },
+        "position": {
+          "x": 900,
+          "y": 1200
+        },
+        "z": 1,
+        "embeds": []
+      },
+      "1896d492-129d-435a-b72d-e4d6afed37aa": {
+        "size": {
+          "width": 60,
+          "height": 60
+        },
+        "position": {
+          "x": 1020,
+          "y": 1200
+        },
+        "z": 1,
+        "embeds": []
+      },
+      "c42f950f-6016-4ccd-babd-ccd5ff471571": {
+        "size": {
+          "width": 1140,
+          "height": 1050
+        },
+        "position": {
+          "x": 60,
+          "y": 90
+        },
+        "z": 1,
+        "embeds": [
+          "46196135-d036-4ed0-b161-3b771c7c36d8",
+          "f3bb4a08-e883-414e-a53f-5450ca9d0136",
+          "c1ec019d-86f7-4bd5-9397-621931ba9f9f",
+          "15007e34-2320-43a1-9ffe-c7cf541b5750",
+          "8ce33261-ec83-470e-91de-8b265845fa38",
+          "0ac9ef93-2b8c-45a9-878b-9b45c2dc16ae",
+          "f3b47cfc-217f-4716-abf6-b57de96d05fa",
+          "52a162d2-54a4-4eb3-a676-994a177d43a4",
+          "ec976a25-e117-4505-8705-09b39dd07b69",
+          "06b3f071-fc8b-4cb9-8d2f-e5f0595f007b",
+          "5541225a-7396-4e7e-999b-c506a9ae4962",
+          "aead53e1-acb6-4721-8f23-c1a1e29facc7",
+          "98d9801f-1513-4f8b-944d-844ed67e3a9f",
+          "e1eaa1c4-5d83-418d-8a2e-8f94d4a6220d",
+          "a743c482-38c4-4c4f-9936-978d6766ee8f",
+          "df6cd2f6-41a3-4f06-b983-fc29500053b9"
+        ]
+      },
+      "46196135-d036-4ed0-b161-3b771c7c36d8": {
+        "size": {
+          "width": 60,
+          "height": 60
+        },
+        "position": {
+          "x": 90,
+          "y": 840
+        },
+        "z": 2,
+        "parent": "c42f950f-6016-4ccd-babd-ccd5ff471571",
+        "embeds": []
+      },
+      "f3bb4a08-e883-414e-a53f-5450ca9d0136": {
+        "size": {
+          "width": 60,
+          "height": 60
+        },
+        "position": {
+          "x": 210,
+          "y": 840
+        },
+        "z": 2,
+        "parent": "c42f950f-6016-4ccd-babd-ccd5ff471571",
+        "embeds": [],
+        "isrelatedto": [
+          "46196135-d036-4ed0-b161-3b771c7c36d8"
+        ]
+      },
+      "c1ec019d-86f7-4bd5-9397-621931ba9f9f": {
+        "size": {
+          "width": 60,
+          "height": 60
+        },
+        "position": {
+          "x": 330,
+          "y": 840
+        },
+        "z": 2,
+        "parent": "c42f950f-6016-4ccd-babd-ccd5ff471571",
+        "embeds": [],
+        "isrelatedto": [
+          "46196135-d036-4ed0-b161-3b771c7c36d8"
+        ]
+      },
+      "15007e34-2320-43a1-9ffe-c7cf541b5750": {
+        "size": {
+          "width": 60,
+          "height": 60
+        },
+        "position": {
+          "x": 450,
+          "y": 840
+        },
+        "z": 2,
+        "parent": "c42f950f-6016-4ccd-babd-ccd5ff471571",
+        "embeds": []
+      },
+      "8ce33261-ec83-470e-91de-8b265845fa38": {
+        "size": {
+          "width": 60,
+          "height": 60
+        },
+        "position": {
+          "x": 570,
+          "y": 840
+        },
+        "z": 2,
+        "parent": "c42f950f-6016-4ccd-babd-ccd5ff471571",
+        "embeds": []
+      },
+      "0ac9ef93-2b8c-45a9-878b-9b45c2dc16ae": {
+        "size": {
+          "width": 60,
+          "height": 60
+        },
+        "position": {
+          "x": 690,
+          "y": 840
+        },
+        "z": 2,
+        "parent": "c42f950f-6016-4ccd-babd-ccd5ff471571",
+        "embeds": []
+      },
+      "f3b47cfc-217f-4716-abf6-b57de96d05fa": {
+        "size": {
+          "width": 60,
+          "height": 60
+        },
+        "position": {
+          "x": 90,
+          "y": 960
+        },
+        "z": 2,
+        "parent": "c42f950f-6016-4ccd-babd-ccd5ff471571",
+        "embeds": [],
+        "dependson": [
+          "0ac9ef93-2b8c-45a9-878b-9b45c2dc16ae"
+        ],
+        "isrelatedto": [
+          "15007e34-2320-43a1-9ffe-c7cf541b5750",
+          "0ac9ef93-2b8c-45a9-878b-9b45c2dc16ae"
+        ]
+      },
+      "52a162d2-54a4-4eb3-a676-994a177d43a4": {
+        "size": {
+          "width": 60,
+          "height": 60
+        },
+        "position": {
+          "x": 210,
+          "y": 960
+        },
+        "z": 2,
+        "parent": "c42f950f-6016-4ccd-babd-ccd5ff471571",
+        "embeds": []
+      },
+      "ec976a25-e117-4505-8705-09b39dd07b69": {
+        "size": {
+          "width": 60,
+          "height": 60
+        },
+        "position": {
+          "x": 330,
+          "y": 960
+        },
+        "z": 2,
+        "parent": "c42f950f-6016-4ccd-babd-ccd5ff471571",
+        "embeds": []
+      },
+      "06b3f071-fc8b-4cb9-8d2f-e5f0595f007b": {
+        "size": {
+          "width": 240,
+          "height": 240
+        },
+        "position": {
+          "x": 870,
+          "y": 750
+        },
+        "z": 2,
+        "parent": "c42f950f-6016-4ccd-babd-ccd5ff471571",
+        "embeds": [
+          "a5f99ea5-2236-4c95-b5f5-2e73ee0c1f0d"
+        ]
+      },
+      "5541225a-7396-4e7e-999b-c506a9ae4962": {
+        "size": {
+          "width": 240,
+          "height": 240
+        },
+        "position": {
+          "x": 870,
+          "y": 450
+        },
+        "z": 2,
+        "parent": "c42f950f-6016-4ccd-babd-ccd5ff471571",
+        "embeds": [
+          "23928ba6-c4bd-4723-8c05-0c6970201fbf"
+        ]
+      },
+      "aead53e1-acb6-4721-8f23-c1a1e29facc7": {
+        "size": {
+          "width": 240,
+          "height": 240
+        },
+        "position": {
+          "x": 870,
+          "y": 150
+        },
+        "z": 2,
+        "parent": "c42f950f-6016-4ccd-babd-ccd5ff471571",
+        "embeds": [
+          "df401bcc-7d09-4fd7-9480-ebaa1c1ae18a"
+        ]
+      },
+      "df401bcc-7d09-4fd7-9480-ebaa1c1ae18a": {
+        "size": {
+          "width": 60,
+          "height": 60
+        },
+        "position": {
+          "x": 900,
+          "y": 210
+        },
+        "z": 3,
+        "parent": "aead53e1-acb6-4721-8f23-c1a1e29facc7",
+        "embeds": [],
+        "references": [
+          "1896d492-129d-435a-b72d-e4d6afed37aa"
+        ]
+      },
+      "0136a1d4-0ad8-446a-b5f8-25b32f950bb1": {
+        "source": {
+          "id": "1896d492-129d-435a-b72d-e4d6afed37aa"
+        },
+        "target": {
+          "id": "c42f950f-6016-4ccd-babd-ccd5ff471571"
+        }
+      },
+      "98d9801f-1513-4f8b-944d-844ed67e3a9f": {
+        "size": {
+          "width": 330,
+          "height": 330
+        },
+        "position": {
+          "x": 480,
+          "y": 150
+        },
+        "z": 2,
+        "parent": "c42f950f-6016-4ccd-babd-ccd5ff471571",
+        "embeds": [
+          "3c187df0-0e59-488d-bef4-b18bbd39ce59",
+          "9071659a-70f9-4f13-aa0b-dad67bac2e12",
+          "be42c1dc-4097-46f5-b5e6-862d61e49d0a"
+        ]
+      },
+      "e17d7638-0978-4a9d-934a-262b96994ca4": {
+        "source": {
+          "id": "06b3f071-fc8b-4cb9-8d2f-e5f0595f007b"
+        },
+        "target": {
+          "id": "98d9801f-1513-4f8b-944d-844ed67e3a9f"
+        }
+      },
+      "e1eaa1c4-5d83-418d-8a2e-8f94d4a6220d": {
+        "size": {
+          "width": 330,
+          "height": 330
+        },
+        "position": {
+          "x": 90,
+          "y": 150
+        },
+        "z": 2,
+        "parent": "c42f950f-6016-4ccd-babd-ccd5ff471571",
+        "embeds": [
+          "de7d09fe-8f7d-49c2-a4dc-19778523318c",
+          "90ee5d90-e505-4741-9d14-d4003f618f83",
+          "4ce56bb6-57b3-434a-8c84-82fac5bfe838"
+        ]
+      },
+      "0b38e380-f0ab-4ef7-a089-b17d7884f7fd": {
+        "source": {
+          "id": "5541225a-7396-4e7e-999b-c506a9ae4962"
+        },
+        "target": {
+          "id": "e1eaa1c4-5d83-418d-8a2e-8f94d4a6220d"
+        }
+      },
+      "a743c482-38c4-4c4f-9936-978d6766ee8f": {
+        "size": {
+          "width": 330,
+          "height": 240
+        },
+        "position": {
+          "x": 480,
+          "y": 540
+        },
+        "z": 2,
+        "parent": "c42f950f-6016-4ccd-babd-ccd5ff471571",
+        "embeds": [
+          "58a20f03-05ea-44b7-9f00-fa8314da8cf4",
+          "53012870-0724-4c47-8c10-20a578bd64fe"
+        ]
+      },
+      "58a20f03-05ea-44b7-9f00-fa8314da8cf4": {
+        "size": {
+          "width": 60,
+          "height": 60
+        },
+        "position": {
+          "x": 510,
+          "y": 600
+        },
+        "z": 3,
+        "parent": "a743c482-38c4-4c4f-9936-978d6766ee8f",
+        "embeds": [],
+        "isrelatedto": [
+          "ec976a25-e117-4505-8705-09b39dd07b69"
+        ]
+      },
+      "a5f99ea5-2236-4c95-b5f5-2e73ee0c1f0d": {
+        "size": {
+          "width": 60,
+          "height": 60
+        },
+        "position": {
+          "x": 900,
+          "y": 810
+        },
+        "z": 3,
+        "parent": "06b3f071-fc8b-4cb9-8d2f-e5f0595f007b",
+        "embeds": [],
+        "references": [
+          "58a20f03-05ea-44b7-9f00-fa8314da8cf4"
+        ]
+      },
+      "99c28be6-fbf3-483d-902b-1f26477687bd": {
+        "source": {
+          "id": "aead53e1-acb6-4721-8f23-c1a1e29facc7"
+        },
+        "target": {
+          "id": "a743c482-38c4-4c4f-9936-978d6766ee8f"
+        }
+      },
+      "df6cd2f6-41a3-4f06-b983-fc29500053b9": {
+        "size": {
+          "width": 330,
+          "height": 240
+        },
+        "position": {
+          "x": 90,
+          "y": 540
+        },
+        "z": 2,
+        "parent": "c42f950f-6016-4ccd-babd-ccd5ff471571",
+        "embeds": [
+          "01dc4349-9337-4862-97cb-a48a2d12c609",
+          "c72ef4ac-9e00-4944-8791-aa0ed5ee24d0"
+        ]
+      },
+      "01dc4349-9337-4862-97cb-a48a2d12c609": {
+        "size": {
+          "width": 60,
+          "height": 60
+        },
+        "position": {
+          "x": 120,
+          "y": 600
+        },
+        "z": 3,
+        "parent": "df6cd2f6-41a3-4f06-b983-fc29500053b9",
+        "embeds": [],
+        "isrelatedto": [
+          "ec976a25-e117-4505-8705-09b39dd07b69"
+        ]
+      },
+      "23928ba6-c4bd-4723-8c05-0c6970201fbf": {
+        "size": {
+          "width": 60,
+          "height": 60
+        },
+        "position": {
+          "x": 900,
+          "y": 510
+        },
+        "z": 3,
+        "parent": "5541225a-7396-4e7e-999b-c506a9ae4962",
+        "embeds": [],
+        "references": [
+          "01dc4349-9337-4862-97cb-a48a2d12c609"
+        ]
+      },
+      "aa2a9c03-c58d-4e55-b046-328b14e534bf": {
+        "source": {
+          "id": "aead53e1-acb6-4721-8f23-c1a1e29facc7"
+        },
+        "target": {
+          "id": "df6cd2f6-41a3-4f06-b983-fc29500053b9"
+        }
+      },
+      "401bcb16-da50-4975-a52b-6723f3b9ab57": {
+        "size": {
+          "width": 60,
+          "height": 60
+        },
+        "position": {
+          "x": 1140,
+          "y": 1200
+        },
+        "z": 1,
+        "embeds": []
+      },
+      "0dbb1855-2711-4553-8187-50a5a3cbb573": {
+        "size": {
+          "width": 60,
+          "height": 60
+        },
+        "position": {
+          "x": 1260,
+          "y": 90
+        },
+        "z": 1,
+        "embeds": [],
+        "isassociatedwith": [
+          "401bcb16-da50-4975-a52b-6723f3b9ab57"
+        ]
+      },
+      "de7d09fe-8f7d-49c2-a4dc-19778523318c": {
+        "size": {
+          "width": 60,
+          "height": 60
+        },
+        "position": {
+          "x": 120,
+          "y": 210
+        },
+        "z": 3,
+        "parent": "e1eaa1c4-5d83-418d-8a2e-8f94d4a6220d",
+        "embeds": [],
+        "ismemberof": [
+          "f3b47cfc-217f-4716-abf6-b57de96d05fa",
+          "46196135-d036-4ed0-b161-3b771c7c36d8"
+        ],
+        "dependson": [
+          "01dc4349-9337-4862-97cb-a48a2d12c609"
+        ],
+        "isrelatedto": [
+          "0dbb1855-2711-4553-8187-50a5a3cbb573"
+        ]
+      },
+      "ee0a92a8-7187-4a4a-bf11-0c0b3698b612": {
+        "size": {
+          "width": 60,
+          "height": 60
+        },
+        "position": {
+          "x": 1260,
+          "y": 210
+        },
+        "z": 1,
+        "embeds": [],
+        "references": [
+          "2ba24f8b-9216-4a48-a14a-0a75d2b1c829"
+        ],
+        "dependson": [
+          "de7d09fe-8f7d-49c2-a4dc-19778523318c"
+        ]
+      },
+      "90ee5d90-e505-4741-9d14-d4003f618f83": {
+        "size": {
+          "width": 60,
+          "height": 60
+        },
+        "position": {
+          "x": 240,
+          "y": 210
+        },
+        "z": 3,
+        "parent": "e1eaa1c4-5d83-418d-8a2e-8f94d4a6220d",
+        "embeds": [],
+        "ismemberof": [
+          "c1ec019d-86f7-4bd5-9397-621931ba9f9f",
+          "15007e34-2320-43a1-9ffe-c7cf541b5750"
+        ],
+        "dependson": [
+          "ee0a92a8-7187-4a4a-bf11-0c0b3698b612"
+        ],
+        "isrelatedto": [
+          "0dbb1855-2711-4553-8187-50a5a3cbb573"
+        ]
+      },
+      "eff836cf-14aa-4f07-b783-e71791ea1d95": {
+        "size": {
+          "width": 60,
+          "height": 60
+        },
+        "position": {
+          "x": 1260,
+          "y": 330
+        },
+        "z": 1,
+        "embeds": [],
+        "references": [
+          "6c897d45-2fff-4445-8ec4-c804cd6d5ce5"
+        ],
+        "dependson": [
+          "90ee5d90-e505-4741-9d14-d4003f618f83"
+        ]
+      },
+      "8166c2b5-b8ef-4f96-9062-3a26eb9b9b36": {
+        "size": {
+          "width": 60,
+          "height": 60
+        },
+        "position": {
+          "x": 1260,
+          "y": 450
+        },
+        "z": 1,
+        "embeds": [],
+        "references": [
+          "6a9f37b1-7abf-4078-a1cf-0e2f9f54db1d"
+        ],
+        "dependson": [
+          "90ee5d90-e505-4741-9d14-d4003f618f83"
+        ]
+      },
+      "3c187df0-0e59-488d-bef4-b18bbd39ce59": {
+        "size": {
+          "width": 60,
+          "height": 60
+        },
+        "position": {
+          "x": 510,
+          "y": 210
+        },
+        "z": 3,
+        "parent": "98d9801f-1513-4f8b-944d-844ed67e3a9f",
+        "embeds": [],
+        "ismemberof": [
+          "46196135-d036-4ed0-b161-3b771c7c36d8",
+          "15007e34-2320-43a1-9ffe-c7cf541b5750",
+          "8ce33261-ec83-470e-91de-8b265845fa38"
+        ],
+        "dependson": [
+          "8166c2b5-b8ef-4f96-9062-3a26eb9b9b36"
+        ],
+        "isrelatedto": [
+          "0dbb1855-2711-4553-8187-50a5a3cbb573"
+        ]
+      },
+      "af21afe6-be70-494d-a06c-39ca2bf25cab": {
+        "size": {
+          "width": 60,
+          "height": 60
+        },
+        "position": {
+          "x": 1260,
+          "y": 570
+        },
+        "z": 1,
+        "embeds": [],
+        "references": [
+          "a16ab2b7-32ca-4257-81fe-779d26e09036"
+        ],
+        "dependson": [
+          "3c187df0-0e59-488d-bef4-b18bbd39ce59"
+        ]
+      },
+      "9071659a-70f9-4f13-aa0b-dad67bac2e12": {
+        "size": {
+          "width": 60,
+          "height": 60
+        },
+        "position": {
+          "x": 630,
+          "y": 210
+        },
+        "z": 3,
+        "parent": "98d9801f-1513-4f8b-944d-844ed67e3a9f",
+        "embeds": [],
+        "ismemberof": [
+          "f3b47cfc-217f-4716-abf6-b57de96d05fa",
+          "46196135-d036-4ed0-b161-3b771c7c36d8"
+        ],
+        "dependson": [
+          "af21afe6-be70-494d-a06c-39ca2bf25cab"
+        ],
+        "isrelatedto": [
+          "0dbb1855-2711-4553-8187-50a5a3cbb573"
+        ]
+      },
+      "b9add35c-8303-4e0f-96a8-913cefbea414": {
+        "size": {
+          "width": 60,
+          "height": 60
+        },
+        "position": {
+          "x": 1260,
+          "y": 690
+        },
+        "z": 1,
+        "embeds": [],
+        "references": [
+          "7c24a36d-7c8a-4c0d-ae9c-e2dd92f1e70d"
+        ],
+        "dependson": [
+          "9071659a-70f9-4f13-aa0b-dad67bac2e12"
+        ]
+      },
+      "4ce56bb6-57b3-434a-8c84-82fac5bfe838": {
+        "size": {
+          "width": 60,
+          "height": 60
+        },
+        "position": {
+          "x": 120,
+          "y": 330
+        },
+        "z": 3,
+        "parent": "e1eaa1c4-5d83-418d-8a2e-8f94d4a6220d",
+        "embeds": [],
+        "ismemberof": [
+          "46196135-d036-4ed0-b161-3b771c7c36d8",
+          "15007e34-2320-43a1-9ffe-c7cf541b5750",
+          "8ce33261-ec83-470e-91de-8b265845fa38"
+        ],
+        "dependson": [
+          "8166c2b5-b8ef-4f96-9062-3a26eb9b9b36"
+        ],
+        "isrelatedto": [
+          "0dbb1855-2711-4553-8187-50a5a3cbb573"
+        ]
+      },
+      "23c9ce06-519c-48b5-827a-0578119558d6": {
+        "size": {
+          "width": 60,
+          "height": 60
+        },
+        "position": {
+          "x": 1260,
+          "y": 810
+        },
+        "z": 1,
+        "embeds": [],
+        "references": [
+          "a07eb4b5-7a48-45ed-bd34-1f4202523e00"
+        ],
+        "dependson": [
+          "4ce56bb6-57b3-434a-8c84-82fac5bfe838"
+        ]
+      },
+      "53012870-0724-4c47-8c10-20a578bd64fe": {
+        "size": {
+          "width": 60,
+          "height": 60
+        },
+        "position": {
+          "x": 630,
+          "y": 600
+        },
+        "z": 3,
+        "parent": "a743c482-38c4-4c4f-9936-978d6766ee8f",
+        "embeds": [],
+        "ismemberof": [
+          "52a162d2-54a4-4eb3-a676-994a177d43a4",
+          "46196135-d036-4ed0-b161-3b771c7c36d8",
+          "15007e34-2320-43a1-9ffe-c7cf541b5750"
+        ],
+        "dependson": [
+          "8166c2b5-b8ef-4f96-9062-3a26eb9b9b36"
+        ],
+        "isrelatedto": [
+          "0dbb1855-2711-4553-8187-50a5a3cbb573"
+        ]
+      },
+      "5752ef1e-3e3c-4d6e-842a-2a07bfc35316": {
+        "size": {
+          "width": 60,
+          "height": 60
+        },
+        "position": {
+          "x": 1260,
+          "y": 930
+        },
+        "z": 1,
+        "embeds": [],
+        "references": [
+          "7a42f6bd-876e-4ff8-9d00-4eceb686d6e0"
+        ],
+        "dependson": [
+          "53012870-0724-4c47-8c10-20a578bd64fe"
+        ]
+      },
+      "0cd696c2-1be7-4c93-a77e-2466eea6c625": {
+        "size": {
+          "width": 60,
+          "height": 60
+        },
+        "position": {
+          "x": 1260,
+          "y": 1050
+        },
+        "z": 1,
+        "embeds": [],
+        "isconnectedto": [
+          "53012870-0724-4c47-8c10-20a578bd64fe"
+        ]
+      },
+      "c72ef4ac-9e00-4944-8791-aa0ed5ee24d0": {
+        "size": {
+          "width": 60,
+          "height": 60
+        },
+        "position": {
+          "x": 240,
+          "y": 600
+        },
+        "z": 3,
+        "parent": "df6cd2f6-41a3-4f06-b983-fc29500053b9",
+        "embeds": [],
+        "ismemberof": [
+          "52a162d2-54a4-4eb3-a676-994a177d43a4",
+          "46196135-d036-4ed0-b161-3b771c7c36d8",
+          "15007e34-2320-43a1-9ffe-c7cf541b5750"
+        ],
+        "dependson": [
+          "8166c2b5-b8ef-4f96-9062-3a26eb9b9b36"
+        ],
+        "isrelatedto": [
+          "0dbb1855-2711-4553-8187-50a5a3cbb573"
+        ]
+      },
+      "4d65ad0a-a3b8-4315-9448-c4ecac70d119": {
+        "size": {
+          "width": 60,
+          "height": 60
+        },
+        "position": {
+          "x": 1260,
+          "y": 1170
+        },
+        "z": 1,
+        "embeds": [],
+        "references": [
+          "62502381-a870-45f3-80b7-04cb09cde20a"
+        ],
+        "dependson": [
+          "c72ef4ac-9e00-4944-8791-aa0ed5ee24d0"
+        ]
+      },
+      "8249b934-2d9d-404e-b87d-958af3023943": {
+        "size": {
+          "width": 60,
+          "height": 60
+        },
+        "position": {
+          "x": 1260,
+          "y": 1290
+        },
+        "z": 1,
+        "embeds": [],
+        "isconnectedto": [
+          "c72ef4ac-9e00-4944-8791-aa0ed5ee24d0"
+        ]
+      },
+      "be42c1dc-4097-46f5-b5e6-862d61e49d0a": {
+        "size": {
+          "width": 60,
+          "height": 60
+        },
+        "position": {
+          "x": 510,
+          "y": 330
+        },
+        "z": 3,
+        "parent": "98d9801f-1513-4f8b-944d-844ed67e3a9f",
+        "embeds": [],
+        "ismemberof": [
+          "f3bb4a08-e883-414e-a53f-5450ca9d0136",
+          "15007e34-2320-43a1-9ffe-c7cf541b5750"
+        ],
+        "dependson": [
+          "8166c2b5-b8ef-4f96-9062-3a26eb9b9b36"
+        ],
+        "isrelatedto": [
+          "0dbb1855-2711-4553-8187-50a5a3cbb573"
+        ]
+      },
+      "ef89b044-f795-4bf8-86a2-4b61d1f250b3": {
+        "size": {
+          "width": 60,
+          "height": 60
+        },
+        "position": {
+          "x": 1380,
+          "y": 90
+        },
+        "z": 1,
+        "embeds": [],
+        "isconnectedto": [
+          "de7d09fe-8f7d-49c2-a4dc-19778523318c",
+          "e1eaa1c4-5d83-418d-8a2e-8f94d4a6220d",
+          "98d9801f-1513-4f8b-944d-844ed67e3a9f"
+        ],
+        "ismemberof": [
+          "0ac9ef93-2b8c-45a9-878b-9b45c2dc16ae"
+        ],
+        "dependson": [
+          "de7d09fe-8f7d-49c2-a4dc-19778523318c"
+        ]
+      }
+    }
+  }
+}
