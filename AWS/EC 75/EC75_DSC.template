@@ -55,7 +55,7 @@
       "Description": "Password for the Administrator user account",
       "Type": "String",
       "NoEcho": "true",
-      "Default": "Password123"
+      "Default": "Ericom123$"
     },
     "PullServer1PrivateIp": {
       "Description": "Fixed private IP for the first DSC Pull server located in AZ1",
@@ -3318,7 +3318,7 @@
         "Handle": {
           "Ref": "ESG1WaitHandle"
         },
-        "Timeout": "3000"
+        "Timeout": "4000"
       },
       "Metadata": {
         "AWS::CloudFormation::Designer": {
@@ -3341,7 +3341,7 @@
         "Handle": {
           "Ref": "ESG2WaitHandle"
         },
-        "Timeout": "3000"
+        "Timeout": "4000"
       },
       "Metadata": {
         "AWS::CloudFormation::Designer": {
@@ -3364,7 +3364,7 @@
         "Handle": {
           "Ref": "BRKR1WaitHandle"
         },
-        "Timeout": "3000"
+        "Timeout": "4000"
       },
       "Metadata": {
         "AWS::CloudFormation::Designer": {
@@ -3387,7 +3387,7 @@
         "Handle": {
           "Ref": "BRKR2WaitHandle"
         },
-        "Timeout": "3000"
+        "Timeout": "4000"
       },
       "Metadata": {
         "AWS::CloudFormation::Designer": {
@@ -3410,7 +3410,7 @@
         "Handle": {
           "Ref": "Pull1WaitHandle"
         },
-        "Timeout": "3000"
+        "Timeout": "4000"
       },
       "Metadata": {
         "AWS::CloudFormation::Designer": {
@@ -3433,7 +3433,7 @@
         "Handle": {
           "Ref": "Pull2WaitHandle"
         },
-        "Timeout": "3000"
+        "Timeout": "4000"
       },
       "Metadata": {
         "AWS::CloudFormation::Designer": {
@@ -3456,7 +3456,7 @@
         "Handle": {
           "Ref": "DC1WaitHandle"
         },
-        "Timeout": "3000"
+        "Timeout": "4000"
       },
       "Metadata": {
         "AWS::CloudFormation::Designer": {
@@ -3479,7 +3479,7 @@
         "Handle": {
           "Ref": "DC2WaitHandle"
         },
-        "Timeout": "3000"
+        "Timeout": "4000"
       },
       "Metadata": {
         "AWS::CloudFormation::Designer": {

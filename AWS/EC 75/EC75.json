@@ -944,7 +944,7 @@
                            "Fn::Join":[
                               "",
                               [
-                                 "powershell.exe \"Install-WindowsFeature RDS-Gateway,RSAT-RDS-Gateway\""
+                                 "powershell.exe \"Install-WindowsFeature RSAT-RDS-Gateway\""
                               ]
                            ]
                         }
@@ -1013,7 +1013,7 @@
                               [
                                  "cfn-signal.exe -e 0 \"",
                                  {
-                                    "Ref":"RDGWWaitHandle"
+                                    "Ref":"RDGW1WaitHandle"  
                                  },
                                  "\""
                               ]
@@ -1370,12 +1370,12 @@
         "DomainControllerWaitHandle"          : {
             "Type" : "AWS::CloudFormation::WaitConditionHandle"
         },
-      "RDGWWaitCondition":{
+        "RDGW1WaitCondition":{
          "Type":"AWS::CloudFormation::WaitCondition",
          "DependsOn":"RDGateway",
          "Properties":{
             "Handle":{
-               "Ref":"RDGWWaitHandle"
+               "Ref":"RDGW1WaitHandle"
             },
             "Timeout":"3000"
          },
@@ -1385,7 +1385,7 @@
             }
          }
       },
-      "RDGWWaitHandle":{
+      "RDGW1WaitHandle":{
          "Type":"AWS::CloudFormation::WaitConditionHandle",
          "Metadata":{
             "AWS::CloudFormation::Designer":{
@@ -1717,7 +1717,7 @@
                               [
                                  "cfn-signal.exe -e 0 \"",
                                  {
-                                    "Ref":"RDGWWaitHandle"
+                                    "Ref":"RDGW1WaitHandle"
                                  },
                                  "\""
                               ]

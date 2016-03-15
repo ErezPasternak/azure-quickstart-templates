@@ -45,13 +45,13 @@ $ConfigurationData = @{
             AvailabilityZone = 'AZ2'
         },
         @{
-            NodeName = 'Grid1'
-            Guid = (Get-EC2InstanceGuid -InstanceName WEGrid1B1)
+            NodeName = 'BRKR1'
+            Guid = (Get-EC2InstanceGuid -InstanceName BRKR1)
             AvailabilityZone = 'AZ1'
         },
         @{
-            NodeName = 'WEB2'
-            Guid = (Get-EC2InstanceGuid -InstanceName WEB2)
+            NodeName = 'BRKR2'
+            Guid = (Get-EC2InstanceGuid -InstanceName BRKR1)
             AvailabilityZone = 'AZ2'
         },
         @{
@@ -417,9 +417,9 @@ Configuration ServerBase {
         }
     }
 
-    Node Grid1 {
+    Node BRKR1 {
         xComputer JoinDomain {
-            Name = 'Grid1'
+            Name = 'BRKR1'
             DomainName = $DomainDNSName
             Credential = $Credential
             DependsOn = "[xDnsServerAddress]DnsServerAddress"
@@ -447,9 +447,9 @@ Configuration ServerBase {
         }
     }
 
-    Node WEB2 {
+    Node BRKR2 {
         xComputer JoinDomain {
-            Name = 'WEB2'
+            Name = 'BRKR1'
             DomainName = $DomainDNSName
             Credential = $Credential
             DependsOn = "[xDnsServerAddress]DnsServerAddress"
