@@ -1287,15 +1287,15 @@ configuration EricomConnectServerSetup
                 $ServiceName = "AutomationWebService.exe"                  
                 $ServicePath = Join-Path $workingDirectory -ChildPath $ServiceName
 
-                $fqdn = "portalSettings/FQDN $_externalFqdn";
-                $port = "portalSettings/Port $portNumber";
-                $adDomain = "adSettings/Domain $domainSuffix";
-                $adAdmin = "adSettings/Administrator $_adminUser";
-                $adPassword = "adSettings/Password $_adminPass";
-                $adBaseGroup = "adSettings/BaseADGroup $baseRDPGroup";
-                $rhp = "adSettings/RemoteHostPattern $rdshpattern";
-                $ec_admin = "connectSettings/EC_AdminUser $_adminUser"; # EC_Admin User
-                $ec_pass = "connectSettings/EC_AdminPass $_adminPass"; # EC_Admin Pass
+                $fqdn = "PortalSettings/FQDN $_externalFqdn";
+                $port = "PortalSettings/Port $portNumber";
+                $adDomain = "ADSettings/Domain $domainSuffix";
+                $adAdmin = "ADSettings/Administrator $_adminUser";
+                $adPassword = "ADSettings/Password $_adminPass";
+                $adBaseGroup = "ADSettings/BaseADGroup $baseRDPGroup";
+                $rhp = "ADSettings/RemoteHostPattern $rdshpattern";
+                $ec_admin = "ConnectSettings/EC_AdminUser $_adminUser"; # EC_Admin User
+                $ec_pass = "ConnectSettings/EC_AdminPass $_adminPass"; # EC_Admin Pass
                 
                 # register the service
                 $argumentsService = "/changesettings $fqdn $port $adDomain $adAdmin $adPassword $adBaseGroup $rhp $ec_admin $ec_pass";
