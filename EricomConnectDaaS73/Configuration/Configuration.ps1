@@ -959,6 +959,12 @@ configuration EricomConnectServerSetup
 		    Source = "\\neuromancer\Share\Sources_sxs\?Win2012R2"
 	   }
        
+       WindowsFeature ADDomainServices 
+	   {             
+		    Ensure = "Present"
+		    Name = "AD-Domain-Services"
+	   }
+       
        Script ExtractSQLInstaller
        {
             TestScript = {
@@ -1059,7 +1065,7 @@ configuration EricomConnectServerSetup
             DependsOn = "[Script]DownloadAdminWebServiceMSI"
         }
 
-	Script DownloadClientWebServiceMSI
+	    Script DownloadClientWebServiceMSI
         {
             TestScript = {
                 Test-Path "C:\EricomConnectClientWebService.msi"
@@ -1221,7 +1227,7 @@ configuration EricomConnectServerSetup
                 {
                     $shell.Namespace($destTmp).copyhere($item)
                 }
-                Move-Item "$destTmp\Ericom DaaS Service" -Destination $dest -Force -ErrorAction SilentlyContinue
+                Move-Item "$destTmp" -Destination $dest -Force -ErrorAction SilentlyContinue
             }
             GetScript = {@{Result = "UnZipDaaSService"}}
         }
@@ -1235,7 +1241,7 @@ configuration EricomConnectServerSetup
                 $domainSuffix = "@" + $Using:domainName;
                
                 Write-Verbose "DaaSService Configuration step"
-                $workingDirectory = "$env:ProgramFiles\Ericom Software\Ericom DaaS Service\"
+                $workingDirectory = "C:\Program Files\Ericom Software\Ericom DaaS Service\"
                 $ServiceName = "AutomationWebService.exe"                  
                 $ServicePath = Join-Path $workingDirectory -ChildPath $ServiceName
                 
