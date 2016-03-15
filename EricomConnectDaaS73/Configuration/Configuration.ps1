@@ -1261,6 +1261,56 @@ configuration EricomConnectServerSetup
             GetScript = {@{Result = "StartDaaSService"}}
         }
         
+        Script ConfigureDaaSService
+        {
+            TestScript = {
+                return $false
+            }
+            SetScript ={
+                $domainSuffix = "@" + $Using:domainName;
+                $_adminUser = "$Using:_adminUser" + "$domainSuffix"
+                $_adminPass = "$Using:_adminPassword"
+                $_gridName = "$Using:gridName"
+                $_hostOrIp = "$env:COMPUTERNAME"
+                $_saUser = $Using:_sqlUser
+                $_saPass = $Using:_sqlPassword
+                $_databaseServer = $Using:sqlserver
+                $_databaseName = $Using:sqldatabase
+                $_externalFqdn = $Using:externalFqdn
+                $baseRDPGroup = $Using:baseADGroupRDP
+                $rdshpattern = $Using:remoteHostPattern
+
+                $portNumber = 2244; # DaaS WebService port number
+               
+                Write-Verbose "DaaSService Configuration step"
+                $workingDirectory = "C:\Program Files\Ericom Software\Ericom DaaS Service\"
+                $ServiceName = "AutomationWebService.exe"                  
+                $ServicePath = Join-Path $workingDirectory -ChildPath $ServiceName
+
+                $fqdn = "portalSettings/FQDN $_externalFqdn";
+                $port = "portalSettings/Port $portNumber";
+                $adDomain = "adSettings/Domain $domainSuffix";
+                $adAdmin = "adSettings/Administrator $_adminUser";
+                $adPassword = "adSettings/Password $_adminPass";
+                $adBaseGroup = "adSettings/BaseADGroup $baseRDPGroup";
+                $rhp = "adSettings/RemoteHostPattern $rdshpattern";
+                $ec_admin = "connectSettings/EC_AdminUser $_adminUser"; # EC_Admin User
+                $ec_pass = "connectSettings/EC_AdminPass $_adminPass"; # EC_Admin Pass
+                
+                # register the service
+                $argumentsService = "/changesettings $fqdn $port $adDomain $adAdmin $adPassword $adBaseGroup $rhp $ec_admin $ec_pass";
+                
+                $exitCodeCli = (Start-Process -Filepath $ServicePath -ArgumentList "$argumentsService" -Wait -Passthru).ExitCode;
+                if ($exitCodeCli -eq 0) {
+                    Write-Verbose "DaaSService: Service has been succesfuly updated."
+                } else {
+                    Write-Verbose "$ServicePath $argumentsService"
+                    Write-Verbose ("DaaSService: Service could not be updated.. Exit Code: " + $exitCode)
+                } 
+            }
+            GetScript = {@{Result = "ConfigureDaaSService"}}
+        }
+        
         Script AlterAirURLPage
         {
             TestScript = {
