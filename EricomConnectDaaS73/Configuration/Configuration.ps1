@@ -1219,15 +1219,17 @@ configuration EricomConnectServerSetup
             SetScript ={
                 $source = "C:\DaaSService.zip"
                 Unblock-File -Path "C:\DaaSService.zip"
-                $destTmp = "C:\Program Files\Ericom Software\"
+                $destTmp = "C:\Program Files\Ericom Software\Ericom DaaS Service"
                 $dest = "C:\Program Files\Ericom Software\Ericom DaaS Service\"
                 $shell = new-object -com shell.application
                 $zip = $shell.NameSpace($source)
+                
+                New-Item -ItemType Directory -Path $destTmp -Force -ErrorAction SilentlyContinue 
                 foreach($item in $zip.items())
                 {
                     $shell.Namespace($destTmp).copyhere($item)
                 }
-                Move-Item "$destTmp" -Destination $dest -Force -ErrorAction SilentlyContinue
+     
             }
             GetScript = {@{Result = "UnZipDaaSService"}}
         }
@@ -1246,7 +1248,7 @@ configuration EricomConnectServerSetup
                 $ServicePath = Join-Path $workingDirectory -ChildPath $ServiceName
                 
                 # register the service
-                $argumentsService = "/install";
+                $argumentsService = "/installandstart";
                 
                 $exitCodeCli = (Start-Process -Filepath $ServicePath -ArgumentList "$argumentsService" -Wait -Passthru).ExitCode;
                 if ($exitCodeCli -eq 0) {
