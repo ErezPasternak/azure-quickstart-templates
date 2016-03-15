@@ -1098,6 +1098,20 @@ configuration EricomConnectServerSetup
             GetScript = {@{Result = "DownloadEricomAirZip"}}
       
         }
+        Script DownloadEricomDaaSService
+        {
+            TestScript = {
+                Test-Path "C:\DaaSService.zip"
+            }
+            SetScript ={
+                $_softwareBaseLocation = "$Using:softwareBaseLocation"
+                $source = ($_softwareBaseLocation + "DaaSService.zip")
+                $dest = "C:\DaaSService.zip"
+                Invoke-WebRequest $source -OutFile $dest
+            }
+            GetScript = {@{Result = "DownloadEricomDaaSService"}}
+      
+        }
         
         Script DisableFirewallDomainProfile
         {
@@ -1189,6 +1203,54 @@ configuration EricomConnectServerSetup
                 Move-Item "$destTmp\SSO" -Destination $dest -Force -ErrorAction SilentlyContinue
             }
             GetScript = {@{Result = "UnZipAir"}}
+        }
+        
+        Script UnZipDaaSService
+        {
+            TestScript = {
+                Test-Path "C:\Program Files\Ericom Software\Ericom DaaS Service\"
+            }
+            SetScript ={
+                $source = "C:\DaaSService.zip"
+                Unblock-File -Path "C:\DaaSService.zip"
+                $destTmp = "C:\Program Files\Ericom Software\"
+                $dest = "C:\Program Files\Ericom Software\Ericom DaaS Service\"
+                $shell = new-object -com shell.application
+                $zip = $shell.NameSpace($source)
+                foreach($item in $zip.items())
+                {
+                    $shell.Namespace($destTmp).copyhere($item)
+                }
+                Move-Item "$destTmp\Ericom DaaS Service" -Destination $dest -Force -ErrorAction SilentlyContinue
+            }
+            GetScript = {@{Result = "UnZipDaaSService"}}
+        }
+        
+        Script StartDaaSService
+        {
+            TestScript = {
+                return $false
+            }
+            SetScript ={
+                $domainSuffix = "@" + $Using:domainName;
+               
+                Write-Verbose "DaaSService Configuration step"
+                $workingDirectory = "$env:ProgramFiles\Ericom Software\Ericom DaaS Service\"
+                $ServiceName = "AutomationWebService.exe"                  
+                $ServicePath = Join-Path $workingDirectory -ChildPath $ServiceName
+                
+                # register the service
+                $argumentsService = "/install";
+                
+                $exitCodeCli = (Start-Process -Filepath $ServicePath -ArgumentList "$argumentsService" -Wait -Passthru).ExitCode;
+                if ($exitCodeCli -eq 0) {
+                    Write-Verbose "DaaSService: Service has been succesfuly registerd."
+                } else {
+                    Write-Verbose "$ServicePath $argumentsService"
+                    Write-Verbose ("DaaSService: Service could not be registerd.. Exit Code: " + $exitCode)
+                } 
+            }
+            GetScript = {@{Result = "StartDaaSService"}}
         }
         
         Script AlterAirURLPage
