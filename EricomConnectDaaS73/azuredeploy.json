@@ -86,7 +86,7 @@
       },
       "numberOf2008DesktopHostInstances":{
          "type":"int",
-         "defaultValue":0,
+         "defaultValue":1,
          "metadata":{
             "description":"Number of 2008 Desktop instances"
          }
