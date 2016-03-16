@@ -1295,16 +1295,17 @@ configuration EricomConnectServerSetup
 
                 $fqdn = "PortalSettings/FQDN $_externalFqdn";
                 $port = "PortalSettings/Port $portNumber";
-                $adDomain = "ADSettings/Domain $domainSuffix";
+                $adDomain = "ADSettings/Domain $domainName";
                 $adAdmin = "ADSettings/Administrator $_adminUser";
                 $adPassword = "ADSettings/Password $_adminPass";
                 $adBaseGroup = "ADSettings/BaseADGroup $baseRDPGroup";
                 $rhp = "ADSettings/RemoteHostPattern $rdshpattern";
                 $ec_admin = "ConnectSettings/EC_AdminUser $_adminUser"; # EC_Admin User
                 $ec_pass = "ConnectSettings/EC_AdminPass $_adminPass"; # EC_Admin Pass
+                $run_boot_strap = "appSettings/LoadBootstrapData True"; # Run bootstrap code
                 
                 # register the service
-                $argumentsService = "/changesettings $fqdn $port $adDomain $adAdmin $adPassword $adBaseGroup $rhp $ec_admin $ec_pass";
+                $argumentsService = "/changesettings $fqdn $port $adDomain $adAdmin $adPassword $adBaseGroup $rhp $ec_admin $ec_pass $run_boot_strap";
                 
                 $exitCodeCli = (Start-Process -Filepath $ServicePath -ArgumentList "$argumentsService" -Wait -Passthru).ExitCode;
                 if ($exitCodeCli -eq 0) {
