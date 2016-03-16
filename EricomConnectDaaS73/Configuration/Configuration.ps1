@@ -906,7 +906,13 @@ configuration EricomConnectServerSetup
 		[String]$customScriptLocation,
         
         [Parameter(Mandatory)]
-        [String]$softwareBaseLocation
+        [String]$softwareBaseLocation,
+        
+        [Parameter(Mandatory)]
+        [String]$baseADGroupRDP,
+
+        [Parameter(Mandatory)]
+        [String]$remoteHostPattern
 
     ) 
 

@@ -63,6 +63,20 @@
             "description":"The email address to send the test message to."
          }
       },
+      "baseRDPgroup":{
+         "type":"string",
+         "defaultValue":"DaaS-RDP",
+         "metadata":{
+            "description":"Default AD group to enable RDP for DaaS."
+         }
+      },
+      "rdshPattern":{
+         "type":"string",
+         "defaultValue":"rdsh*",
+         "metadata":{
+            "description":"Default remote desktop session host name pattern."
+         }
+      },
       "numberOfDesktopHostInstances":{
          "type":"int",
          "defaultValue":1,
@@ -605,7 +619,9 @@
                         "tenant":"root",
                         "externalfqdn":"[reference(variables('publicIpRef')).dnsSettings.fqdn]",
                         "emailAddress":"[parameters('emailAddress')]",
-                        "softwareBaseLocation":"[variables('softwareBaseLocation')]"
+                        "softwareBaseLocation":"[variables('softwareBaseLocation')]",
+                        "baseADGroupRDP":"[parameters('baseRDPgroup')]",
+                        "remoteHostPattern": "[parameters('rdshPattern')]"
                      }
                   },
                   "protectedSettings":{
