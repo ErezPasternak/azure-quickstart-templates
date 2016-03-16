@@ -962,7 +962,9 @@
                            "Password":"PrivateSettingsRef:SqlPassword"
                         },
 						"customScriptLocation":"[variables('customScriptLocation')]",
-						"softwareBaseLocation":"[variables('softwareBaseLocation')]"
+						"softwareBaseLocation":"[variables('softwareBaseLocation')]",
+                        "baseADGroupRDP":"[parameters('baseRDPgroup')]",
+                        "remoteHostPattern": "[parameters('rdshPattern')]"
                      }
                   },
                   "protectedSettings":{
