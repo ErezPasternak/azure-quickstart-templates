@@ -1254,7 +1254,7 @@ configuration EricomConnectServerSetup
                 $ServicePath = Join-Path $workingDirectory -ChildPath $ServiceName
                 
                 # register the service
-                $argumentsService = "/installandstart";
+                $argumentsService = "/install";
                 
                 $exitCodeCli = (Start-Process -Filepath $ServicePath -ArgumentList "$argumentsService" -Wait -Passthru).ExitCode;
                 if ($exitCodeCli -eq 0) {
@@ -1302,7 +1302,7 @@ configuration EricomConnectServerSetup
                 $rhp = "ADSettings/RemoteHostPattern $rdshpattern";
                 $ec_admin = "ConnectSettings/EC_AdminUser $_adminUser"; # EC_Admin User
                 $ec_pass = "ConnectSettings/EC_AdminPass $_adminPass"; # EC_Admin Pass
-                $run_boot_strap = "appSettings/LoadBootstrapData True"; # Run bootstrap code
+                $run_boot_strap = "appSettings/LoadBootstrapData False"; # Run bootstrap code
                 
                 # register the service
                 $argumentsService = "/changesettings $fqdn $port $adDomain $adAdmin $adPassword $adBaseGroup $rhp $ec_admin $ec_pass $run_boot_strap";
