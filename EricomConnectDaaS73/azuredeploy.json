@@ -619,9 +619,7 @@
                         "tenant":"root",
                         "externalfqdn":"[reference(variables('publicIpRef')).dnsSettings.fqdn]",
                         "emailAddress":"[parameters('emailAddress')]",
-                        "softwareBaseLocation":"[variables('softwareBaseLocation')]",
-                        "baseADGroupRDP":"[parameters('baseRDPgroup')]",
-                        "remoteHostPattern": "[parameters('rdshPattern')]"
+                        "softwareBaseLocation":"[variables('softwareBaseLocation')]"
                      }
                   },
                   "protectedSettings":{
