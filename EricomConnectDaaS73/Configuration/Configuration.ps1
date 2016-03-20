@@ -1254,7 +1254,7 @@ configuration EricomConnectServerSetup
                 $ServicePath = Join-Path $workingDirectory -ChildPath $ServiceName
                 
                 # register the service
-                $argumentsService = "/install";
+                $argumentsService = "/installandstart";
                 
                 $exitCodeCli = (Start-Process -Filepath $ServicePath -ArgumentList "$argumentsService" -Wait -Passthru).ExitCode;
                 if ($exitCodeCli -eq 0) {
