@@ -19,7 +19,7 @@ function getProtocol() {
                                   $("#encryptedPassword").is(':checked'));
         if (Url != null) {
             setCookie("EAN_settingsURL", Url, 1);
-            window.open(getProtocol() + $("#EUWS").val() + "/EricomXML/AccessNow/start.html?autostart=true","_self");
+            window.open(getProtocol() + $("#EUWS").val() + "/EricomXML/AccessNow/start.html?autostart=true" + "&endURL=" + $("#endURL").val(), "_self");
         }
     }
     

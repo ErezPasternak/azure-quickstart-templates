@@ -63,6 +63,20 @@
             "description":"The email address to send the test message to."
          }
       },
+      "baseRDPgroup":{
+         "type":"string",
+         "defaultValue":"DaaS-RDP",
+         "metadata":{
+            "description":"Default AD group to enable RDP for DaaS."
+         }
+      },
+      "rdshPattern":{
+         "type":"string",
+         "defaultValue":"rdsh*",
+         "metadata":{
+            "description":"Default remote desktop session host name pattern."
+         }
+      },
       "numberOfDesktopHostInstances":{
          "type":"int",
          "defaultValue":1,
@@ -70,11 +84,11 @@
             "description":"Number of Desktop instances"
          }
       },
-      "numberOf2016DesktopHostInstances":{
+      "numberOf2008DesktopHostInstances":{
          "type":"int",
          "defaultValue":1,
          "metadata":{
-            "description":"Number of 2016 Desktop instances"
+            "description":"Number of 2008 Desktop instances"
          }
       },
       "numberOfApplicationHostInstances":{
@@ -130,7 +144,7 @@
       }
    },
    "variables":{
-      "storageAccountName":"[concat(uniquestring(resourceGroup().id), 'RDS', 'Storage')]",
+      "storageAccountName":"[substring(concat(uniquestring(resourceGroup().id), 'rds', 'storage',uniquestring(resourceGroup().id)),0,24)]",
       "imagePublisher":"MicrosoftWindowsServer",
       "imageOffer":"WindowsServer",
       "imageSKU":"2012-R2-Datacenter",
@@ -482,11 +496,11 @@
       {
          "apiVersion":"[variables('apiVersion')]",
          "type":"Microsoft.Network/networkInterfaces",
-         "name":"[concat('rdshD16-', copyindex(), '-nif')]",
+         "name":"[concat('rdshD8-', copyindex(), '-nif')]",
          "location":"[parameters('siteLocation')]",
          "copy":{
-            "name":"rdshD16-nif-loop",
-            "count":"[parameters('numberOf2016DesktopHostInstances')]"
+            "name":"rdshD8-nif-loop",
+            "count":"[parameters('numberOf2008DesktopHostInstances')]"
          },
          "dependsOn":[
             "Microsoft.Resources/deployments/updatevnetdns"
@@ -704,22 +718,22 @@
       {
          "apiVersion":"[variables('apiVersion')]",
          "type":"Microsoft.Compute/virtualMachines",
-         "name":"[concat('rdshD16-', copyindex())]",
+         "name":"[concat('rdshD8-', copyindex())]",
          "location":"[parameters('siteLocation')]",
          "copy":{
-            "name":"rdshD16-vm-loop",
+            "name":"rdshD8-vm-loop",
             "count":"[parameters('numberOfDesktopHostInstances')]"
          },
          "dependsOn":[
             "[concat('Microsoft.Storage/storageAccounts/', variables('StorageAccountName'))]",
-            "[concat('Microsoft.Network/networkInterfaces/', 'rdshD16-', copyindex(), '-nif')]"
+            "[concat('Microsoft.Network/networkInterfaces/', 'rdshD8-', copyindex(), '-nif')]"
          ],
          "properties":{
             "hardwareProfile":{
                "vmSize":"[parameters('DesktopVmSize')]"
             },
             "osProfile":{
-               "computerName":"[concat('rdshD16-', copyIndex())]",
+               "computerName":"[concat('rdshD8-', copyIndex())]",
                "adminUsername":"[parameters('adminUsername')]",
                "adminPassword":"[parameters('adminPassword')]"
             },
@@ -727,13 +741,13 @@
                "imageReference":{
                   "publisher":"[variables('imagePublisher')]",
                   "offer":"[variables('imageOffer')]",
-                  "sku":"Windows-Server-Technical-Preview",
+                  "sku":"2008-R2-SP1",
                   "version":"latest"
                },
                "osDisk":{
                   "name":"osdisk",
                   "vhd":{
-                     "uri":"[concat('http://',variables('StorageAccountName'),'.blob.core.windows.net/vhds/rdshD16-',copyindex(),'-osdisk.vhd')]"
+                     "uri":"[concat('http://',variables('StorageAccountName'),'.blob.core.windows.net/vhds/rdshD8-',copyindex(),'-osdisk.vhd')]"
                   },
                   "caching":"ReadWrite",
                   "createOption":"FromImage"
@@ -742,7 +756,7 @@
             "networkProfile":{
                "networkInterfaces":[
                   {
-                     "id":"[resourceId('Microsoft.Network/networkInterfaces',concat('rdshD16-', copyindex(), '-nif'))]"
+                     "id":"[resourceId('Microsoft.Network/networkInterfaces',concat('rdshD8-', copyindex(), '-nif'))]"
                   }
                ]
             }
@@ -751,10 +765,10 @@
             {
                "apiVersion":"[variables('apiVersion')]",
                "type":"Microsoft.Compute/virtualMachines/extensions",
-               "name":"[concat('rdshD16-', copyindex(),'/DesktopHost')]",
+               "name":"[concat('rdshD8-', copyindex(),'/DesktopHost')]",
                "location":"[parameters('siteLocation')]",
                "dependsOn":[
-                  "[resourceId('Microsoft.Compute/virtualMachines', concat('rdshD16-', copyindex()))]",
+                  "[resourceId('Microsoft.Compute/virtualMachines', concat('rdshD8-', copyindex()))]",
                   "Microsoft.Compute/virtualMachines/cb-vm/extensions/EricomConnectServerSetup"
                ],
                "properties":{
@@ -945,7 +959,10 @@
                            "UserName":"[variables('sqluser')]",
                            "Password":"PrivateSettingsRef:SqlPassword"
                         },
-                        "softwareBaseLocation":"[variables('softwareBaseLocation')]"
+						"customScriptLocation":"[variables('customScriptLocation')]",
+						"softwareBaseLocation":"[variables('softwareBaseLocation')]",
+                        "baseADGroupRDP":"[parameters('baseRDPgroup')]",
+                        "remoteHostPattern": "[parameters('rdshPattern')]"
                      }
                   },
                   "protectedSettings":{

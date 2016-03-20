@@ -40,6 +40,139 @@
    }
 }
 
+configuration EnableRemoteAdministration
+{
+	param
+	(
+		[Parameter(Mandatory)]
+		[String]$broker
+	)
+
+	Node localhost 
+	{
+		LocalConfigurationManager
+        {
+            RebootNodeIfNeeded = $true
+        }
+		
+		Script SetRDA
+		{
+			TestScript = {
+                Test-Path "C:\RDAEnabled\"
+            }
+            SetScript ={
+				New-Item -Path "C:\RDAEnabled" -ItemType Directory -Force -ErrorAction SilentlyContinue
+                Enable-PSRemoting -Force
+				$broker = "$Using:broker"
+				Set-Item wsman:\localhost\Client\TrustedHosts -value $broker
+            }
+            GetScript = {@{Result = "SetRDA"}}
+		}
+	}
+}
+
+configuration EnableRemoteDesktopForDomainUsers
+{
+	Node localhost 
+	{
+		LocalConfigurationManager
+        {
+            RebootNodeIfNeeded = $true
+        }
+		
+		Script SetRDS
+		{
+			TestScript = {
+                Test-Path "C:\RDSEnabled\"
+            }
+            SetScript ={
+				New-Item -Path "C:\RDSEnabled" -ItemType Directory -Force -ErrorAction SilentlyContinue
+				$baseADGroupRDP = "Domain Users"
+                Invoke-Command { param([String]$RDPGroup) net localgroup "Remote Desktop Users" "$RDPGroup" /ADD } -computername "localhost" -ArgumentList "$baseADGroupRDP"
+            }
+            GetScript = {@{Result = "SetRDS"}}
+		}
+	}
+}
+
+configuration EnableRunningScripts
+{
+	Node localhost 
+	{
+		LocalConfigurationManager
+        {
+            RebootNodeIfNeeded = $true
+        }
+		
+		Script SetExecutionPolicy
+		{
+			TestScript = {
+                Test-Path "C:\ExecutionPolicy\"
+            }
+            SetScript ={
+				New-Item -Path "C:\ExecutionPolicy" -ItemType Directory -Force -ErrorAction SilentlyContinue
+				try {
+					Set-ExecutionPolicy Unrestricted -Scope LocalMachine -Force -Confirm:$false -ErrorAction SilentlyContinue
+				} catch { }
+            }
+            GetScript = {@{Result = "SetExecutionPolicy"}}
+		}
+	}
+}
+
+configuration RunBootstrap
+{
+	param
+	(
+		[Parameter(Mandatory)]
+		[String]$adminUsername,
+		
+		[Parameter(Mandatory)]
+		[String]$adminPassword,
+		
+		[Parameter(Mandatory)]
+		[String]$baseADGroupRDP  = "DaaS-RDP",
+		
+		[Parameter(Mandatory)]
+		[String]$remoteHostPattern,
+		
+		[Parameter(Mandatory)]
+		[String]$bootstrapURL
+	)
+	
+	Node localhost 
+	{
+		LocalConfigurationManager
+        {
+            RebootNodeIfNeeded = $true
+        }
+		
+		Script RunBootstrapScript
+		{
+			TestScript = {
+                Test-Path "C:\RunBootstrapScript\"
+            }
+            SetScript ={
+				New-Item -Path "C:\RunBootstrapScript" -ItemType Directory -Force -ErrorAction SilentlyContinue
+				$bootstrapURL = "$Using:bootstrapURL"
+				$bootstrapDestination = "C:\RunBootstrapScript\Bootstrap.ps1"
+				# 1. Download bootstrap file
+				Invoke-WebRequest $bootstrapURL -OutFile $bootstrapDestination
+				Unblock-File $bootstrapDestination
+				# 2. Run the bootstrap file
+				$adminUser = "$Using:adminUsername"
+				$adminPass = "$Using:adminPassword"
+				$ADGroup = "$Using:baseADGroupRDP"
+				$rdshpattern = "$Using:remoteHostPattern"
+                "C:\RunBootstrapScript\.\Bootstrap.ps1 -adminUsername `"$adminUser`" -adminPassword `"$adminPass`" -baseADGroupRDP `"$ADGroup`" -remoteHostPattern `"$rdshpattern`"" | Out-File "C:\RunBootstrapScript\command.txt"
+				#Invoke-Expression "C:\RunBootstrapScript\.\Bootstrap.ps1 -adminUsername `"$adminUser`" -adminPassword `"$adminPass`" -baseADGroupRDP `"$ADGroup`" -remoteHostPattern `"$rdshpattern`""
+				
+            }
+            GetScript = {@{Result = "RunBootstrapScript"}}
+		}
+	}
+	
+}
 
 configuration GatewaySetup
 {
@@ -215,7 +348,7 @@ configuration GatewaySetup
                 }
                 
                 # publish admin page via ESG
-                $argumentsCli = "EsgConfig /adminUser `"$_adminUser`" /adminPassword `"$_adminPass`" common ExternalWebServer`$UrlServicePointsFilter=`"<UrlServicePointsFilter> <UrlFilter> <UrlPathRegExp>^/Admin</UrlPathRegExp> <UrlServicePoints>https://`"$_lookUpHosts`":8022/</UrlServicePoints></UrlFilter> </UrlServicePointsFilter>`"";
+                $argumentsCli = "EsgConfig /adminUser `"$_adminUser`" /adminPassword `"$_adminPass`" common ExternalWebServer`$UrlServicePointsFilter=`"<UrlServicePointsFilter> <UrlFilter> <UrlPathRegExp>^/Admin</UrlPathRegExp> <UrlServicePoints>https://`"$_lookUpHosts`":8022/</UrlServicePoints></UrlFilter><UrlFilter> <UrlPathRegExp>^/DaaS</UrlPathRegExp> <UrlServicePoints>https://`"$_lookUpHosts`":2244/</UrlServicePoints></UrlFilter>  </UrlServicePointsFilter>`"";
                 
                 $exitCodeCli = (Start-Process -Filepath $cliPath -ArgumentList "$argumentsCli" -Wait -Passthru).ExitCode;
                 if ($exitCodeCli -eq 0) {
@@ -317,6 +450,15 @@ configuration DesktopHost
             domainName = $domainName 
             adminCreds = $adminCreds 
         }
+
+		EnableRemoteAdministration EnableRemoteAdministration
+		{
+			broker = $LUS
+		}
+		
+		EnableRemoteDesktopForDomainUsers EnableRemoteDesktopForDomainUsers
+		{
+		}
 
         WindowsFeature RDS-RD-Server
         {
@@ -565,6 +707,15 @@ configuration ApplicationHost
             adminCreds = $adminCreds 
         }
 
+		EnableRemoteAdministration EnableRemoteAdministration
+		{
+			broker = $LUS
+		}
+		
+		EnableRemoteDesktopForDomainUsers EnableRemoteDesktopForDomainUsers
+		{
+		}
+
         WindowsFeature RDS-RD-Server
         {
             Ensure = "Present"
@@ -752,7 +903,16 @@ configuration EricomConnectServerSetup
         [PSCredential]$sqlCreds,
         
         [Parameter(Mandatory)]
-        [String]$softwareBaseLocation
+		[String]$customScriptLocation,
+        
+        [Parameter(Mandatory)]
+        [String]$softwareBaseLocation,
+        
+        [Parameter(Mandatory)]
+        [String]$baseADGroupRDP,
+
+        [Parameter(Mandatory)]
+        [String]$remoteHostPattern
 
     ) 
 
@@ -803,6 +963,12 @@ configuration EricomConnectServerSetup
 		    Ensure = "Present"
 		    Name = "Net-Framework-Core"
 		    Source = "\\neuromancer\Share\Sources_sxs\?Win2012R2"
+	   }
+       
+       WindowsFeature ADDomainServices 
+	   {             
+		    Ensure = "Present"
+		    Name = "AD-Domain-Services"
 	   }
        
        Script ExtractSQLInstaller
@@ -945,7 +1111,7 @@ configuration EricomConnectServerSetup
             GetScript = {@{Result = "DownloadRemoteAgentWebServiceMSI"}}
       
         }
-		
+        
         Package InstallRemoteAgentWebServiceMSI
         {
             Ensure = "Present" 
@@ -955,6 +1121,33 @@ configuration EricomConnectServerSetup
             Arguments = ""
             LogPath = "C:\log-ecrws.txt"
             DependsOn = "[Script]DownloadRemoteAgentWebServiceMSI"
+        }
+        Script DownloadEricomAirZip
+        {
+            TestScript = {
+                Test-Path "C:\SSO.zip"
+            }
+            SetScript ={
+                $source = "https://raw.githubusercontent.com/ErezPasternak/azure-quickstart-templates/EricomConnect/EricomConnectDaaS73/SSO.zip"
+                $dest = "C:\SSO.zip"
+                Invoke-WebRequest $source -OutFile $dest
+            }
+            GetScript = {@{Result = "DownloadEricomAirZip"}}
+      
+        }
+        Script DownloadEricomDaaSService
+        {
+            TestScript = {
+                Test-Path "C:\DaaSService.zip"
+            }
+            SetScript ={
+                $_softwareBaseLocation = "$Using:softwareBaseLocation"
+                $source = ($_softwareBaseLocation + "DaaSService.zip")
+                $dest = "C:\DaaSService.zip"
+                Invoke-WebRequest $source -OutFile $dest
+            }
+            GetScript = {@{Result = "DownloadEricomDaaSService"}}
+		
         }
         
         Script DisableFirewallDomainProfile
@@ -1027,19 +1220,7 @@ configuration EricomConnectServerSetup
             }
             GetScript = {@{Result = "InitializeGrid"}}      
         }
-         Script DownloadEricomAirZip
-        {
-            TestScript = {
-                Test-Path "C:\SSO.zip"
-            }
-            SetScript ={
-                $source = "https://raw.githubusercontent.com/ErezPasternak/azure-quickstart-templates/EricomConnect/EricomConnectDaaS75/SSO.zip"
-                $dest = "C:\SSO.zip"
-                Invoke-WebRequest $source -OutFile $dest
-            }
-            GetScript = {@{Result = "DownloadEricomAirZip"}}
       
-        }
         Script UnZipAir
         {
             TestScript = {
@@ -1059,6 +1240,107 @@ configuration EricomConnectServerSetup
                 Move-Item "$destTmp\SSO" -Destination $dest -Force -ErrorAction SilentlyContinue
             }
             GetScript = {@{Result = "UnZipAir"}}
+        }
+        
+        Script UnZipDaaSService
+        {
+            TestScript = {
+                Test-Path "C:\Program Files\Ericom Software\Ericom DaaS Service\"
+            }
+            SetScript ={
+                $source = "C:\DaaSService.zip"
+                Unblock-File -Path "C:\DaaSService.zip"
+                $destTmp = "C:\Program Files\Ericom Software\Ericom DaaS Service"
+                $dest = "C:\Program Files\Ericom Software\Ericom DaaS Service\"
+                $shell = new-object -com shell.application
+                $zip = $shell.NameSpace($source)
+                
+                New-Item -ItemType Directory -Path $destTmp -Force -ErrorAction SilentlyContinue 
+                foreach($item in $zip.items())
+                {
+                    $shell.Namespace($destTmp).copyhere($item)
+                }
+     
+            }
+            GetScript = {@{Result = "UnZipDaaSService"}}
+        }
+        
+        Script StartDaaSService
+        {
+            TestScript = {
+                return $false
+            }
+            SetScript ={
+                $domainSuffix = "@" + $Using:domainName;
+               
+                Write-Verbose "DaaSService Configuration step"
+                $workingDirectory = "C:\Program Files\Ericom Software\Ericom DaaS Service\"
+                $ServiceName = "AutomationWebService.exe"                  
+                $ServicePath = Join-Path $workingDirectory -ChildPath $ServiceName
+                
+                # register the service
+                $argumentsService = "/install";
+                
+                $exitCodeCli = (Start-Process -Filepath $ServicePath -ArgumentList "$argumentsService" -Wait -Passthru).ExitCode;
+                if ($exitCodeCli -eq 0) {
+                    Write-Verbose "DaaSService: Service has been succesfuly registerd."
+                } else {
+                    Write-Verbose "$ServicePath $argumentsService"
+                    Write-Verbose ("DaaSService: Service could not be registerd.. Exit Code: " + $exitCode)
+                } 
+            }
+            GetScript = {@{Result = "StartDaaSService"}}
+        }
+        
+        Script ConfigureDaaSService
+        {
+            TestScript = {
+                return $false
+            }
+            SetScript ={
+                $domainSuffix = "@" + $Using:domainName;
+                $_adminUser = "$Using:_adminUser" + "$domainSuffix"
+                $_adminPass = "$Using:_adminPassword"
+                $_gridName = "$Using:gridName"
+                $_hostOrIp = "$env:COMPUTERNAME"
+                $_saUser = $Using:_sqlUser
+                $_saPass = $Using:_sqlPassword
+                $_databaseServer = $Using:sqlserver
+                $_databaseName = $Using:sqldatabase
+                $_externalFqdn = $Using:externalFqdn
+                $baseRDPGroup = $Using:baseADGroupRDP
+                $rdshpattern = $Using:remoteHostPattern
+
+                $portNumber = 2244; # DaaS WebService port number
+               
+                Write-Verbose "DaaSService Configuration step"
+                $workingDirectory = "C:\Program Files\Ericom Software\Ericom DaaS Service\"
+                $ServiceName = "AutomationWebService.exe"                  
+                $ServicePath = Join-Path $workingDirectory -ChildPath $ServiceName
+
+                $fqdn = "PortalSettings/FQDN $_externalFqdn";
+                $port = "PortalSettings/Port $portNumber";
+                $adDomain = "ADSettings/Domain $domainName";
+                $adAdmin = "ADSettings/Administrator $_adminUser";
+                $adPassword = "ADSettings/Password $_adminPass";
+                $adBaseGroup = "ADSettings/BaseADGroup $baseRDPGroup";
+                $rhp = "ADSettings/RemoteHostPattern $rdshpattern";
+                $ec_admin = "ConnectSettings/EC_AdminUser $_adminUser"; # EC_Admin User
+                $ec_pass = "ConnectSettings/EC_AdminPass $_adminPass"; # EC_Admin Pass
+                $run_boot_strap = "appSettings/LoadBootstrapData False"; # Run bootstrap code
+                
+                # register the service
+                $argumentsService = "/changesettings $fqdn $port $adDomain $adAdmin $adPassword $adBaseGroup $rhp $ec_admin $ec_pass $run_boot_strap";
+                
+                $exitCodeCli = (Start-Process -Filepath $ServicePath -ArgumentList "$argumentsService" -Wait -Passthru).ExitCode;
+                if ($exitCodeCli -eq 0) {
+                    Write-Verbose "DaaSService: Service has been succesfuly updated."
+                } else {
+                    Write-Verbose "$ServicePath $argumentsService"
+                    Write-Verbose ("DaaSService: Service could not be updated.. Exit Code: " + $exitCode)
+                } 
+            }
+            GetScript = {@{Result = "ConfigureDaaSService"}}
         }
         
         Script AlterAirURLPage
@@ -1092,6 +1374,5 @@ configuration EricomConnectServerSetup
             }
             GetScript = {@{Result = "AlterAirURLPage"}}
         }
-
     }
 }

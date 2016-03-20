@@ -62,6 +62,7 @@
                                 <button id="loginfull" type="button" class="btn btn-default" onclick="runCookie()" style="float:right;">Login</button>
                     </div>
                   </div>
+                    <input type="hidden" name="endURL" id="endURL" value="" size="250" />
                   <input type="hidden" name="redirect" id="redirect" value="false" size="80" />
                         <input type="hidden" id="EUWS" value="" size="80" />
                         <input type="hidden" name="groupName" id="group" value="" size="80" />
@@ -76,6 +77,7 @@
 								$('form').first().submit();
 							}
 						});
+                        document.getElementById('endURL').value = getURLParameter('endURL');
 						document.getElementById('Username').value = getURLParameter('username'); // *
 						document.getElementById('Password').value = getURLParameter('password'); // *
 						document.getElementById('EUWS').value = window.document.location.host;
