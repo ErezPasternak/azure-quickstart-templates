@@ -348,7 +348,7 @@ configuration GatewaySetup
                 }
                 
                 # publish admin page via ESG
-                $argumentsCli = "EsgConfig /adminUser `"$_adminUser`" /adminPassword `"$_adminPass`" common ExternalWebServer`$UrlServicePointsFilter=`"<UrlServicePointsFilter> <UrlFilter> <UrlPathRegExp>^/Admin</UrlPathRegExp> <UrlServicePoints>https://`"$_lookUpHosts`":8022/</UrlServicePoints></UrlFilter><UrlFilter> <UrlPathRegExp>^/DaaS</UrlPathRegExp> <UrlServicePoints>https://`"$_lookUpHosts`":2244/</UrlServicePoints></UrlFilter>  </UrlServicePointsFilter>`"";
+                $argumentsCli = "EsgConfig /adminUser `"$_adminUser`" /adminPassword `"$_adminPass`" common ExternalWebServer`$UrlServicePointsFilter=`"<UrlServicePointsFilter> <UrlFilter> <UrlPathRegExp>^/Admin</UrlPathRegExp> <UrlServicePoints>https://`"$_lookUpHosts`":8022/</UrlServicePoints></UrlFilter><UrlFilter> <UrlPathRegExp>^/DaaS</UrlPathRegExp> <UrlServicePoints>http://`"$_lookUpHosts`":2244/</UrlServicePoints></UrlFilter>  </UrlServicePointsFilter>`"";
                 
                 $exitCodeCli = (Start-Process -Filepath $cliPath -ArgumentList "$argumentsCli" -Wait -Passthru).ExitCode;
                 if ($exitCodeCli -eq 0) {
@@ -1279,7 +1279,7 @@ configuration EricomConnectServerSetup
                 $ServicePath = Join-Path $workingDirectory -ChildPath $ServiceName
                 
                 # register the service
-                $argumentsService = "/install";
+                $argumentsService = "/installandstart";
                 
                 $exitCodeCli = (Start-Process -Filepath $ServicePath -ArgumentList "$argumentsService" -Wait -Passthru).ExitCode;
                 if ($exitCodeCli -eq 0) {
