@@ -348,7 +348,7 @@ configuration GatewaySetup
                 }
                 
                 # publish admin page via ESG
-                $argumentsCli = "EsgConfig /adminUser `"$_adminUser`" /adminPassword `"$_adminPass`" common ExternalWebServer`$UrlServicePointsFilter=`"<UrlServicePointsFilter> <UrlFilter> <UrlPathRegExp>^/Admin</UrlPathRegExp> <UrlServicePoints>https://`"$_lookUpHosts`":8022/</UrlServicePoints></UrlFilter><UrlFilter> <UrlPathRegExp>^/DaaS</UrlPathRegExp> <UrlServicePoints>http://`"$_lookUpHosts`":2244/</UrlServicePoints></UrlFilter>  </UrlServicePointsFilter>`"";
+                $argumentsCli = "EsgConfig /adminUser `"$_adminUser`" /adminPassword `"$_adminPass`" common ExternalWebServer`$UrlServicePointsFilter=`"<UrlServicePointsFilter> <UrlFilter> <UrlPathRegExp>^/Admin</UrlPathRegExp> <UrlServicePoints>https://`"$_lookUpHosts`":8022/</UrlServicePoints></UrlFilter><UrlFilter> <UrlPathRegExp>^/EricomAutomation</UrlPathRegExp> <UrlServicePoints>http://`"$_lookUpHosts`":2244/</UrlServicePoints></UrlFilter>  </UrlServicePointsFilter>`"";
                 
                 $exitCodeCli = (Start-Process -Filepath $cliPath -ArgumentList "$argumentsCli" -Wait -Passthru).ExitCode;
                 if ($exitCodeCli -eq 0) {
@@ -369,6 +369,8 @@ configuration GatewaySetup
             SetScript = {
                 New-Item -Path "C:\SendEndEmailExecuted" -ItemType Directory -Force -ErrorAction SilentlyContinue
                 $domainSuffix = "@" + $Using:domainName;
+                $_adminUser = "$Using:_adminUser" + "$domainSuffix"
+                $_adminPass = "$Using:_adminPassword"
                 # send system is ready mail - might need a better place for it
                 $To = "nobody"
                 $Subject = "Ericom Connect Deployment on Azure is now Ready"
@@ -391,7 +393,7 @@ configuration GatewaySetup
 
                 Write-Verbose "Ericom Connect Grid Server has been succesfuly configured."
                 $Keyword = "CB: Ericom Connect Grid Server has been succesfuly configured."
-                $Message = '<h1>Congratulations! Your Ericom DaaS Environment on Microsoft Azure is now Ready!</h1><p>Dear ' + $ToName + ',<br><br>Thank you for deploying <a href="http://www.ericom.com/connect-enterprise.asp">Ericom Connect</a> via Microsoft Azure.<br><br>Your deployment is now complete and you can start using the system.<br><br>To launch Ericom DaaS Client please click <a href="https://' + $_externalFqdn + '"/EricomXml/AccessPortal/Start.html#/login>here. </a><br><br>To log-in to Ericom Connect management console please click <a href="https://' + $_externalFqdn + '/Admin">here. </a><br><br><Below are your credentials. Please make sure you save them for future use:<br><br>Username: demouser' + $domainSuffix + ' <br>Password: P@55w0rd   <br><br><br>Regards,<br><a href="http://www.ericom.com">Ericom</a> Automation Team'
+                $Message = '<h1>Congratulations! Your Ericom DaaS Environment on Microsoft Azure is now Ready!</h1><p>Dear ' + $ToName + ',<br><br>Thank you for deploying <a href="http://www.ericom.com/connect-enterprise.asp">Ericom Connect</a> via Microsoft Azure.<br><br>Your deployment is now complete and you can start using the system.<br><br>To launch Ericom DaaS Client please click <a href="https://' + $_externalFqdn + '"/EricomXml/AccessPortal/Start.html#/login>here. </a><br><br>To log-in to Ericom Connect management console please click <a href="https://' + $_externalFqdn + '/Admin">here. </a><br><br><Below are your Admin credentials. Please make sure you save them for future use:<br><br>Username: ' + $_adminUser + ' <br>Password: '+ $_adminPass  '+ <br><br><br>Regards,<br><a href="http://www.ericom.com">Ericom</a> Automation Team'
                 if ($To -ne "nobody") {
                     try {
                         Send-MailMessage -Body "$Message" -BodyAsHtml -Subject "$Subject" -SmtpServer $SmtpServer -Port $Port -Credential $credential -From $credential.UserName -To $To -bcc "erez.pasternak@ericom.com","DaaS@ericom.com","David.Oprea@ericom.com" -ErrorAction SilentlyContinue
