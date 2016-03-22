@@ -349,7 +349,7 @@ configuration GatewaySetup
                 
                 # publish admin page via ESG
                 $argumentsCli = "EsgConfig /adminUser `"$_adminUser`" /adminPassword `"$_adminPass`" common ExternalWebServer`$UrlServicePointsFilter=`"<UrlServicePointsFilter> <UrlFilter> <UrlPathRegExp>^/Admin</UrlPathRegExp> <UrlServicePoints>https://`"$_lookUpHosts`":8022/</UrlServicePoints></UrlFilter><UrlFilter> <UrlPathRegExp>^/EricomAutomation</UrlPathRegExp> <UrlServicePoints>http://`"$_lookUpHosts`":2244/</UrlServicePoints></UrlFilter>  </UrlServicePointsFilter>`"";
-                
+              
                 $exitCodeCli = (Start-Process -Filepath $cliPath -ArgumentList "$argumentsCli" -Wait -Passthru).ExitCode;
                 if ($exitCodeCli -eq 0) {
                     Write-Verbose "ESG: Admin page has been succesfuly published."
@@ -405,7 +405,38 @@ configuration GatewaySetup
             }
             GetScript = {@{Result = "SendEndEmail"}}
         } 
+        Script StartBootStrapOnBroker
+        {
+   
+            SetScript = {
+
+                    New-Item -Path "C:\SendBootStrapCommand" -ItemType Directory -Force -ErrorAction SilentlyContinue
+                    $data = @{command='Bootstrap'}
+                    $json = $data | ConvertTo-Json
+                    try {
+                        $_lookUpHosts = "$Using:LUS"
+                        $uri = 'http://'+$_lookUpHosts+':2244/EricomAutomation/command/Generic'
+                        $Request = [System.UriBuilder]$uri
+                        $response = Invoke-RestMethod -Uri $Request.Uri -TimeoutSec 400 -Method Post -Body $json -ContentType 'application/json' 
+                    }
+                    catch {
+                        $response | Out-file "C:\Bootstrap.txt"
+                    }
+                    Finally {
+                        $response | Out-file "C:\Bootstrap.txt"
+                    }
+              }
+    
+        TestScript = {
+            Test-Path "C:\SendBootStrapCommand\"
+        }
+    
+        GetScript = {@{Result = "StartBootStrapOnBroker"}}
+
+        }
+        
     }
+
 }
 
 
@@ -1130,7 +1161,7 @@ configuration EricomConnectServerSetup
                 Test-Path "C:\SSO.zip"
             }
             SetScript ={
-                $source = "https://raw.githubusercontent.com/ErezPasternak/azure-quickstart-templates/EricomConnect/EricomConnectDaaS73/SSO.zip"
+                $source = "https://raw.githubusercontent.com/ErezPasternak/azure-quickstart-templates/EricomConnect/EricomConnectDaaS75/SSO.zip"
                 $dest = "C:\SSO.zip"
                 Invoke-WebRequest $source -OutFile $dest
             }
@@ -1267,7 +1298,7 @@ configuration EricomConnectServerSetup
             GetScript = {@{Result = "UnZipDaaSService"}}
         }
         
-        Script StartDaaSService
+        Script InstallDaaSService
         {
             TestScript = {
                 return $false
@@ -1281,7 +1312,7 @@ configuration EricomConnectServerSetup
                 $ServicePath = Join-Path $workingDirectory -ChildPath $ServiceName
                 
                 # register the service
-                $argumentsService = "/installandstart";
+                $argumentsService = "/install";
                 
                 $exitCodeCli = (Start-Process -Filepath $ServicePath -ArgumentList "$argumentsService" -Wait -Passthru).ExitCode;
                 if ($exitCodeCli -eq 0) {
@@ -1291,7 +1322,7 @@ configuration EricomConnectServerSetup
                     Write-Verbose ("DaaSService: Service could not be registerd.. Exit Code: " + $exitCode)
                 } 
             }
-            GetScript = {@{Result = "StartDaaSService"}}
+            GetScript = {@{Result = "InstallDaaSService"}}
         }
         
         Script ConfigureDaaSService
@@ -1344,7 +1375,33 @@ configuration EricomConnectServerSetup
             }
             GetScript = {@{Result = "ConfigureDaaSService"}}
         }
-        
+       
+        Script StartDaaSService
+        {
+            TestScript = {
+                return $false
+            }
+            SetScript ={
+                $domainSuffix = "@" + $Using:domainName;
+               
+                Write-Verbose "DaaSService Configuration step"
+                $workingDirectory = "C:\Program Files\Ericom Software\Ericom DaaS Service\"
+                $ServiceName = "AutomationWebService.exe"                  
+                $ServicePath = Join-Path $workingDirectory -ChildPath $ServiceName
+                
+                # register the service
+                $argumentsService = "/start";
+                
+                $exitCodeCli = (Start-Process -Filepath $ServicePath -ArgumentList "$argumentsService" -Wait -Passthru).ExitCode;
+                if ($exitCodeCli -eq 0) {
+                    Write-Verbose "DaaSService: Service has been succesfuly registerd."
+                } else {
+                    Write-Verbose "$ServicePath $argumentsService"
+                    Write-Verbose ("DaaSService: Service could not be registerd.. Exit Code: " + $exitCode)
+                } 
+            }
+            GetScript = {@{Result = "StartDaaSService"}}
+        }
         Script AlterAirURLPage
         {
             TestScript = {
