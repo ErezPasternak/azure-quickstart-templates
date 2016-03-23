@@ -603,69 +603,6 @@ configuration ApplicationHost
             Name = "googlechrome"
             DependsOn = "[cChocoInstaller]installChoco"
         }
-        
-       cChocoPackageInstaller install7zip
-        {
-            Name = "7zip.install"
-            DependsOn = "[cChocoInstaller]installChoco"
-        }
-        
-        cChocoPackageInstaller installadobereader
-        {
-            Name = "adobereader"
-            DependsOn = "[cChocoInstaller]installChoco"
-        }
- 
-        cChocoPackageInstaller installdropbox
-        {
-            Name = "dropbox"
-            DependsOn = "[cChocoInstaller]installChoco"
-        }
-        
-        cChocoPackageInstaller installlibreoffice
-        {
-            Name = "libreoffice"
-            DependsOn = "[cChocoInstaller]installChoco"
-        }
-        
-        cChocoPackageInstaller installpaintnet
-        {
-            Name = "paint.net"
-            DependsOn = "[cChocoInstaller]installChoco"
-        }
-        
-        cChocoPackageInstaller installgimp
-        {
-            Name = "gimp"
-            DependsOn = "[cChocoInstaller]installChoco"
-        }
-        
-        cChocoPackageInstaller installopera
-        {
-            Name = "opera"
-            DependsOn = "[cChocoInstaller]installChoco"
-        }
-        
-        cChocoPackageInstaller installgoogledrive
-        {
-            Name = "googledrive"
-            DependsOn = "[cChocoInstaller]installChoco"
-        }
-        
-        cChocoPackageInstaller installk-litecodecpackfull
-        {
-            Name = "k-litecodecpackfull"
-            DependsOn = "[cChocoInstaller]installChoco"
-        }
-        
-        cChocoPackageInstaller installvlc
-        {
-            Name = "vlc"
-            DependsOn = "[cChocoInstaller]installChoco"
-        }
-        
-        
-	
     }
 
 }
@@ -697,7 +634,7 @@ configuration EricomConnectServerSetup
         [PSCredential]$sqlCreds,
         
         [Parameter(Mandatory)]
-	[String]$customScriptLocation,
+	    [String]$customScriptLocation,
         
         [Parameter(Mandatory)]
         [String]$softwareBaseLocation,
