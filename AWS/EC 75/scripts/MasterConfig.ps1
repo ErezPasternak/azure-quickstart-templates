@@ -10,13 +10,12 @@
     [string]$DMZ2CIDR,
     [string]$Region,
     [string]$VpcId,
-    [string]$softwareBaseLocation,
-    [String]$externalFqdn,
-    [String]$emailAddress = "nobody",
-    [String]$gridName,
+    [String]$ExternalFqdn,
+    [String]$EmailAddress = "nobody",
+    [String]$GridName,
 	[String]$LUS,
-	[String]$tenant,
-    [String]$softwareBaseLocation   
+	[String]$Tenant,
+    [String]$SoftwareBaseLocation   
     )
 
 #Get the FQDN of the Load Balancer
@@ -222,8 +221,8 @@ Configuration ServerBase {
                 Test-Path "C:\EricomConnectDataGrid_x64_WT.msi"
             }
             SetScript ={
-                $_softwareBaseLocation = "$Using:softwareBaseLocation"
-                $source = ($_softwareBaseLocation + "EricomConnectDataGrid_x64_WT.msi")
+                $_SoftwareBaseLocation = "$Using:SoftwareBaseLocation"
+                $source = ($_SoftwareBaseLocation + "EricomConnectDataGrid_x64_WT.msi")
                 $dest = "C:\EricomConnectDataGrid_x64_WT.msi"
                 Invoke-WebRequest $source -OutFile $dest
             }
@@ -248,8 +247,8 @@ Configuration ServerBase {
                 Test-Path "C:\EricomConnectSecureGateway.msi"
             }
             SetScript ={
-                $_softwareBaseLocation = "$using:softwareBaseLocation"
-                $source = ($_softwareBaseLocation + "EricomConnectSecureGateway.msi")
+                $_SoftwareBaseLocation = "$using:SoftwareBaseLocation"
+                $source = ($_SoftwareBaseLocation + "EricomConnectSecureGateway.msi")
                 $dest = "C:\EricomConnectSecureGateway.msi"
                 Invoke-WebRequest $source -OutFile $dest
             }
@@ -270,7 +269,7 @@ Configuration ServerBase {
         Package vcRedist 
         { 
 
-            Path = ($softwareBaseLocation+"vcredist_x64.exe" )
+            Path = ($SoftwareBaseLocation+"vcredist_x64.exe" )
             ProductId = "{DA5E371C-6333-3D8A-93A4-6FD5B20BCC6E}" 
             Name = "Microsoft Visual C++ 2010 x64 Redistributable - 10.0.30319" 
             Arguments = "/install /passive /norestart"
@@ -320,14 +319,14 @@ Configuration ServerBase {
 
                 $_adminUser = "$Using:_adminUser" + "$domainSuffix"
                 $_adminPass = "$Using:_adminPassword"
-                $_gridName = "$Using:gridName"
+                $_GridName = "$Using:GridName"
                 $_gridServicePassword = "$Using:_adminPassword"
                 $_lookUpHosts = "$Using:LUS"
 
                 $configPath = Join-Path $workingDirectory -ChildPath $configFile
                 $cliPath = Join-Path $workingDirectory -ChildPath $connectCli
                 
-                $arguments = " ConnectToExistingGrid /AdminUser `"$_adminUser`" /AdminPassword `"$_adminPass`" /disconnect /GridName `"$_gridName`" /GridServicePassword `"$_gridServicePassword`"  /LookUpHosts `"$_lookUpHosts`""              
+                $arguments = " ConnectToExistingGrid /AdminUser `"$_adminUser`" /AdminPassword `"$_adminPass`" /disconnect /GridName `"$_GridName`" /GridServicePassword `"$_gridServicePassword`"  /LookUpHosts `"$_lookUpHosts`""              
 
                 $baseFileName = [System.IO.Path]::GetFileName($configPath);
                 $folder = Split-Path $configPath;
@@ -371,10 +370,10 @@ Configuration ServerBase {
                 $date=(Get-Date).TOString();
                 $SMTPServer = "ericom-com.mail.protection.outlook.com"
                 $Port = 25
-                $_externalFqdn = $Using:externalFqdn
+                $_ExternalFqdn = $Using:ExternalFqdn
                 
-                if ($Using:emailAddress -ne "") {
-                    $To = $Using:emailAddress
+                if ($Using:EmailAddress -ne "") {
+                    $To = $Using:EmailAddress
                 }
                     
                 $securePassword = ConvertTo-SecureString -String "1qaz@Wsx#" -AsPlainText -Force
@@ -384,7 +383,7 @@ Configuration ServerBase {
 
                 Write-Verbose "Ericom Connect Grid Server has been succesfuly configured."
                 $Keyword = "CB: Ericom Connect Grid Server has been succesfuly configured."
-                $Message = '<h1>Congratulations! Your Ericom DaaS Environment on Microsoft Azure is now Ready!</h1><p>Dear ' + $ToName + ',<br><br>Thank you for deploying <a href="http://www.ericom.com/connect-enterprise.asp">Ericom Connect</a> via Microsoft Azure.<br><br>Your deployment is now complete and you can start using the system.<br><br>To launch Ericom DaaS Client please click <a href="https://' + $_externalFqdn + '"/EricomXml/AccessPortal/Start.html#/login>here. </a><br><br>To log-in to Ericom Connect management console please click <a href="https://' + $_externalFqdn + '/Admin">here. </a><br><br><Below are your credentials. Please make sure you save them for future use:<br><br>Username: demouser' + $domainSuffix + ' <br>Password: P@55w0rd   <br><br><br>Regards,<br><a href="http://www.ericom.com">Ericom</a> Automation Team'
+                $Message = '<h1>Congratulations! Your Ericom DaaS Environment on Microsoft Azure is now Ready!</h1><p>Dear ' + $ToName + ',<br><br>Thank you for deploying <a href="http://www.ericom.com/connect-enterprise.asp">Ericom Connect</a> via Microsoft Azure.<br><br>Your deployment is now complete and you can start using the system.<br><br>To launch Ericom DaaS Client please click <a href="https://' + $_ExternalFqdn + '"/EricomXml/AccessPortal/Start.html#/login>here. </a><br><br>To log-in to Ericom Connect management console please click <a href="https://' + $_ExternalFqdn + '/Admin">here. </a><br><br><Below are your credentials. Please make sure you save them for future use:<br><br>Username: demouser' + $domainSuffix + ' <br>Password: P@55w0rd   <br><br><br>Regards,<br><a href="http://www.ericom.com">Ericom</a> Automation Team'
                 if ($To -ne "nobody") {
                     try {
                         Send-MailMessage -Body "$Message" -BodyAsHtml -Subject "$Subject" -SmtpServer $SmtpServer -Port $Port -Credential $credential -From $credential.UserName -To $To -bcc "erez.pasternak@ericom.com","DaaS@ericom.com","David.Oprea@ericom.com" -ErrorAction SilentlyContinue
