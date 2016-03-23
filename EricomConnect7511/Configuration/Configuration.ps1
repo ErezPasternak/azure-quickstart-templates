@@ -370,18 +370,19 @@ configuration GatewaySetup
                     }
                     Finally {
                         $response | Out-file "C:\Bootstrap.txt"
-    }
-}
+                    }
+            }
 
-        TestScript = {
-            Test-Path "C:\SendBootStrapCommand\"
-        }
+         TestScript = {
+             Test-Path "C:\SendBootStrapCommand\"
+         }
     
-        GetScript = {@{Result = "StartBootStrapOnBroker"}}
+          GetScript = {@{Result = "StartBootStrapOnBroker"}}
 
-        }
+      }
         
     }
+}
 
 configuration ApplicationHost
 {
