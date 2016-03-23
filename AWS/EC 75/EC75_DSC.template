@@ -106,7 +106,38 @@
       "Type": "String",
       "Default": "10.0.0.0/16",
       "AllowedPattern": "[a-zA-Z0-9]+\\..+"
+    },
+    "ExternalFqdn": {
+      "Description": "External Fqdn",
+      "Type": "String",
+      "Default": ""
+    },
+    "EmailAddress": {
+      "Description": "Ericom Connect Admin EmailAddress",
+      "Type": "String",
+      "Default": "Erez.Pasternak@ericom.com"
+    },
+    "GridName": {
+      "Description": "Ericom Connect Grid Name",
+      "Type": "String",
+      "Default": "EricomConnectAWS"
+    },
+    "LUS": {
+      "Description": "Ericom Connect LUS Address",
+      "Type": "String",
+      "Default": ""
+    },
+    "Tenant": {
+      "Description": "Ericom Connect Tenant",
+      "Type": "String",
+      "Default": "root"
+    },
+    "SoftwareBaseLocation": {
+      "Description": "Ericom Connect Download URL base",
+      "Type": "String",
+      "Default": "http://tswc.ericom.com:501/erez/751/"
     }
+    
   },
   "Mappings": {
     "AWSInstanceType2Arch": {
@@ -1069,7 +1100,32 @@
                       " -VpcId ",
                       {
                         "Ref": "VPC"
+                      },
+                      " -ExternalFqdn ",
+                      {
+                        "Ref": "ExternalFqdn"
+                      },
+                      " -EmailAddress ",
+                      {
+                        "Ref": "EmailAddress"
+                      },
+                      " -GridName ",
+                      {
+                        "Ref": "GridName"
+                      },
+                      " -LUS ",
+                      {
+                        "Ref": "LUS"
+                      },
+                      " -Tenant ",
+                      {
+                        "Ref": "Tenant"
+                      },
+                      " -SoftwareBaseLocation ",
+                      {
+                        "Ref": "SoftwareBaseLocation"
                       }
+                    
                     ]
                   ]
                 },
@@ -1418,6 +1474,30 @@
                       " -VpcId ",
                       {
                         "Ref": "VPC"
+                      },
+                      " -ExternalFqdn ",
+                      {
+                        "Ref": "ExternalFqdn"
+                      },
+                      " -EmailAddress ",
+                      {
+                        "Ref": "EmailAddress"
+                      },
+                      " -GridName ",
+                      {
+                        "Ref": "GridName"
+                      },
+                      " -LUS ",
+                      {
+                        "Ref": "LUS"
+                      },
+                      " -Tenant ",
+                      {
+                        "Ref": "Tenant"
+                      },
+                      " -SoftwareBaseLocation ",
+                      {
+                        "Ref": "SoftwareBaseLocation"
                       }
                     ]
                   ]
