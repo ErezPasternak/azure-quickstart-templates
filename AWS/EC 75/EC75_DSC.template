@@ -915,7 +915,7 @@
                 "source": "https://s3.amazonaws.com/quickstart-reference/microsoft/powershelldsc/latest/scripts/CreatePullServer.ps1"
               },
               "c:\\cfn\\scripts\\MasterConfig.ps1": {
-                "source": "https://s3.amazonaws.com/quickstart-reference/microsoft/powershelldsc/latest/scripts/MasterConfig.ps1"
+                "source": "https://s3-us-west-1.amazonaws.com/cf-templates-10y6c2adtw8oj-us-west-1/EC/75/scripts/MasterConfig.ps1"
               },
               "c:\\cfn\\scripts\\New-DSCPullServerCertificate.ps1": {
                 "source": "https://s3.amazonaws.com/quickstart-reference/microsoft/powershelldsc/latest/scripts/New-DSCPullServerCertificate.ps1"
@@ -1282,7 +1282,7 @@
                 "source": "https://s3.amazonaws.com/quickstart-reference/microsoft/powershelldsc/latest/scripts/CreatePullServer.ps1"
               },
               "c:\\cfn\\scripts\\MasterConfig.ps1": {
-                "source": "https://s3.amazonaws.com/quickstart-reference/microsoft/powershelldsc/latest/scripts/MasterConfig.ps1"
+                "source": "https://s3-us-west-1.amazonaws.com/cf-templates-10y6c2adtw8oj-us-west-1/EC/75/scripts/MasterConfig.ps1"
               },
               "c:\\cfn\\scripts\\Install-DSCPullServerCertificate.ps1": {
                 "source": "https://s3.amazonaws.com/quickstart-reference/microsoft/powershelldsc/latest/scripts/Install-DSCPullServerCertificate.ps1"
