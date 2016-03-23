@@ -1001,14 +1001,14 @@ configuration EricomConnectServerSetup
             }
             GetScript = {@{Result = "InitializeGrid"}}      
         }
- Script UnZipAutomationWebService
+        Script UnZipAutomationWebService
         {
             TestScript = {
                 Test-Path "C:\Program Files\Ericom Software\Ericom DaaS Service\"
             }
             SetScript ={
-                $source = "C:\AutomationWebService"
-                Unblock-File -Path "C:\AutomationWebService"
+                $source = "C:\AutomationWebService.zip"
+                Unblock-File -Path "C:\AutomationWebService.zip"
                 $destTmp = "C:\Program Files\Ericom Software\Ericom DaaS Service"
                 $dest = "C:\Program Files\Ericom Software\Ericom DaaS Service\"
                 $shell = new-object -com shell.application
