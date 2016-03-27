@@ -21,11 +21,9 @@
     "numberOfDesktopHostInstances": {
       "value": 1
     },
-    
     "numberOfApplicationHostInstances": {
       "value": 1
     },
-    
     "dnsLabelPrefix": {
       "value": "GEN-UNIQUE"
     }

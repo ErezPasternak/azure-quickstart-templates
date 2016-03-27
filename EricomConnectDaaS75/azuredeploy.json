@@ -95,6 +95,7 @@
          "type":"string",
          "defaultValue":"Standard_D2",
          "allowedValues":[
+            "Standard_D1",
             "Standard_D2",
             "Standard_D3",
             "Standard_DS3",
@@ -668,7 +669,7 @@
                            "Password":"PrivateSettingsRef:AdminPassword"
                         },
                         "gridName":"[variables('ecGridname')]",
-                        "LUS":"broker.DaaS.local",
+                        "LUS":"[concat('broker.',parameters('domainName'))]",
                         "tenant":"root",
                         "softwareBaseLocation":"[variables('softwareBaseLocation')]"
                      }
