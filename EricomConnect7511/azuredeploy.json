@@ -543,7 +543,7 @@
          ],
          "properties":{
             "hardwareProfile":{
-               "vmSize":"Standard_D1"
+               "vmSize":"Standard_D2"
             },
             "availabilitySet":{
                "id":"[resourceId('Microsoft.Compute/availabilitySets', 'availabilityset')]"
