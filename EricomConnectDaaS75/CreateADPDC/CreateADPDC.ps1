@@ -98,6 +98,7 @@
         { 
             Ensure = "Present" 
             Name = "AD-Domain-Services"
+            IncludeAllSubFeature = $True
         }  
 
         xADDomain FirstDS 
@@ -157,6 +158,5 @@
             }
             GetScript = {@{Result = "FixUPNSuffix"}}      
         }
-  
    }
 } 
