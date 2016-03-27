@@ -674,7 +674,15 @@ configuration EricomConnectServerSetup
             domainName = $domainName 
             adminCreds = $adminCreds 
         }
-	
+	    
+        #Install the IIS Role (for Izenda)
+        WindowsFeature IIS 
+        { 
+            Ensure = “Present” 
+            Name = “Web-Server”
+            IncludeAllSubFeature = $True 
+        }
+        
        Script DownloadSQLMSI
        {
             TestScript = {
@@ -700,6 +708,7 @@ configuration EricomConnectServerSetup
 	   {             
 		    Ensure = "Present"
 		    Name = "AD-Domain-Services"
+            IncludeAllSubFeature = $True
 	   }
        
        Script ExtractSQLInstaller
@@ -800,6 +809,16 @@ configuration EricomConnectServerSetup
             Arguments = ""
             LogPath = "C:\log-ecaws.txt"
             DependsOn = "[Script]DownloadAdminWebServiceMSI"
+        }
+        
+        Package InstallEricomAnalyticsMSI
+        {
+            Ensure = "Present" 
+            Path  = "C:\Program Files\Ericom Software\Ericom Connect Admin Web Service\Ericom Analytics.msi"
+            Name = "Ericom Analytics"
+            ProductId = "792FF3F1-4D55-437D-91A3-B07118A892CD"
+            Arguments = ""
+            LogPath = "C:\log-erbi.txt"
         }
 
 	    Script DownloadClientWebServiceMSI
