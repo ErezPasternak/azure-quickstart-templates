@@ -14,7 +14,7 @@
         [Int]$RetryIntervalSec=30
     ) 
     
-    Import-DscResource -ModuleName xActiveDirectory, xDisk, xNetworking, xPendingReboot, cDisk, xDnsServer
+    Import-DscResource -ModuleName xActiveDirectory, xDisk, xNetworking, xPendingReboot, cDisk
     $adminUsername = $Admincreds.UserName
     [System.Management.Automation.PSCredential ]$DomainCreds = New-Object System.Management.Automation.PSCredential ("${DomainName}\$($Admincreds.UserName)", $Admincreds.Password)
 
@@ -98,6 +98,7 @@
         { 
             Ensure = "Present" 
             Name = "AD-Domain-Services"
+            IncludeAllSubFeature = $True
         }  
 
         xADDomain FirstDS 
