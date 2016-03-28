@@ -680,7 +680,7 @@ configuration EricomConnectServerSetup
         { 
             Ensure = “Present” 
             Name = “Web-Server”
-            IncludeAllSubFeature = $True 
+           # IncludeAllSubFeature = $True 
         }
         
        Script DownloadSQLMSI
@@ -708,7 +708,7 @@ configuration EricomConnectServerSetup
 	   {             
 		    Ensure = "Present"
 		    Name = "AD-Domain-Services"
-            IncludeAllSubFeature = $True
+       #     IncludeAllSubFeature = $True
 	   }
        
        Script ExtractSQLInstaller
