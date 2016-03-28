@@ -927,7 +927,7 @@ configuration EricomConnectServerSetup
         { 
             Ensure = “Present” 
             Name = “Web-Server”
-            IncludeAllSubFeature = $True 
+           # IncludeAllSubFeature = $True 
         }
         
        Script DownloadSQLMSI
@@ -955,7 +955,6 @@ configuration EricomConnectServerSetup
 	   {             
 		    Ensure = "Present"
 		    Name = "AD-Domain-Services"
-                    IncludeAllSubFeature = $True
 	   }
        
        Script ExtractSQLInstaller
@@ -979,7 +978,7 @@ configuration EricomConnectServerSetup
             SqlAdministratorCredential = $sqlCreds
         }
 
-	Script DownloadGridMSI
+	    Script DownloadGridMSI
         {
             TestScript = {
                 Test-Path "C:\EricomConnectDataGrid_x64_WT.msi"
@@ -1005,7 +1004,7 @@ configuration EricomConnectServerSetup
             DependsOn = "[Script]DownloadGridMSI"
         }
 	
-	Script DownloadProcessingUnitServerMSI
+	    Script DownloadProcessingUnitServerMSI
         {
             TestScript = {
                 Test-Path "C:\EricomConnectProcessingUnitServer.msi"
@@ -1032,7 +1031,7 @@ configuration EricomConnectServerSetup
         }
 
 
-	Script DownloadAdminWebServiceMSI
+	    Script DownloadAdminWebServiceMSI
         {
             TestScript = {
                 Test-Path "C:\EricomConnectAdminWebService.msi"
@@ -1068,7 +1067,7 @@ configuration EricomConnectServerSetup
             LogPath = "C:\log-erbi.txt"
         }
 
-	Script DownloadClientWebServiceMSI
+	    Script DownloadClientWebServiceMSI
         {
             TestScript = {
                 Test-Path "C:\EricomConnectClientWebService.msi"
