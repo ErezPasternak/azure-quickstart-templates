@@ -734,7 +734,8 @@ configuration ApplicationHost
         [Parameter(Mandatory)]
         [String]$softwareBaseLocation
     ) 
-
+    Import-DscResource -ModuleName xActiveDirectory, xComputerManagement, cChoco
+    
     $_adminUser = $adminCreds.UserName
     $domainCreds = New-Object System.Management.Automation.PSCredential ("$domainName\$_adminUser", $adminCreds.Password)
     $_adminPassword = [Runtime.InteropServices.Marshal]::PtrToStringAuto([Runtime.InteropServices.Marshal]::SecureStringToBSTR( (ConvertTo-SecureString ($adminCreds.Password | ConvertFrom-SecureString)) ))
