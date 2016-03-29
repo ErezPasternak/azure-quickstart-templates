@@ -650,7 +650,7 @@ configuration DesktopHost
             Key         = "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Run"
             ValueType   = "String"
             ValueName   = "AccessPad"
-            ValueData   = "`"C:\Program Files\Ericom Software\Ericom AccessPad Client\Blaze.exe`" -accesspad /server=`" $LUS`:8011'""
+            ValueData   = "`"C:\Program Files\Ericom Software\Ericom AccessPad Client\Blaze.exe`" -accesspad /server=`"$LUS`:8011`""
             Force       = $true
             Ensure      = "Present"
             DependsOn   = "[Script]DownloadAccessPadMSI"
