@@ -89,7 +89,8 @@
     "storageAccountType": "Standard_LRS",
     "publicIPAddressName": "publicIp",
     "publicIPAddressType": "Dynamic",
-    "storageAccountName": "[concat(uniquestring(resourceGroup().id), 'lnx', 'Storage')]",
+    "storageAccountName":"[substring(concat(uniquestring(resourceGroup().id), 'rds', 'storage',uniquestring(resourceGroup().id)),0,24)]",
+
     "vmName": "EricomRDS",
     "vmSize": "Standard_D2",
     "virtualNetworkName": "VNET",
