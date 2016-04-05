@@ -204,9 +204,9 @@
         "typeHandlerVersion": "1.2",
         "settings": {
           "fileUris": [
-            "https://raw.githubusercontent.com/azure/azure-quickstart-templates/master/drone-ubuntu-vm/install_drone.sh"
+            "https://raw.githubusercontent.com/ErezPasternak/azure-quickstart-templates/EricomConnect/ericom-ubuntu-vm/install_ericom.sh"
           ],
-          "commandToExecute": "[concat('sh install_ericom.sh ', parameters('githubClientKey'), ' ', parameters('githubSecret'))]"
+          "commandToExecute": "[concat('bash install_ericom.sh ', parameters('githubClientKey'), ' ', parameters('githubSecret'))]"
         }
       }
     }
