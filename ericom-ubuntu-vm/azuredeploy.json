@@ -17,32 +17,23 @@
     },
     "adminUsername": {
       "type": "string",
+         "defaultValue":"ericom",
       "metadata": {
         "description": "Username assigned to new local user on VM"
       }
     },
     "adminPassword": {
       "type": "securestring",
+       "defaultValue":"Ericom123$",
       "metadata": {
         "description": "Password assigned to new local user on VM"
       }
     },
     "vmDnsName": {
       "type": "string",
+       "defaultValue":"erezaaa",
       "metadata": {
         "description": "Hostname and Azure DNS name that the VM will be assigned"
-      }
-    },
-    "githubClientKey": {
-      "type": "string",
-      "metadata": {
-        "description": "GitHub application client key required by the Drone CI components for synchronizing repositories"
-      }
-    },
-    "githubSecret": {
-      "type": "securestring",
-      "metadata": {
-        "description": "GitHub application client secret required by the Drone CI components for synchronizing repositories"
       }
     }
   },
@@ -59,7 +50,9 @@
     "vmSize": "Standard_A3",
     "virtualNetworkName": "droneCINET",
     "vnetID": "[resourceId('Microsoft.Network/virtualNetworks',variables('virtualNetworkName'))]",
-    "subnetRef": "[concat(variables('vnetID'),'/subnets/',variables('subnetName'))]"
+    "subnetRef": "[concat(variables('vnetID'),'/subnets/',variables('subnetName'))]",
+    "githubClientKey" :"dd",
+    "githubSecret": "ss"
   },
   "resources": [
     {
@@ -206,7 +199,7 @@
           "fileUris": [
             "https://raw.githubusercontent.com/ErezPasternak/azure-quickstart-templates/EricomConnect/ericom-ubuntu-vm/install_ericom.sh"
           ],
-          "commandToExecute": "[concat('bash install_ericom.sh ', parameters('githubClientKey'), ' ', parameters('githubSecret'))]"
+          "commandToExecute": "[concat('bash install_ericom.sh ', variables('githubClientKey'), ' ', variables('githubSecret'))]"
         }
       }
     }
