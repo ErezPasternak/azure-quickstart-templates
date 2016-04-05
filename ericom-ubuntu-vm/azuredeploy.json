@@ -1,86 +1,135 @@
 {
   "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
   "contentVersion": "1.0.0.0",
+
   "parameters": {
-    "newStorageAccountName": {
-      "type": "string",
-      "metadata": {
-        "description": "Name of new Storage Account that will hold VM OS disk"
-      }
-    },
-    "location": {
+  
+          "dnsLabelPrefix": {
+            "type": "string",
+	     "metadata": {
+                "description": "Unique public DNS prefix for the deployment. The fqdn will look something like '<dnsname>.westus.cloudapp.azure.com'. Up to 62 chars, digits or dashes, lowercase, should start with a letter: must conform to '^[a-z][a-z0-9-]{1,61}[a-z0-9]$'."
+            }
+        },
+    "siteLocation": {
       "type": "string",
       "defaultValue": "East US",
+      "allowedValues": [
+        "West US",
+        "East US",
+        "East US 2",
+        "Central US",
+        "South Central US",
+        "North Central US",
+        "North Europe",
+        "West Europe",
+        "East Asia",
+        "Southeast Asia",
+        "Japan East",
+        "Japan West",
+        "Brazil South",
+        "Australia East",
+        "Australia Southeast",
+        "Central India",
+        "South India",
+        "West India"
+      ],
       "metadata": {
-        "description": "Azure Region to which template and its resources will be deployed"
+        "description": "The region to deploy the resources into"
       }
     },
     "adminUsername": {
       "type": "string",
-         "defaultValue":"ericom",
       "metadata": {
-        "description": "Username assigned to new local user on VM"
+        "description": "User name for the Virtual Machine."
       }
     },
     "adminPassword": {
       "type": "securestring",
-       "defaultValue":"Ericom123$",
       "metadata": {
-        "description": "Password assigned to new local user on VM"
+        "description": "Password for the Virtual Machine."
       }
     },
-    "vmDnsName": {
+    "domain": {
       "type": "string",
-       "defaultValue":"erezaaa",
+      "defaultValue": "test.local"
+    },
+    "rAWSaddress": {
+      "type": "string",
+      "defaultValue": "aaa"
+    },
+    "remoteAgentAddress": {
+      "type": "string",
+      "defaultValue": "Ericom"
+    },
+    "tenantInfo": {
+      "type": "string",
+      "defaultValue": "root"
+    },
+    "ubuntuOSVersion": {
+      "type": "string",
+      "defaultValue": "14.04.2-LTS",
+      "allowedValues": [
+        "14.04.2-LTS",
+        "15.04"
+      ],
       "metadata": {
-        "description": "Hostname and Azure DNS name that the VM will be assigned"
+        "description": "The Ubuntu version for the VM. This will pick a fully patched image of this given Ubuntu version. Allowed values: 12.04.5-LTS, 14.04.2-LTS, 15.04."
       }
     }
   },
   "variables": {
-    "nicName": "myVMNic",
+    "imagePublisher": "Canonical",
+    "imageOffer": "UbuntuServer",
+    "nicName": "EricomRDS-nif",
     "addressPrefix": "10.0.0.0/16",
-    "subnetName": "Subnet-1",
+    "subnetName": "Subnet",
     "subnetPrefix": "10.0.0.0/24",
     "storageAccountType": "Standard_LRS",
-    "publicIPAddressName": "myPublicIPTest",
+    "publicIPAddressName": "publicIp",
     "publicIPAddressType": "Dynamic",
-    "vmStorageAccountContainerName": "vhds",
-    "vmName": "[parameters('vmDnsName')]",
-    "vmSize": "Standard_A3",
-    "virtualNetworkName": "droneCINET",
+    "storageAccountName": "[concat(uniquestring(resourceGroup().id), 'lnx', 'Storage')]",
+    "vmName": "EricomRDS",
+    "vmSize": "Standard_D2",
+    "virtualNetworkName": "VNET",
+    "apiVersion": "2015-06-15",
     "vnetID": "[resourceId('Microsoft.Network/virtualNetworks',variables('virtualNetworkName'))]",
     "subnetRef": "[concat(variables('vnetID'),'/subnets/',variables('subnetName'))]",
-    "githubClientKey" :"dd",
-    "githubSecret": "ss"
+    "domainA" : "[parameters('domain')]",
+    "domainAdmin" : "[parameters('adminUsername')]",
+    "domainPwd" : "[parameters('adminPassword')]",
+    "rAWSaddress" : "[parameters('rAWSaddress')]",
+    "remoteAgentAddress" : "[parameters('remoteAgentAddress')]",
+    "tenantInfo" : "[parameters('tenantInfo')]" ,
+    "command" : "[concat('bash install_ericom.sh ', variables('domainA'),' ', variables('domainAdmin'),' ', variables('domainPwd'),' ', variables('rAWSaddress'),' ', variables('remoteAgentAddress'),' ', variables('tenantInfo'))]"
+    
   },
   "resources": [
     {
       "type": "Microsoft.Storage/storageAccounts",
-      "name": "[parameters('newStorageAccountName')]",
-      "apiVersion": "2015-05-01-preview",
-      "location": "[parameters('location')]",
+      "name": "[variables('storageAccountName')]",
+      "apiVersion": "[variables('apiVersion')]",
+      "location": "[parameters('siteLocation')]",
       "properties": {
         "accountType": "[variables('storageAccountType')]"
       }
     },
     {
-      "apiVersion": "2015-05-01-preview",
+      "apiVersion": "[variables('apiVersion')]",
       "type": "Microsoft.Network/publicIPAddresses",
       "name": "[variables('publicIPAddressName')]",
-      "location": "[parameters('location')]",
+      "location": "[parameters('siteLocation')]",
       "properties": {
         "publicIPAllocationMethod": "[variables('publicIPAddressType')]",
         "dnsSettings": {
-          "domainNameLabel": "[parameters('vmDnsName')]"
+          "domainNameLabel": "[parameters('dnsLabelPrefix')]"
         }
       }
     },
     {
-      "apiVersion": "2015-05-01-preview",
+      "apiVersion": "[variables('apiVersion')]",
       "type": "Microsoft.Network/virtualNetworks",
       "name": "[variables('virtualNetworkName')]",
-      "location": "[parameters('location')]",
+      "location": "[parameters('siteLocation')]",
       "properties": {
         "addressSpace": {
           "addressPrefixes": [
@@ -98,10 +147,10 @@
       }
     },
     {
-      "apiVersion": "2015-05-01-preview",
+      "apiVersion": "[variables('apiVersion')]",
       "type": "Microsoft.Network/networkInterfaces",
       "name": "[variables('nicName')]",
-      "location": "[parameters('location')]",
+      "location": "[parameters('siteLocation')]",
       "dependsOn": [
         "[concat('Microsoft.Network/publicIPAddresses/', variables('publicIPAddressName'))]",
         "[concat('Microsoft.Network/virtualNetworks/', variables('virtualNetworkName'))]"
@@ -124,12 +173,12 @@
       }
     },
     {
-      "apiVersion": "2015-05-01-preview",
+      "apiVersion": "[variables('apiVersion')]",
       "type": "Microsoft.Compute/virtualMachines",
       "name": "[variables('vmName')]",
-      "location": "[parameters('location')]",
+      "location": "[parameters('siteLocation')]",
       "dependsOn": [
-        "[concat('Microsoft.Storage/storageAccounts/', parameters('newStorageAccountName'))]",
+        "[concat('Microsoft.Storage/storageAccounts/', variables('storageAccountName'))]",
         "[concat('Microsoft.Network/networkInterfaces/', variables('nicName'))]"
       ],
       "properties": {
@@ -137,26 +186,25 @@
           "vmSize": "[variables('vmSize')]"
         },
         "osProfile": {
-          "computerName": "[variables('vmName')]",
+          "computername": "[variables('vmName')]",
           "adminUsername": "[parameters('adminUsername')]",
           "adminPassword": "[parameters('adminPassword')]"
         },
         "storageProfile": {
           "imageReference": {
-            "publisher": "Canonical",
-            "offer": "UbuntuServer",
-            "sku": "14.04.2-LTS",
+            "publisher": "[variables('imagePublisher')]",
+            "offer": "[variables('imageOffer')]",
+            "sku": "[parameters('ubuntuOSVersion')]",
             "version": "latest"
           },
-          "destinationVhdsContainer": "[concat('http://',parameters('newStorageAccountName'),'.blob.core.windows.net/',variables('vmStorageAccountContainerName'),'/')]"
-        },
-        "osDisk": {
-          "name": "osdisk",
-          "vhd": {
-            "uri": "[concat('http://', parameters('newStorageAccountName'), '.blob.core.windows.net/vhds/', 'osdisk.vhd')]"
-          },
-          "caching": "ReadWrite",
-          "createOption": "FromImage"
+          "osDisk": {
+            "name": "osdisk",
+            "vhd": {
+              "uri": "[concat('http://',variables('StorageAccountName'),'.blob.core.windows.net/vhds/osdiskforlinuxsimple.vhd')]"
+            },
+            "caching": "ReadWrite",
+            "createOption": "FromImage"
+          }
         },
         "networkProfile": {
           "networkInterfaces": [
@@ -169,25 +217,9 @@
     },
     {
       "type": "Microsoft.Compute/virtualMachines/extensions",
-      "name": "[concat(variables('vmName'),'/DockerExtension')]",
-      "apiVersion": "2015-05-01-preview",
-      "location": "[parameters('location')]",
-      "dependsOn": [
-        "[concat('Microsoft.Compute/virtualMachines/',variables('vmName'))]"
-      ],
-      "properties": {
-        "publisher": "Microsoft.Azure.Extensions",
-        "type": "DockerExtension",
-        "typeHandlerVersion": "1.0",
-        "autoUpgradeMinorVersion": true,
-        "settings": {}
-      }
-    },
-    {
-      "type": "Microsoft.Compute/virtualMachines/extensions",
-      "name": "[concat(variables('vmName'),'/installEricom')]",
-      "apiVersion": "2015-05-01-preview",
-      "location": "[parameters('location')]",
+      "name": "[concat(variables('vmName'),'/newuserscript')]",
+      "apiVersion": "[variables('apiVersion')]",
+      "location": "[parameters('siteLocation')]",
       "dependsOn": [
         "[concat('Microsoft.Compute/virtualMachines/', variables('vmName'))]"
       ],
@@ -199,7 +231,8 @@
           "fileUris": [
             "https://raw.githubusercontent.com/ErezPasternak/azure-quickstart-templates/EricomConnect/ericom-ubuntu-vm/install_ericom.sh"
           ],
-          "commandToExecute": "[concat('bash install_ericom.sh ', variables('githubClientKey'), ' ', variables('githubSecret'))]"
+          "commandToExecute": "[variables('command')]"
+
         }
       }
     }

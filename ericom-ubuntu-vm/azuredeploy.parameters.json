@@ -1,27 +1,28 @@
 {
-  "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+  "$schema": "http://schema.management.azure.com/schemas/2015-05-01/deploymentParameters.json#",
   "contentVersion": "1.0.0.0",
   "parameters": {
-    "newStorageAccountName": {
-      "value": "armdronetest01"
+   "adminPassword": {
+      "value": "Ericom123$"
     },
-    "location": {
-      "value": "East US"
-    },
+    
     "adminUsername": {
-      "value": "myuser"
+      "value": "Ericom"
     },
-    "adminPassword": {
-      "value": "dronepassword$1"
+    "domain": {
+      "value": "test.local"
     },
-    "vmDnsName": {
-      "value": "dronevm01"
+    "rAWSaddress": {
+      "value": "aaa"
     },
-    "githubClientKey": {
-      "value": "clientkey"
+    "remoteAgentAddress": {
+      "value": "Ericom"
     },
-    "githubSecret": {
-      "value": "clientsecret"
+    "tenantInfo": {
+      "value": "root"
+    },
+    "dnsLabelPrefix": {
+      "value": "GEN-UNIQUE"
     }
   }
 }

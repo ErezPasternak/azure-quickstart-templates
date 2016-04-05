@@ -1,7 +1,7 @@
 {
-  "itemDisplayName": "Ericom on Ubuntu VM",
-  "description": "This template provisions an instance of Ubuntu 14.04 LTS with the Docker Extension and Ericom Linux client package.",
-  "summary": "Ubuntu VM template with Ericom",
+  "itemDisplayName": "Ericom Access Server and RemoteAgent on Ubuntu VM",
+  "description": "This template uses the Azure Linux CustomScript extension to deploy an Linux Bases RDS server. The deployment template creates an Ubuntu VM, installs Ericom Access Server and RemoteAgent",
+  "summary": "Deploy an Ubuntu VM with Ericom AccessServer and RemoteAgent",
   "githubUsername": "ErezPasternak",
-  "dateUpdated": "2015-04-27"
+  "dateUpdated": "2015-04-28"
 }

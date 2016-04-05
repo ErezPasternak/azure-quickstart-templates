@@ -1,7 +1,0 @@
-{
-  "itemDisplayName": "Ericom Access Server and RemoteAgent on Ubuntu VM",
-  "description": "This template uses the Azure Linux CustomScript extension to deploy an Linux Bases RDS server. The deployment template creates an Ubuntu VM, installs Ericom Access Server and RemoteAgent",
-  "summary": "Deploy an Ubuntu VM with Ericom AccessServer and RemoteAgent",
-  "githubUsername": "ErezPasternak",
-  "dateUpdated": "2015-04-28"
-}
