@@ -199,7 +199,7 @@
           "fileUris": [
             "https://raw.githubusercontent.com/ErezPasternak/azure-quickstart-templates/EricomConnect/ericom-ubuntu-vm/install_ericom.sh"
           ],
-          "commandToExecute": "[concat('bash install_ericom.sh ', variables('githubClientKey'), ' ', variables('githubSecret'))]"
+          "commandToExecute": "[variables('command')]"
         }
       }
     }
