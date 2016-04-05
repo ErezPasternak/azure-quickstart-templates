@@ -39,12 +39,14 @@
     },
     "adminUsername": {
       "type": "string",
+       "defaultValue":"ericom",
       "metadata": {
         "description": "User name for the Virtual Machine."
       }
     },
     "adminPassword": {
       "type": "securestring",
+       "defaultValue":"Ericom123$",
       "metadata": {
         "description": "Password for the Virtual Machine."
       }
