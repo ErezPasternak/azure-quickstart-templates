@@ -8,8 +8,8 @@ DOMAIN_ADMIN=$2
 DOMAIN_PWD=$3
 RAWSaddress=$4
 TenantInfo=$5
-RemoteAgentAddress=$6
-StartupApp=$7
+RemoteAgentAddress=$7
+StartupApp=$6
 
 # we will install the app and set to be un startup
 # install app
@@ -17,6 +17,19 @@ time sudo apt-get -y install $StartupApp
 
 # define variable of applicaiton to launch in the desktop.  can use xfce4-session or firefox for example
 XRDP_APP=$StartupApp
+
+# install chrome
+time sudo apt-get install -y libxss1 libappindicator1 libindicator7 fonts-liberation
+time wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
+time sudo dpkg -i google-chrome*.deb 
+#file is google-chrome
+
+#install AVG
+time wget http://download.avgfree.com/filedir/inst/avg2013flx-r3118-a6926.i386.deb
+time sudo dpkg -i avg2013flx-r3118-a6926.i386.deb
+time sudo avgupdate
+#time sudo /opt/avg/av/bin/avgsetup
+
 
 # install QT
 time sudo apt-get -y install qt5-default
