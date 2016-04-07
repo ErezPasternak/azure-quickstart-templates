@@ -19,8 +19,9 @@ time sudo apt-get -y install $StartupApp
 XRDP_APP=$StartupApp
 
 # install chrome
-time sudo apt-get install -y libxss1 libappindicator1 libindicator7 fonts-liberation
+time sudo apt-get install -y libxss1 libappindicator1 libindicator7 fonts-liberation gconf-service
 time wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
+time sudo apt-get -f install
 time sudo dpkg -i google-chrome*.deb 
 #file is google-chrome
 
