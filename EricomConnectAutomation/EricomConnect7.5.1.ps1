@@ -120,7 +120,7 @@ function Install-Apps
 
 function Setup-Bginfo ([string] $LocalPath)
 {
-    $GITBase     = "https://raw.githubusercontent.com/ErezPasternak/azure-quickstart-templates/EricomConnect/EricomConnectDaaS75/BGinfo/" 
+    $GITBase     = "https://raw.githubusercontent.com/ErezPasternak/azure-quickstart-templates/EricomConnect/EricomConnectAutomation/BGinfo/" 
     $GITBginfo   = $GITBase + "BGInfo.zip"
     $GITBgConfig = $GITBase + "bginfo_config.bgi"
     $LocalBgConfig = Join-Path $LocalPath  "bginfo_config.bgi"
@@ -134,6 +134,7 @@ function Setup-Bginfo ([string] $LocalPath)
     Start-BitsTransfer -Source $GITBgWall -Destination $localWall 
 
     New-ItemProperty -Path HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Run -Name BgInfo -PropertyType String -Value "C:\BgInfo\bginfo.exe C:\BgInfo\bginfo_config.bgi /silent /accepteula /timer:0"
+    C:\BgInfo\bginfo.exe C:\BgInfo\bginfo_config.bgi /silent /accepteula /timer:0
 }
 
 function Expand-ZIPFile($file, $destination)
