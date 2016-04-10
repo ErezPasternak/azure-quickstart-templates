@@ -9,21 +9,6 @@ Write-Output "AutoStart: $AutoStart"
 Import-Module BitsTransfer
 Write-Host "BitsTransfer Module is loaded"
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 # Settings Section
 
 #download 
@@ -50,8 +35,7 @@ function Download-EricomConnect()
     Write-Output "Download-EricomConnect  -- Start"
 
     #if we have an installer near the ps1 file we will use it and not download
-    $myDir = Split-Path -Parent $MyInvocation.MyCommand.Path
-    $myInstaller = Join-Path $myDir "EricomConnectPOC.exe"
+    $myInstaller = Join-Path $PSScriptRoot "EricomConnectPOC.exe"
 
     if (Test-Path $myInstaller){
         Copy-Item $myInstaller -Destination $EC_local_path
@@ -176,13 +160,13 @@ function Install-WindowsFeatures
 function ConfigureFirewall
 {
     Import-Module NetSecurity
-  Set-NetFirewallProfile -Profile Domain -Enabled False
+    Set-NetFirewallProfile -Profile Domain -Enabled False
 }
 
 function AddUsersToRemoteDesktopGroup
 {
-  $baseADGroupRDP = "Domain Users"
-  Invoke-Command { param([String]$RDPGroup) net localgroup "Remote Desktop Users" "$RDPGroup" /ADD } -computername "localhost" -ArgumentList "$baseADGroupRDP"
+    $baseADGroupRDP = "Domain Users"
+    Invoke-Command { param([String]$RDPGroup) net localgroup "Remote Desktop Users" "$RDPGroup" /ADD } -computername "localhost" -ArgumentList "$baseADGroupRDP"
  
 }
 
@@ -199,6 +183,7 @@ Install-Apps
 
 Setup-Bginfo -LocalPath C:\BgInfo
 
+Write-Output $PSScriptRoot 
 #bootstrape apps
 
 if ($AutoStart -eq $true) {
