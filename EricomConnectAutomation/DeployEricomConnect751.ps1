@@ -145,7 +145,7 @@ function Expand-ZIPFile($file, $destination)
     
     foreach($item in $zip.items())
     {
-        $shell.Namespace($destination).copyhere($item)
+        $shell.Namespace($destination).copyhere($item, 0x14)
     }
 }
 
