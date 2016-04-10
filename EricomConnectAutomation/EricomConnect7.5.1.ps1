@@ -9,13 +9,28 @@ Write-Output "AutoStart: $AutoStart"
 Import-Module BitsTransfer
 Write-Host "BitsTransfer Module is loaded"
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # Settings Section
 
-#download info 
+#download 
 $EC_download_url = "https://www.ericom.com/demos/EricomConnectPOC.exe"
 $EC_local_path   = "C:\Windows\Temp\EricomConnectPOC.exe"
 
-#Ericom Connect info
+#grid
 $AdminUser         = "Ericom"
 $AdminPassword     = "Ericom123$"
 $GridName          = "EricomGrid"
@@ -29,21 +44,6 @@ $UseWinCredentials = "true"
 $LookUpHosts       = $env:computername
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-#Code part
 # Download EricomConnect
 function Download-EricomConnect()
 {
@@ -164,7 +164,30 @@ function Expand-ZIPFile($file, $destination)
     }
 }
 
+function Install-WindowsFeatures
+{
+    Install-WindowsFeature Net-Framework-Core
+    Install-WindowsFeature RDS-RD-Server
+    Install-WindowsFeature Web-Server
+    Install-WindowsFeature RSAT-AD-PowerShell
+    Install-WindowsFeature NET-Framework-45-Features
+}
+
+function ConfigureFirewall
+{
+    Import-Module NetSecurity
+  Set-NetFirewallProfile -Profile Domain -Enabled False
+}
+
+function AddUsersToRemoteDesktopGroup
+{
+  $baseADGroupRDP = "Domain Users"
+  Invoke-Command { param([String]$RDPGroup) net localgroup "Remote Desktop Users" "$RDPGroup" /ADD } -computername "localhost" -ArgumentList "$baseADGroupRDP"
+ 
+}
+
 # Main Code 
+Install-WindowsFeatures
 
 Download-EricomConnect
 
@@ -176,11 +199,7 @@ Install-Apps
 
 Setup-Bginfo -LocalPath C:\BgInfo
 
-#Create AD users
-
-#Add Apps to EC
-
-#Publish apps to users 
+#bootstrape apps
 
 if ($AutoStart -eq $true) {
    Start-EricomServices
