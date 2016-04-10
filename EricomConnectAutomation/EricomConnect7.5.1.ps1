@@ -35,7 +35,7 @@ function Download-EricomConnect()
     Write-Output "Download-EricomConnect  -- Start"
 
     #if we have an installer near the ps1 file we will use it and not download
-    $myInstaller = Join-Path $PSScriptRoot "EricomConnectPOC.exe"
+    $myInstaller = Join-Path $pwd "EricomConnectPOC.exe"
 
     if (Test-Path $myInstaller){
         Copy-Item $myInstaller -Destination $EC_local_path
