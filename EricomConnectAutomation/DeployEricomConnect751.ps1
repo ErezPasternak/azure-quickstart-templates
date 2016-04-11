@@ -181,7 +181,7 @@ Install-SingleMachine -sourceFile C:\Windows\Temp\EricomConnectPOC.exe
 
 Config-CreateGrid -config $Settings
 
-Install-Apps
+#Install-Apps
 
 Setup-Bginfo -LocalPath C:\BgInfo
 
