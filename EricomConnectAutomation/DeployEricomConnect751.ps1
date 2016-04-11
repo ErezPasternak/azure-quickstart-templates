@@ -85,8 +85,8 @@ function Config-CreateGrid($config = $Settings)
     $baseFileName = [System.IO.Path]::GetFileName($configPath);
     $folder = Split-Path $configPath;
     cd $folder;
-    Write-Verbose "List of ARGS"
-    Write-Verbose "$args"
+    Write-Output "List of ARGS"
+    Write-Output "$args"
     $exitCode = (Start-Process -Filepath "$baseFileName" -ArgumentList "$args" -Wait -Passthru).ExitCode
     if ($exitCode -eq 0) {
         Write-Output "Ericom Connect Grid Server has been succesfuly configured."
@@ -172,7 +172,23 @@ function AddUsersToRemoteDesktopGroup
     Invoke-Command { param([String]$RDPGroup) net localgroup "Remote Desktop Users" "$RDPGroup" /ADD } -computername "localhost" -ArgumentList "$baseADGroupRDP"
  
 }
+function CheckDomainRole
+{
+    # Get-ComputerRole.ps1
+    $ComputerName = "localhost"
 
+    $role = @{
+    0 = "Stand alone workstation";
+    1 = "Member workstation";
+    2 = "Stand alone server";
+    3 = "Member server";
+    4 = "Back-up domain controller";
+    5 = "Primary domain controller"
+    }
+
+    [int32]$myRole = (Get-WmiObject -Class win32_ComputerSystem -ComputerName $ComputerName).DomainRole
+    Write-Host "$ComputerName is a $($role[$myRole]), role type $myrole"
+}
 # Main Code 
 Install-WindowsFeatures
 
@@ -182,7 +198,7 @@ Install-SingleMachine -sourceFile C:\Windows\Temp\EricomConnectPOC.exe
 
 Config-CreateGrid -config $Settings
 
-#Install-Apps
+Install-Apps
 
 Setup-Bginfo -LocalPath C:\BgInfo
 
