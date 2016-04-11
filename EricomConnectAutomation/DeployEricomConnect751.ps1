@@ -16,14 +16,14 @@ $EC_download_url = "https://www.ericom.com/demos/EricomConnectPOC.exe"
 $EC_local_path   = "C:\Windows\Temp\EricomConnectPOC.exe"
 
 #grid
-$AdminUser         = "Ericom"
+$AdminUser         = "Ericom@test.local"
 $AdminPassword     = "Ericom123$"
 $GridName          = "EricomGrid"
-$HostOrIp          = $env:computername
+$HostOrIp          = $env:COMPUTERNAME
 $SaUser            = ""
 $SaPassword        = ""
 $DatabaseServer    = $env:computername
-$DatabaseName      = "EricomGRID"
+$DatabaseName      = "ERICOMCONNECTDB"
 $ConnectConfigurationToolPath = "\Ericom Software\Ericom Connect Configuration Tool\EricomConnectConfigurationTool.exe"
 $UseWinCredentials = "true"
 $LookUpHosts       = $env:computername
@@ -85,6 +85,7 @@ function Config-CreateGrid($config = $Settings)
     $baseFileName = [System.IO.Path]::GetFileName($configPath);
     $folder = Split-Path $configPath;
     cd $folder;
+    Write-Verbose "$args"
     $exitCode = (Start-Process -Filepath "$baseFileName" -ArgumentList "$args" -Wait -Passthru).ExitCode
     if ($exitCode -eq 0) {
         Write-Output "Ericom Connect Grid Server has been succesfuly configured."
