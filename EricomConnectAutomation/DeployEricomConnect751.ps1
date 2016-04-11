@@ -133,7 +133,7 @@ function Setup-Bginfo ([string] $LocalPath)
     Start-BitsTransfer -Source $GITBgConfig -Destination $LocalBgConfig 
     Start-BitsTransfer -Source $GITBgWall -Destination $localWall 
 
-    New-ItemProperty -Path HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Run -Name BgInfo -PropertyType String -Value "C:\BgInfo\bginfo.exe C:\BgInfo\bginfo_config.bgi /silent /accepteula /timer:0"
+    New-ItemProperty -Path HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Run -Name BgInfo -Force -PropertyType String -Value "C:\BgInfo\bginfo.exe C:\BgInfo\bginfo_config.bgi /silent /accepteula /timer:0"
     C:\BgInfo\bginfo.exe C:\BgInfo\bginfo_config.bgi /silent /accepteula /timer:0
 }
 
