@@ -187,7 +187,7 @@ Setup-Bginfo -LocalPath C:\BgInfo
 Write-Output $PSScriptRoot 
 #bootstrape apps
 
-if ($AutoStart -eq $true) {
-   Start-EricomServices
-}
+#if ($AutoStart -eq $true) {
+#   Start-EricomServices
+#}
  
