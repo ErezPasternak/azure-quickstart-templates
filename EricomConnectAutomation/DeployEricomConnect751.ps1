@@ -85,6 +85,7 @@ function Config-CreateGrid($config = $Settings)
     $baseFileName = [System.IO.Path]::GetFileName($configPath);
     $folder = Split-Path $configPath;
     cd $folder;
+    Write-Verbose "List of ARGS"
     Write-Verbose "$args"
     $exitCode = (Start-Process -Filepath "$baseFileName" -ArgumentList "$args" -Wait -Passthru).ExitCode
     if ($exitCode -eq 0) {
