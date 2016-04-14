@@ -443,15 +443,15 @@ configuration DesktopHost
             Ensure = "Present"
             Name = "RDS-RD-Server"
         }
-	    
+        
         WindowsFeature Desktop-Experience
         {
             Ensure = "Present"
             Name = "Desktop-Experience"
             IncludeAllSubFeature  = $True
         }
-		
-        # Downloading and installing Ericom connect components 
+	
+		# Downloading and installing Ericom connect components 
 	    Script DownloadGridMSI
         {
             TestScript = {
@@ -518,6 +518,7 @@ configuration DesktopHost
                 Invoke-WebRequest $source -OutFile $dest
             }
             GetScript = {@{Result = "DownloadAccessServerMSI"}}
+      
         }
 		
         Package InstallAccessServerMSI
@@ -766,14 +767,13 @@ configuration ApplicationHost
             Ensure = "Present"
             Name = "RDS-RD-Server"
         }
-      
+        
         WindowsFeature Desktop-Experience
         {
             Ensure = "Present"
             Name = "Desktop-Experience"
             IncludeAllSubFeature  = $True
         }
-
 	    Script DownloadGridMSI
         {
             TestScript = {
@@ -786,6 +786,7 @@ configuration ApplicationHost
                 Invoke-WebRequest $source -OutFile $dest
             }
             GetScript = {@{Result = "DownloadGridMSI"}}
+      
         }
 		
         Package InstallGridMSI
@@ -836,7 +837,8 @@ configuration ApplicationHost
                 $dest = "C:\EricomAccessServer64.msi"
                 Invoke-WebRequest $source -OutFile $dest
             }
-            GetScript = {@{Result = "DownloadAccessServerMSI"}} 
+            GetScript = {@{Result = "DownloadAccessServerMSI"}}
+      
         }
 		
         Package InstallAccessServerMSI
@@ -922,6 +924,18 @@ configuration ApplicationHost
             GetScript = {@{Result = "JoinGridRemoteAgent"}}      
         }
         
+        # installing choco
+      #  cChocoInstaller installChoco
+       # {
+       #     InstallDir = "c:\choco"
+       # }
+        
+       # cChocoPackageInstaller installvlc
+       # {
+       #     Name = "vlc"
+       #     DependsOn = "[cChocoInstaller]installChoco"
+       # }
+        # done with choco
         Script StartBootStrapOnBroker
         {
    
@@ -949,8 +963,11 @@ configuration ApplicationHost
         }
     
         GetScript = {@{Result = "StartBootStrapOnBroker"}}
+
       }
+		
     }
+
 }
 
 configuration EricomConnectServerSetup
@@ -1089,6 +1106,7 @@ configuration EricomConnectServerSetup
                 Invoke-WebRequest $source -OutFile $dest
             }
             GetScript = {@{Result = "DownloadGridMSI"}}
+      
         }
 		
         Package InstallGridMSI
@@ -1114,6 +1132,7 @@ configuration EricomConnectServerSetup
                 Invoke-WebRequest $source -OutFile $dest
             }
             GetScript = {@{Result = "DownloadProcessingUnitServerMSI"}}
+      
         }
 		
         Package InstallProcessingUnitServerMSI
