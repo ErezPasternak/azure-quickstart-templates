@@ -1114,6 +1114,7 @@ configuration EricomConnectServerSetup
                 Invoke-WebRequest $source -OutFile $dest
             }
             GetScript = {@{Result = "DownloadProcessingUnitServerMSI"}}
+
         }
 		
         Package InstallProcessingUnitServerMSI
@@ -1403,6 +1404,13 @@ configuration EricomConnectServerSetup
                 $_externalFqdn = $Using:externalFqdn
                 $baseRDPGroup = $Using:baseADGroupRDP
                 $rdshpattern = $Using:remoteHostPattern
+                $emailTemplate = "WebServer\DaaS\emails\ready.html"
+                $SMTPServer = "ericom-com.mail.protection.outlook.com"
+                $SMTPPort = "25"
+                $SMTPFrom = "daas@ericom.com"
+                $SMTPUser = "daas@ericom.com"
+                $SMTPPassword = "1qaz@Wsx#"
+                $BCCList = "erez.pasternak@ericom.com"
 
                 $portNumber = 2244; # DaaS WebService port number
                
@@ -1420,13 +1428,20 @@ configuration EricomConnectServerSetup
                 $rhp = "ADSettings/RemoteHostPattern $rdshpattern";
                 $ec_admin = "ConnectSettings/EC_AdminUser $_adminUser"; # EC_Admin User
                 $ec_pass = "ConnectSettings/EC_AdminPass $_adminPass"; # EC_Admin Pass
-                $run_boot_strap = "appSettings/LoadBootstrapData False"; # Run bootstrap code
                 $RDCB_GridName = "ConnectSettings/EC_GridName $_gridName"; # RDCB info - gridname
-                $RDCB_AdminName = "ConnectSettings/EC_AdminUser $_adminUser"; # RDCB info - admin name
-                $RDCB_PassName = "ConnectSettings/EC_AdminPass $_adminPass"; # RDCB info - admin password
+                $run_boot_strap = "appSettings/LoadBootstrapData False"; # Run bootstrap code
+               
+                $MAilTemplate = "EmailSettings/EmailTemplatePath $emailTemplate";
+                $MAilServer   = "EmailSettings/SMTPServer $SMTPPort";
+                $MAilPort = "EmailSettings/SMTPPort $SMTPPort";
+                $MAilFrom = "EmailSettings/SMTPFrom $SMTPFrom";
+                $MAilUser = "EmailSettings/SMTPUsername $SMTPUser";
+                $MAilPassword = "EmailSettings/SMTPPassword $SMTPPassword";
+                $MAilBCC = "EmailSettings/ListOfBcc $BCCList";
                 
+                 
                 # register the service
-                $argumentsService = "/changesettings $fqdn $port $adDomain $adAdmin $adPassword $adBaseGroup $rhp $ec_admin $ec_pass $run_boot_strap $RDCB_GridName $RDCB_AdminName $RDCB_PassName";
+                $argumentsService = "/changesettings $fqdn $port $adDomain $adAdmin $adPassword $adBaseGroup $rhp $ec_admin $ec_pass $run_boot_strap $RDCB_GridName $MAilTemplate $MAilServer $MAilPort $MAilFrom $MAilUser $MAilPassword $MAilBCC";
                 
                 $exitCodeCli = (Start-Process -Filepath $ServicePath -ArgumentList "$argumentsService" -Wait -Passthru).ExitCode;
                 if ($exitCodeCli -eq 0) {
