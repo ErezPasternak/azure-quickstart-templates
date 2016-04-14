@@ -1,5 +1,5 @@
 ﻿param (
-  [switch]$AutoStart = $true
+  [switch]$PrepareSystem = $true
 )
 
 Write-Output "AutoStart: $AutoStart"
@@ -15,6 +15,8 @@ Write-Host "BitsTransfer Module is loaded"
 $EC_download_url = "https://www.ericom.com/demos/EricomConnectPOC.exe"
 $EC_local_path   = "C:\Windows\Temp\EricomConnectPOC.exe"
 
+$domainName        = "test.local"
+
 #grid
 $AdminUser         = "Ericom@test.local"
 $AdminPassword     = "Ericom123$"
@@ -27,7 +29,6 @@ $DatabaseName      = "ERICOMCONNECTDB"
 $ConnectConfigurationToolPath = "\Ericom Software\Ericom Connect Configuration Tool\EricomConnectConfigurationTool.exe"
 $UseWinCredentials = "true"
 $LookUpHosts       = $env:computername
-
 
 # Download EricomConnect
 function Download-EricomConnect()
@@ -111,9 +112,6 @@ function Install-Apps
     Write-Output "Installing excel.viewer"
     choco install -y excel.viewer
 
-    Write-Output "Installing bginfo"
-    choco install -y bginfo
-    
     Write-Output "Installing notepadplusplus.install"
     choco install -y notepadplusplus.install
 
@@ -165,7 +163,7 @@ function ConfigureFirewall
     Import-Module NetSecurity
     Set-NetFirewallProfile -Profile Domain -Enabled False
 }
-
+#David - can we fix it for single machine install - just to add the Domain users to the local RemoteDesktopUsers ?
 function AddUsersToRemoteDesktopGroup
 {
     $baseADGroupRDP = "Domain Users"
@@ -189,23 +187,202 @@ function CheckDomainRole
     [int32]$myRole = (Get-WmiObject -Class win32_ComputerSystem -ComputerName $ComputerName).DomainRole
     Write-Host "$ComputerName is a $($role[$myRole]), role type $myrole"
 }
+Function Start-EricomConnection { 
+    $Assem = Import-EricomLib
+
+    $regularUser = New-Object Ericom.CloudConnect.Utilities.SpaceCredentials("regularUser")
+    $adminApi = [Ericom.MegaConnect.Runtime.XapApi.AdministrationProcessingUnitClassFactory]::GetInstance($regularUser)
+
+    return $adminApi
+}
+
+Function Import-EricomLib {
+    $XAPPath = "C:\Program Files\Ericom Software\Ericom Connect Configuration Tool\"
+
+    function Get-ScriptDirectory
+    {
+        $Invocation = (Get-Variable MyInvocation -Scope 1).Value
+        Split-Path $Invocation.MyCommand.Path
+    }
+
+    $MegaConnectRuntimeApiDll = Join-Path ($XAPPath)  "MegaConnectRuntimeXapApi.dll"
+    $CloudConnectUtilitiesDll = Join-Path ($XAPPath)  "CloudConnectUtilities.dll"
+
+
+    add-type -Path (
+        $MegaConnectRuntimeApiDll,
+        $CloudConnectUtilitiesDll
+    )
+                                                                                                                    `
+    $Assem = ( 
+        $MegaConnectRuntimeApiDll,
+        $CloudConnectUtilitiesDll
+        )
+  
+    return $Assem
+}
+function CreateUser {
+ param(
+        [Parameter()][String]$userName ,
+        [Parameter()][String]$password ,
+        [Parameter()][String]$domainName
+ )
+    
+        $baseADGroupRDP = "Domain Users"
+        
+        $securePassword = ConvertTo-SecureString -String $password -AsPlainText -Force	
+        $AdminSecurePassword = ConvertTo-SecureString -String $AdminPassword -AsPlainText -Force	
+        $AdminCredentials = New-Object System.Management.Automation.PSCredential ($AdminUser, $AdminSecurePassword);
+
+        try {
+              Write-Host "Creating new AD user <<$username>>" -ForegroundColor Green
+              New-ADUser -Server $domainName -PasswordNeverExpires $true -SamAccountName $userName -Name "$userName" -Credential $AdminCredentials -Enabled $true -Verbose -AccountPassword $securePassword
+        } catch {
+              Write-Warning "Could not create AD User: $userName"
+              Write-Error $_.Exception.Message
+        }
+        try {
+            #  Add-ADGroupMember -Server $domainName -Identity (Get-ADGroup $baseADGroupRDP -Server $domainName -Credential $AdminCredentials ) -Members $userName -Credential $AdminCredentials
+        } catch {
+              Write-Warning "Could not add $userName to `"$baseADGroupRDP`" AD group"
+              Write-Error $_.Exception.Message
+        }
+}
+
+function CreateUserGroup {
+param(
+        [Parameter()][String]$GroupName ,
+        [Parameter()][String]$BaseGroup 
+ 
+ )
+ #TBD
+
+}
+function PublishAppU {
+param(
+        [Parameter()][String]$DisplayName ,
+        [Parameter()][String]$AppName ,
+        [Parameter()][String]$HostGroupName ,
+        [Parameter()][String]$User
+ )
+ #TBD
+
+}
+function PublishAppUG {
+param(
+        [Parameter()][String]$DisplayName ,
+        [Parameter()][String]$AppName ,
+        [Parameter()][String]$HostGroupName ,
+        [Parameter()][String]$UserGroup
+ )
+ #TBD
+
+}
+function PublishDesktopU {
+param(
+        [Parameter()][String]$DisplayName ,
+        [Parameter()][String]$HostGroupName ,
+        [Parameter()][String]$User
+ )
+ #TBD
+
+}
+function PublishDesktopUG {
+param(
+        [Parameter()][String]$DisplayName ,
+        [Parameter()][String]$HostGroupName ,
+        [Parameter()][String]$UserGroup
+ )
+ #TBD
+
+}
+function AddUserToUserGroup {
+ param(
+        [Parameter()][String]$GroupName ,
+        [Parameter()][String]$User 
+ )   
+    
+function Create-RemoteHostsGroup {
+    param(
+        
+        [Parameter()][string]$groupName,
+        [Parameter()][string]$pattern
+    )
+  
+    $adminApi = Start-EricomConnection
+    $adminSessionId = $adminApi.CreateAdminsession($AdminUser, $AdminPassword,"rooturl","en-us");
+    [Ericom.MegaConnect.Runtime.XapApi.RemoteHostMembershipComputation]$rhmc = 0;
+    $rGroup = $adminApi.CreateRemoteHostGroup($adminSessionId.AdminSessionId, $groupName, $rhmc);
+    [System.Collections.Generic.List[String]]$remoteHostsList = New-Object System.Collections.Generic.List[String];
+
+    [Ericom.MegaConnect.Runtime.XapApi.RemoteHostSearchConstraints]$rhsc = New-Object Ericom.MegaConnect.Runtime.XapApi.RemoteHostSearchConstraints;
+    $rhsc.HostnamePattern = $pattern; #TODO: Update HERE!
+    $rhl = $adminApi.GetRemoteHostList($adminSessionId.AdminSessionId, $rhsc)
+    foreach($h in $rhl)
+    {
+	    $remoteHostsList.Add($h.RemoteHostId)
+    }
+    $rGroup.RemoteHostIds = $remoteHostsList;
+    $adminApi.AddRemoteHostGroup($adminSessionId.AdminSessionId, $rGroup)  | Out-Null
+
+}
+
+function PopulateWithRemoteHostGroups
+{
+    Create-RemoteHostsGroup -groupName Allservers -pattern "*"
+}
+
+function PopulateWithUsers
+{
+    CreateUser -userName user1 -password P@55w0rd 
+    CreateUser -userName user2 -password P@55w0rd 
+    CreateUser -userName user3 -password P@55w0rd 
+   
+    CreateUserGroup -GroupName Group1 -BaseGroup "Domain Users"
+    AddUserToUserGroup -GroupName Group1 -User user1
+    
+}
+
+function PublishAppsAndDesktops
+{
+    PublishAppU -DisplayName chrome -AppName chrome -HostGroupName Allservers -User user1
+    PublishAppUG -DisplayName chrome -AppName chrome -HostGroupName Allservers -UserGroup Group1
+    PublishDesktopU -DisplayName MyDesktop -HostGroupName Allservers -User user1
+    PublishDesktopUG -DisplayName MyDesktop -HostGroupName Allservers -UserGroup Group1
+}
+
+
 # Main Code 
-Install-WindowsFeatures
 
-Download-EricomConnect
+# David to update - retrun false if machine is "Stand alone workstation" or "Stand alone server" - give a message tha the machine should be in a domain
+#CheckDomainRole 
 
-Install-SingleMachine -sourceFile C:\Windows\Temp\EricomConnectPOC.exe
+# works  - david to code review and check if more Features are needed and add them
+#Install-WindowsFeatures
 
-Config-CreateGrid -config $Settings
+# works  - david to code review
+#Download-EricomConnect
 
-Install-Apps
+# works  - david to code review
+#Install-SingleMachine -sourceFile C:\Windows\Temp\EricomConnectPOC.exe
 
-Setup-Bginfo -LocalPath C:\BgInfo
+if ($PrepareSystem -eq $true) {
+    
+# works  - david to code review
+#Config-CreateGrid -config $Settings
 
-Write-Output $PSScriptRoot 
-#bootstrape apps
+# works
+#Install-Apps
 
-#if ($AutoStart -eq $true) {
-#   Start-EricomServices
-#}
+# works
+#Setup-Bginfo -LocalPath C:\BgInfo
+
+# works  - david to code review
+#PopulateWithUsers 
+
+# David to fill in the functions 
+#PublishAppsAndDesktops 
+}
+#Write-Output $PSScriptRoot 
+
  
