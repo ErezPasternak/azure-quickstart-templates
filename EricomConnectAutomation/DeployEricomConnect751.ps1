@@ -18,8 +18,8 @@ $EC_local_path = "C:\Windows\Temp\EricomConnectPOC.exe"
 $domainName = "test.local"
 
 #grid
-$AdminUser = "Ericom@test.local"
-$AdminPassword = "Ericom123$"
+$AdminUser = "admin@test.local"
+$AdminPassword = "admin"
 $GridName = "EricomGrid"
 $HostOrIp = $env:COMPUTERNAME
 $SaUser = ""
@@ -339,9 +339,14 @@ function CheckDomainRole
 		4 = "Back-up domain controller";
 		5 = "Primary domain controller"
 	}
-	
 	[int32]$myRole = (Get-WmiObject -Class win32_ComputerSystem -ComputerName $ComputerName).DomainRole
 	Write-Host "$ComputerName is a $($role[$myRole]), role type $myrole"
+    $response = $true;
+    if ($myRole -eq 0 -or $myRole -eq 2) {
+        Write-Warning "The machine should be in a domain!";
+        $response = $false;
+    }
+    return $response;
 }
 Function Start-EricomConnection
 {
@@ -379,6 +384,7 @@ Function Import-EricomLib
 	
 	return $Assem
 }
+
 function CreateUser
 {
 	param (
@@ -387,7 +393,7 @@ function CreateUser
 		[Parameter()]
 		[String]$password,
 		[Parameter()]
-		[String]$domainName
+		[String]$domainName = $domainName
 	)
 	
 	$baseADGroupRDP = "Domain Users"
@@ -516,6 +522,7 @@ function AddUserToUserGroup
 		[String]$User
 	)
 }
+
 function Create-RemoteHostsGroup
 {
 	param (
@@ -568,39 +575,202 @@ function PublishAppsAndDesktops
 	PublishDesktopUG -DisplayName MyDesktop -HostGroupName Allservers -UserGroup Group1
 }
 
+Function PublishApplication {
+    param(
+        [Parameter()][string]$adminUser,
+        [Parameter()][string]$adminPassword,
+        [Parameter()][String]$applicationName
+    )
+
+    $adminApi = Start-EricomConnection
+    $adminSessionId = $adminApi.CreateAdminsession($adminUser, $adminPassword,"rooturl","en-us")
+    
+    $response = $null;
+
+    $RemoteHostList = $adminApi.RemoteHostStatusSearch($adminSessionId.AdminSessionId, "Running", "", "100", "100", "0", "", "true", "true", "true")
+
+    function FlattenFilesForDirectory ($browsingFolder, $rremoteAgentId ,$rremoteHostId)
+    {
+	    foreach ($browsingItem in $browsingFolder.Files.Values)
+	    {
+            if(($browsingItem.Label -eq $applicationName))
+            {
+                $resourceDefinition = $adminApi.CreateResourceDefinition($adminSessionId.AdminSessionId, $applicationName)
+
+                $val1 = $resourceDefinition.ConnectionProperties.GetLocalPropertyValue("remoteapplicationmode")
+                $val1.LocalValue = $true
+                $val1.ComputeBy = "Literal"
+
+                $val2 = $resourceDefinition.ConnectionProperties.GetLocalPropertyValue("alternate_S_shell")
+                $val2.LocalValue = "" +  $browsingItem.Path + $browsingItem.Name + ""
+                $val2.ComputeBy = "Literal"
+                $val2.LocalValue
+
+                $val3 = $resourceDefinition.DisplayProperties.GetLocalPropertyValue("IconLength")
+                $val3.LocalValue = $browsingItem.ApplicationString.Length
+                $val3.ComputeBy = "Literal"
+
+                $val4 = $resourceDefinition.DisplayProperties.GetLocalPropertyValue("IconString")
+                $val4.LocalValue = $browsingItem.ApplicationString
+                $val4.ComputeBy = "Literal"
+
+                $val5 = $resourceDefinition.DisplayProperties.GetLocalPropertyValue("DisplayName")
+                $val5.LocalValue = $applicationName
+                $val5.ComputeBy = "Literal"
+
+                $response = @{}
+                try 
+                {
+                    $adminApi.AddResourceDefinition($adminSessionId.AdminSessionId, $resourceDefinition, "true")
+
+                    $response = @{
+                        status = "OK"
+                        success = "true"
+                        id = $resourceDefinition.ResourceDefinitionId
+                        message = "The resource has been successfuly published."
+                    }
+                } 
+                catch [Exception] 
+                {
+                    $response = @{
+                        status = "ERROR"
+                        message = $_.Exception.Message
+                    }
+                }
+                return $response
+            }
+        }
+
+	    foreach ($directory in $browsingFolder.SubFolders.Values)
+	    {
+		    FlattenFilesForDirectory($directory);
+	    }
+    }
+
+
+    foreach ($RH in $RemoteHostList)
+    {
+        ""
+        ""
+        $RH.SystemInfo.ComputerName
+        "____________"
+        ""
+        $browsingFolder = $adminApi.SendCustomRequest(	$adminSessionId.AdminSessionId, 
+												        $RH.RemoteAgentId,
+											           [Ericom.MegaConnect.Runtime.XapApi.StandaloneServerRequestType]::HostAgentApplications,
+											           "null",
+											           "false",
+											           "999999999")
+       #$browsingFolder
+       FlattenFilesForDirectory ($browsingFolder, $RH.RemoteAgentId ,$RH.RemoteHostId)
+       if($goon -eq $false)
+       {
+            return
+       }
+    }
+}
+
+Function Start-EricomConnection { 
+    $Assem = Import-EricomLib
+
+    $regularUser = New-Object Ericom.CloudConnect.Utilities.SpaceCredentials("regularUser")
+    $adminApi = [Ericom.MegaConnect.Runtime.XapApi.AdministrationProcessingUnitClassFactory]::GetInstance($regularUser)
+
+    return $adminApi
+}
+
+Function Import-EricomLib {
+    $XAPPath = "C:\Program Files\Ericom Software\Ericom Connect Configuration Tool\"
+
+    function Get-ScriptDirectory
+    {
+        $Invocation = (Get-Variable MyInvocation -Scope 1).Value
+        Split-Path $Invocation.MyCommand.Path
+    }
+
+    $MegaConnectRuntimeApiDll = Join-Path ($XAPPath)  "MegaConnectRuntimeXapApi.dll"
+    $CloudConnectUtilitiesDll = Join-Path ($XAPPath)  "CloudConnectUtilities.dll"
+
+
+    add-type -Path (
+        $MegaConnectRuntimeApiDll,
+        $CloudConnectUtilitiesDll
+    )
+                                                                                                                    `
+    $Assem = ( 
+        $MegaConnectRuntimeApiDll,
+        $CloudConnectUtilitiesDll
+        )
+  
+    return $Assem
+}
+
+function PublishAppU {
+    param(
+        [string]$DisplayName,
+        [string]$AppName,
+        [string]$HostGroupName,
+        [string]$User
+    )
+    PublishApplication -adminUser $adminUser -adminPassword $adminPassword -applicationName
+}
+function PublishAppUG {
+    param(
+        [string]$DisplayName,
+        [string]$AppName,
+        [string]$HostGroupName,
+        [string]$UserGroup
+    )
+    PublishApplication -adminUser $adminUser -adminPassword $adminPassword -applicationName
+}
+function PublishDesktopU {
+    param(
+        [string]$DisplayName,
+        [string]$HostGroupName,
+        [string]$User
+    )
+    PublishApplication -adminUser $adminUser -adminPassword $adminPassword -applicationName
+}
+function PublishDesktopUG {
+    param(
+        [string]$DisplayName,
+        [string]$HostGroupName,
+        [string]$UserGroup
+    )
+    PublishApplication -adminUser $adminUser -adminPassword $adminPassword -applicationName
+}
 
 # Main Code 
 
-# David to update - retrun false if machine is "Stand alone workstation" or "Stand alone server" - give a message tha the machine should be in a domain
+# David to update - retrun false if machine is "Stand alone workstation" or "Stand alone server" - give a message tha the machine should be in a domain // Updated
 CheckDomainRole
 
-# works  - david to code review and check if more Features are needed and add them
+# works  - david to code review and check if more Features are needed and add them // I checked and it looks OK for now.
 Install-WindowsFeatures
 
-# works  - david to code review
+# works  - david to code review // Works!
 Download-EricomConnect
 
-# works  - david to code review
+# works  - david to code review // Works!
 Install-SingleMachine -sourceFile C:\Windows\Temp\EricomConnectPOC.exe
 
 if ($PrepareSystem -eq $true)
 {
 	
 	# works  - david to code review
-	#Config-CreateGrid -config $Settings
+	Config-CreateGrid -config $Settings
 	
 	# works
-	#Install-Apps
+	Install-Apps
 	
 	# works
-	#Setup-Bginfo -LocalPath C:\BgInfo
+	Setup-Bginfo -LocalPath C:\BgInfo
 	
-	# works  - david to code review
-	#PopulateWithUsers 
+	# works  - david to code review // Fixed bug (missing Domain)
+	PopulateWithUsers 
 	
-	# David to fill in the functions 
-	#PublishAppsAndDesktops 
+	# David to fill in the functions // We need to discuss. We have Resource Group missing!
+	PublishAppsAndDesktops 
 }
 #Write-Output $PSScriptRoot 
-
 
