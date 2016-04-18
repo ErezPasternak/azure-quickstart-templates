@@ -551,11 +551,6 @@ function Create-RemoteHostsGroup
 	
 }
 
-function PopulateWithRemoteHostGroups
-{
-	Create-RemoteHostsGroup -groupName Allservers -pattern "*"
-}
-
 function PopulateWithUsers
 {
 	CreateUser -userName user1 -password P@55w0rd
@@ -563,18 +558,47 @@ function PopulateWithUsers
 	CreateUser -userName user3 -password P@55w0rd
 	
 	CreateUserGroup -GroupName Group1 -BaseGroup "Domain Users"
-	AddUserToUserGroup -GroupName Group1 -User user1
-	
+	AddUserToUserGroup -GroupName Group1 -User user1	
+}
+
+function PopulateWithRemoteHostGroups
+{
+	Create-RemoteHostsGroup -groupName Allservers -pattern "*"
+}
+
+function PopulateWithAppsAndDesktops
+{
+	Create-App -DisplayName chrome -AppName chrome
+    Create-Desktop -DisplayName MyDesktop
 }
 
 function PublishAppsAndDesktops
 {
-	PublishAppU -DisplayName chrome -AppName chrome -HostGroupName Allservers -User user1
-	PublishAppUG -DisplayName chrome -AppName chrome -HostGroupName Allservers -UserGroup Group1
-	PublishDesktopU -DisplayName MyDesktop -HostGroupName Allservers -User user1
-	PublishDesktopUG -DisplayName MyDesktop -HostGroupName Allservers -UserGroup Group1
+	PublishAppU -Name App1 -AppName chrome -HostGroupName Allservers -User user1
+	PublishAppUG -Name App1 -AppName Firefox -HostGroupName Allservers -UserGroup Group1
+	PublishDesktopU -Name DesktopGroup -DesktopName MyDesktop -HostGroupName Allservers -User user1
+	PublishDesktopUG -Name DesktopGroup1 -DesktopName MyDesktop -HostGroupName Allservers -UserGroup Group1
 }
 
+function PostInstall
+{
+    # Create users and groups in AD
+    PopulateWithUsers
+    PopulateWithRemoteHostGroups
+    
+    # Install varius applications on the machine
+	Install-Apps
+    
+    # publish apps and desktops and Ericon Connect
+    PopulateWithAppsAndDesktops
+    
+    # Now we actuly publish 
+	PublishAppsAndDesktops 
+
+    # Setup background bitmap and user date using BGinfo
+	Setup-Bginfo -LocalPath C:\BgInfo
+    
+}
 Function PublishApplication {
     param(
         [Parameter()][string]$adminUser,
@@ -602,7 +626,7 @@ Function PublishApplication {
                 $val1.ComputeBy = "Literal"
 
                 $val2 = $resourceDefinition.ConnectionProperties.GetLocalPropertyValue("alternate_S_shell")
-                $val2.LocalValue = "" +  $browsingItem.Path + $browsingItem.Name + ""
+                $val2.LocalValue = "'" +  $browsingItem.Path + $browsingItem.Name + "'"
                 $val2.ComputeBy = "Literal"
                 $val2.LocalValue
 
@@ -742,35 +766,26 @@ function PublishDesktopUG {
 
 # Main Code 
 
-# David to update - retrun false if machine is "Stand alone workstation" or "Stand alone server" - give a message tha the machine should be in a domain // Updated
+# Prerequisite check that this machine is part of a domain
 CheckDomainRole
 
-# works  - david to code review and check if more Features are needed and add them // I checked and it looks OK for now.
+# Install the needed Windows Features 
 Install-WindowsFeatures
 
-# works  - david to code review // Works!
+# Download Ericom Offical Installer from the Ericom Web site  
 Download-EricomConnect
 
-# works  - david to code review // Works!
+# Install EC in a single machine mode including SQL express   
 Install-SingleMachine -sourceFile C:\Windows\Temp\EricomConnectPOC.exe
 
+#we can stop here with a system ready and connected installed and not cofigured 
 if ($PrepareSystem -eq $true)
 {
-	
-	# works  - david to code review
+	# Configure Ericom Connect Grid
 	Config-CreateGrid -config $Settings
 	
-	# works
-	Install-Apps
-	
-	# works
-	Setup-Bginfo -LocalPath C:\BgInfo
-	
-	# works  - david to code review // Fixed bug (missing Domain)
-	PopulateWithUsers 
-	
-	# David to fill in the functions // We need to discuss. We have Resource Group missing!
-	PublishAppsAndDesktops 
+    # Run PostInstall Creating users,apps,desktops and publish them
+    PostInstall
 }
 #Write-Output $PSScriptRoot 
 
