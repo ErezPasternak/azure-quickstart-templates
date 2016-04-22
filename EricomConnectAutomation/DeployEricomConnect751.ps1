@@ -736,7 +736,7 @@ function PublishAppU {
         [string]$HostGroupName,
         [string]$User
     )
-    PublishApplication -adminUser $adminUser -adminPassword $adminPassword -applicationName
+    PublishApplication -adminUser $adminUser -adminPassword $adminPassword -applicationName $AppName
 }
 function PublishAppUG {
     param(
@@ -745,7 +745,7 @@ function PublishAppUG {
         [string]$HostGroupName,
         [string]$UserGroup
     )
-    PublishApplication -adminUser $adminUser -adminPassword $adminPassword -applicationName
+    PublishApplication -adminUser $adminUser -adminPassword $adminPassword -applicationName $AppName
 }
 function PublishDesktopU {
     param(
@@ -753,7 +753,7 @@ function PublishDesktopU {
         [string]$HostGroupName,
         [string]$User
     )
-    PublishApplication -adminUser $adminUser -adminPassword $adminPassword -applicationName
+    PublishApplication -adminUser $adminUser -adminPassword $adminPassword -applicationName $AppName
 }
 function PublishDesktopUG {
     param(
@@ -761,7 +761,7 @@ function PublishDesktopUG {
         [string]$HostGroupName,
         [string]$UserGroup
     )
-    PublishApplication -adminUser $adminUser -adminPassword $adminPassword -applicationName
+    PublishApplication -adminUser $adminUser -adminPassword $adminPassword -applicationName $AppName
 }
 
 # Main Code 
