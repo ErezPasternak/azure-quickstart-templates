@@ -444,12 +444,12 @@ configuration DesktopHost
             Name = "RDS-RD-Server"
         }
 	    
-        WindowsFeature Desktop-Experience
-        {
-            Ensure = "Present"
-            Name = "Desktop-Experience"
-            IncludeAllSubFeature  = $True
-        }
+       # WindowsFeature Desktop-Experience
+       # {
+       #     Ensure = "Present"
+       #     Name = "Desktop-Experience"
+       # IncludeAllSubFeature  = $True
+       # }
 		
         # Downloading and installing Ericom connect components 
 	    Script DownloadGridMSI
@@ -767,14 +767,7 @@ configuration ApplicationHost
             Name = "RDS-RD-Server"
         }
       
-        WindowsFeature Desktop-Experience
-        {
-            Ensure = "Present"
-            Name = "Desktop-Experience"
-            IncludeAllSubFeature  = $True
-        }
-
-	    Script DownloadGridMSI
+        Script DownloadGridMSI
         {
             TestScript = {
                 Test-Path "C:\EricomConnectDataGrid_x64.msi"
