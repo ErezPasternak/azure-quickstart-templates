@@ -30,6 +30,16 @@ $ConnectConfigurationToolPath = "\Ericom Software\Ericom Connect Configuration T
 $UseWinCredentials = "true"
 $LookUpHosts = $env:computername
 
+#e-mail
+$To = "erez.pasternak@ericom.com"
+$From = "daas@ericom.com"
+$SMTPServer = "ericom-com.mail.protection.outlook.com"
+$SMTPSUser = "daas@ericom.com"
+$SMTPassword = "1qaz@Wsx#"
+$SMTPPort = 25
+$externalFqdn = $env:COMPUTERNAME
+
+
 # Download EricomConnect
 <#
 	.SYNOPSIS
@@ -46,6 +56,7 @@ $LookUpHosts = $env:computername
 #>
 function Download-EricomConnect()
 {
+	New-Item -Path "C:\Download-EricomConnect" -ItemType Directory -Force -ErrorAction SilentlyContinue
 	Write-Output "Download-EricomConnect  -- Start"
 	
 	#if we have an installer near the ps1 file we will use it and not download
@@ -82,6 +93,7 @@ function Download-EricomConnect()
 #>
 function Install-SingleMachine([string]$sourceFile)
 {
+	New-Item -Path "C:\Install-SingleMachine" -ItemType Directory -Force -ErrorAction SilentlyContinue
 	Write-Output "Ericom Connect POC installation has been started."
 	$exitCode = (Start-Process -Filepath $sourceFile -NoNewWindow -ArgumentList "/silent LAUNCH_CONFIG_TOOL=False" -Wait -Passthru).ExitCode
 	if ($exitCode -eq 0)
@@ -113,7 +125,9 @@ function Install-SingleMachine([string]$sourceFile)
 #>
 function Config-CreateGrid($config = $Settings)
 {
+	New-Item -Path "C:\Config-CreateGrid" -ItemType Directory -Force -ErrorAction SilentlyContinue
 	Write-Output "Ericom Connect Grid configuration has been started."
+	
 	$_adminUser = $AdminUser
 	$_adminPass = $AdminPassword
 	$_gridName = $GridName
@@ -168,6 +182,7 @@ function Config-CreateGrid($config = $Settings)
 #>
 function Install-Apps
 {
+	New-Item -Path "C:\Install-Apps" -ItemType Directory -Force -ErrorAction SilentlyContinue
 	Write-Output "Apps installation has been started."
 	
 	iex ((new-object net.webclient).DownloadString('https://chocolatey.org/install.ps1'))
@@ -205,6 +220,8 @@ function Install-Apps
 #>
 function Setup-Bginfo ([string]$LocalPath)
 {
+	New-Item -Path "C:\Setup-Bginfo" -ItemType Directory -Force -ErrorAction SilentlyContinue
+	
 	$GITBase = "https://raw.githubusercontent.com/ErezPasternak/azure-quickstart-templates/EricomConnect/EricomConnectAutomation/BGinfo/"
 	$GITBginfo = $GITBase + "BGInfo.zip"
 	$GITBgConfig = $GITBase + "bginfo_config.bgi"
@@ -222,6 +239,60 @@ function Setup-Bginfo ([string]$LocalPath)
 	C:\BgInfo\bginfo.exe C:\BgInfo\bginfo_config.bgi /silent /accepteula /timer:0
 }
 
+function SendAdminMail ()
+{
+	New-Item -Path "C:\SendAdminMail" -ItemType Directory -Force -ErrorAction SilentlyContinue
+	
+	$Subject = "Ericom Connect Deployment is now Ready"
+	
+	$securePassword = ConvertTo-SecureString -String $SMTPassword -AsPlainText -Force
+	$credential = New-Object System.Management.Automation.PSCredential ("daas@ericom.com", $securePassword)
+	$date = (Get-Date).ToString();
+	$ToName = $To.Split("@")[0].Replace(".", " ");
+	
+	Write-Verbose "Ericom Connect Grid Server has been succesfuly configured."
+	$Keyword = "CB: Ericom Connect Grid Server has been succesfuly configured."
+	$Message = '<h1>Congratulations! Your Ericom Connect Environment is now Ready!</h1><p>Dear ' + $ToName + ',<br><br>Thank you for deploying <a href="http://www.ericom.com/connect-enterprise.asp">Ericom Connect</a>.<br><br>Your deployment is now complete and you can start using the system.<br><br>To launch Ericom Portal Client please click <a href="https://' + $externalFqdn + '/EricomAutomation/DaaS/index.html#/register">here.</a><br><br>To log-in to Ericom Connect management console please click <a href="https://' + $externalFqdn + '/Admin">here.</a><br><br>Below are your Admin credentials. Please make sure you save them for future use:<br><br>Username: ' + $AdminUser + ' <br>Password: ' + $AdminPassword + '<br><br><br>Regards,<br><a href="http://www.ericom.com">Ericom</a> Automation Team'
+	if ($To -ne "nobody")
+	{
+		try
+		{
+			Send-MailMessage -Body "$Message" -BodyAsHtml -Subject "$Subject" -SmtpServer $SmtpServer -Port $SMTPPort -Credential $credential -From $credential.UserName -To $To -bcc "erez.pasternak@ericom.com", "DaaS@ericom.com" -ErrorAction SilentlyContinue
+		}
+		catch
+		{
+			$_.Exception.Message | Out-File "C:\sendmailmessageend.txt"
+		}
+	}
+}
+
+function SendStartMail ()
+{
+	New-Item -Path "C:\SendStartMail" -ItemType Directory -Force -ErrorAction SilentlyContinue
+	
+	$Subject = "Ericom Connect Deployment have started"
+	
+	$securePassword = ConvertTo-SecureString -String $SMTPassword -AsPlainText -Force
+	$credential = New-Object System.Management.Automation.PSCredential ("daas@ericom.com", $securePassword)
+	$date = (Get-Date).ToString();
+	$ToName = $To.Split("@")[0].Replace(".", " ");
+	
+	Write-Verbose "Ericom Connect Deployment have started."
+	$Keyword = "CB: Ericom Connect Deployment have started."
+	$Message = '<h1>You have successfully started your Ericom Connect Deployment!</h1><p>Dear ' + $ToName + ',<br><br>Thank you for using <a href="http://www.ericom.com/connect-enterprise.asp">Ericom Connect</a>.<br><br>Your Ericom Connect Deployment is now in process.<br><br>We will send you a confirmation e-mail once the deployment is complete and your system is ready.<br><br>Regards,<br><a href="http://www.ericom.com">Ericom</a> Automation Team'
+	
+	if ($To -ne "nobody")
+	{
+		try
+		{
+			Send-MailMessage -Body "$Message" -BodyAsHtml -Subject "$Subject" -SmtpServer $SmtpServer -Port $SMTPPort -Credential $credential -From $credential.UserName -To $To -bcc "erez.pasternak@ericom.com", "DaaS@ericom.com" -ErrorAction SilentlyContinue
+		}
+		catch
+		{
+			$_.Exception.Message | Out-File "C:\sendmailmessageend.txt"
+		}
+	}
+}
 <#
 	.SYNOPSIS
 		A brief description of the Expand-ZIPFile function.
@@ -268,6 +339,8 @@ function Expand-ZIPFile($file, $destination)
 #>
 function Install-WindowsFeatures
 {
+	New-Item -Path "C:\Install-WindowsFeatures" -ItemType Directory -Force -ErrorAction SilentlyContinue
+	
 	Install-WindowsFeature Net-Framework-Core
 	Install-WindowsFeature RDS-RD-Server
 	Install-WindowsFeature Web-Server
@@ -341,12 +414,13 @@ function CheckDomainRole
 	}
 	[int32]$myRole = (Get-WmiObject -Class win32_ComputerSystem -ComputerName $ComputerName).DomainRole
 	Write-Host "$ComputerName is a $($role[$myRole]), role type $myrole"
-    $response = $true;
-    if ($myRole -eq 0 -or $myRole -eq 2) {
-        Write-Warning "The machine should be in a domain!";
-        $response = $false;
-    }
-    return $response;
+	$response = $true;
+	if ($myRole -eq 0 -or $myRole -eq 2)
+	{
+		Write-Warning "The machine should be in a domain!";
+		$response = $false;
+	}
+	return $response;
 }
 Function Start-EricomConnection
 {
@@ -558,7 +632,7 @@ function PopulateWithUsers
 	CreateUser -userName user3 -password P@55w0rd
 	
 	CreateUserGroup -GroupName Group1 -BaseGroup "Domain Users"
-	AddUserToUserGroup -GroupName Group1 -User user1	
+	AddUserToUserGroup -GroupName Group1 -User user1
 }
 
 function PopulateWithRemoteHostGroups
@@ -569,7 +643,7 @@ function PopulateWithRemoteHostGroups
 function PopulateWithAppsAndDesktops
 {
 	Create-App -DisplayName chrome -AppName chrome
-    Create-Desktop -DisplayName MyDesktop
+	Create-Desktop -DisplayName MyDesktop
 }
 
 function PublishAppsAndDesktops
@@ -582,192 +656,208 @@ function PublishAppsAndDesktops
 
 function PostInstall
 {
-    # Create users and groups in AD
-    PopulateWithUsers
-    PopulateWithRemoteHostGroups
-    
-    # Install varius applications on the machine
+	# Create users and groups in AD
+	PopulateWithUsers
+	PopulateWithRemoteHostGroups
+	
+	# Install varius applications on the machine
 	Install-Apps
-    
-    # publish apps and desktops and Ericon Connect
-    PopulateWithAppsAndDesktops
-    
-    # Now we actuly publish 
-	PublishAppsAndDesktops 
-
-    # Setup background bitmap and user date using BGinfo
+	
+	# publish apps and desktops and Ericon Connect
+	PopulateWithAppsAndDesktops
+	
+	# Now we actuly publish 
+	PublishAppsAndDesktops
+	
+	# Setup background bitmap and user date using BGinfo
 	Setup-Bginfo -LocalPath C:\BgInfo
-    
+	
+	#Send Admin mail
+	SendAdminMail
+	
 }
-Function PublishApplication {
-    param(
-        [Parameter()][string]$adminUser,
-        [Parameter()][string]$adminPassword,
-        [Parameter()][String]$applicationName
-    )
-
-    $adminApi = Start-EricomConnection
-    $adminSessionId = $adminApi.CreateAdminsession($adminUser, $adminPassword,"rooturl","en-us")
-    
-    $response = $null;
-
-    $RemoteHostList = $adminApi.RemoteHostStatusSearch($adminSessionId.AdminSessionId, "Running", "", "100", "100", "0", "", "true", "true", "true")
-
-    function FlattenFilesForDirectory ($browsingFolder, $rremoteAgentId ,$rremoteHostId)
-    {
-	    foreach ($browsingItem in $browsingFolder.Files.Values)
-	    {
-            if(($browsingItem.Label -eq $applicationName))
-            {
-                $resourceDefinition = $adminApi.CreateResourceDefinition($adminSessionId.AdminSessionId, $applicationName)
-
-                $val1 = $resourceDefinition.ConnectionProperties.GetLocalPropertyValue("remoteapplicationmode")
-                $val1.LocalValue = $true
-                $val1.ComputeBy = "Literal"
-
-                $val2 = $resourceDefinition.ConnectionProperties.GetLocalPropertyValue("alternate_S_shell")
-                $val2.LocalValue = "'" +  $browsingItem.Path + $browsingItem.Name + "'"
-                $val2.ComputeBy = "Literal"
-                $val2.LocalValue
-
-                $val3 = $resourceDefinition.DisplayProperties.GetLocalPropertyValue("IconLength")
-                $val3.LocalValue = $browsingItem.ApplicationString.Length
-                $val3.ComputeBy = "Literal"
-
-                $val4 = $resourceDefinition.DisplayProperties.GetLocalPropertyValue("IconString")
-                $val4.LocalValue = $browsingItem.ApplicationString
-                $val4.ComputeBy = "Literal"
-
-                $val5 = $resourceDefinition.DisplayProperties.GetLocalPropertyValue("DisplayName")
-                $val5.LocalValue = $applicationName
-                $val5.ComputeBy = "Literal"
-
-                $response = @{}
-                try 
-                {
-                    $adminApi.AddResourceDefinition($adminSessionId.AdminSessionId, $resourceDefinition, "true")
-
-                    $response = @{
-                        status = "OK"
-                        success = "true"
-                        id = $resourceDefinition.ResourceDefinitionId
-                        message = "The resource has been successfuly published."
-                    }
-                } 
-                catch [Exception] 
-                {
-                    $response = @{
-                        status = "ERROR"
-                        message = $_.Exception.Message
-                    }
-                }
-                return $response
-            }
-        }
-
-	    foreach ($directory in $browsingFolder.SubFolders.Values)
-	    {
-		    FlattenFilesForDirectory($directory);
-	    }
-    }
-
-
-    foreach ($RH in $RemoteHostList)
-    {
-        ""
-        ""
-        $RH.SystemInfo.ComputerName
-        "____________"
-        ""
-        $browsingFolder = $adminApi.SendCustomRequest(	$adminSessionId.AdminSessionId, 
-												        $RH.RemoteAgentId,
-											           [Ericom.MegaConnect.Runtime.XapApi.StandaloneServerRequestType]::HostAgentApplications,
-											           "null",
-											           "false",
-											           "999999999")
-       #$browsingFolder
-       FlattenFilesForDirectory ($browsingFolder, $RH.RemoteAgentId ,$RH.RemoteHostId)
-       if($goon -eq $false)
-       {
-            return
-       }
-    }
-}
-
-Function Start-EricomConnection { 
-    $Assem = Import-EricomLib
-
-    $regularUser = New-Object Ericom.CloudConnect.Utilities.SpaceCredentials("regularUser")
-    $adminApi = [Ericom.MegaConnect.Runtime.XapApi.AdministrationProcessingUnitClassFactory]::GetInstance($regularUser)
-
-    return $adminApi
+Function PublishApplication
+{
+	param (
+		[Parameter()]
+		[string]$adminUser,
+		[Parameter()]
+		[string]$adminPassword,
+		[Parameter()]
+		[String]$applicationName
+	)
+	
+	$adminApi = Start-EricomConnection
+	$adminSessionId = $adminApi.CreateAdminsession($adminUser, $adminPassword, "rooturl", "en-us")
+	
+	$response = $null;
+	
+	$RemoteHostList = $adminApi.RemoteHostStatusSearch($adminSessionId.AdminSessionId, "Running", "", "100", "100", "0", "", "true", "true", "true")
+	
+	function FlattenFilesForDirectory ($browsingFolder, $rremoteAgentId, $rremoteHostId)
+	{
+		foreach ($browsingItem in $browsingFolder.Files.Values)
+		{
+			if (($browsingItem.Label -eq $applicationName))
+			{
+				$resourceDefinition = $adminApi.CreateResourceDefinition($adminSessionId.AdminSessionId, $applicationName)
+				
+				$val1 = $resourceDefinition.ConnectionProperties.GetLocalPropertyValue("remoteapplicationmode")
+				$val1.LocalValue = $true
+				$val1.ComputeBy = "Literal"
+				
+				$val2 = $resourceDefinition.ConnectionProperties.GetLocalPropertyValue("alternate_S_shell")
+				$val2.LocalValue = "'" + $browsingItem.Path + $browsingItem.Name + "'"
+				$val2.ComputeBy = "Literal"
+				$val2.LocalValue
+				
+				$val3 = $resourceDefinition.DisplayProperties.GetLocalPropertyValue("IconLength")
+				$val3.LocalValue = $browsingItem.ApplicationString.Length
+				$val3.ComputeBy = "Literal"
+				
+				$val4 = $resourceDefinition.DisplayProperties.GetLocalPropertyValue("IconString")
+				$val4.LocalValue = $browsingItem.ApplicationString
+				$val4.ComputeBy = "Literal"
+				
+				$val5 = $resourceDefinition.DisplayProperties.GetLocalPropertyValue("DisplayName")
+				$val5.LocalValue = $applicationName
+				$val5.ComputeBy = "Literal"
+				
+				$response = @{ }
+				try
+				{
+					$adminApi.AddResourceDefinition($adminSessionId.AdminSessionId, $resourceDefinition, "true")
+					
+					$response = @{
+						status = "OK"
+						success = "true"
+						id = $resourceDefinition.ResourceDefinitionId
+						message = "The resource has been successfuly published."
+					}
+				}
+				catch [Exception]
+				{
+					$response = @{
+						status = "ERROR"
+						message = $_.Exception.Message
+					}
+				}
+				return $response
+			}
+		}
+		
+		foreach ($directory in $browsingFolder.SubFolders.Values)
+		{
+			FlattenFilesForDirectory($directory);
+		}
+	}
+	
+	
+	foreach ($RH in $RemoteHostList)
+	{
+		""
+		""
+		$RH.SystemInfo.ComputerName
+		"____________"
+		""
+		$browsingFolder = $adminApi.SendCustomRequestStandaloneServer($adminSessionId.AdminSessionId,
+		$RH.RemoteAgentId,
+		[Ericom.MegaConnect.Runtime.XapApi.StandaloneServerRequestType]::HostAgentApplications,
+		"null",
+		"false",
+		"999999999")
+		#$browsingFolder
+		FlattenFilesForDirectory ($browsingFolder, $RH.RemoteAgentId, $RH.RemoteHostId)
+		if ($goon -eq $false)
+		{
+			return
+		}
+	}
 }
 
-Function Import-EricomLib {
-    $XAPPath = "C:\Program Files\Ericom Software\Ericom Connect Configuration Tool\"
+Function Start-EricomConnection
+{
+	$Assem = Import-EricomLib
+	
+	$regularUser = New-Object Ericom.CloudConnect.Utilities.SpaceCredentials("regularUser")
+	$adminApi = [Ericom.MegaConnect.Runtime.XapApi.AdministrationProcessingUnitClassFactory]::GetInstance($regularUser)
+	
+	return $adminApi
+}
 
-    function Get-ScriptDirectory
-    {
-        $Invocation = (Get-Variable MyInvocation -Scope 1).Value
-        Split-Path $Invocation.MyCommand.Path
-    }
-
-    $MegaConnectRuntimeApiDll = Join-Path ($XAPPath)  "MegaConnectRuntimeXapApi.dll"
-    $CloudConnectUtilitiesDll = Join-Path ($XAPPath)  "CloudConnectUtilities.dll"
-
-
-    add-type -Path (
-        $MegaConnectRuntimeApiDll,
-        $CloudConnectUtilitiesDll
-    )
+Function Import-EricomLib
+{
+	$XAPPath = "C:\Program Files\Ericom Software\Ericom Connect Configuration Tool\"
+	
+	function Get-ScriptDirectory
+	{
+		$Invocation = (Get-Variable MyInvocation -Scope 1).Value
+		Split-Path $Invocation.MyCommand.Path
+	}
+	
+	$MegaConnectRuntimeApiDll = Join-Path ($XAPPath)  "MegaConnectRuntimeXapApi.dll"
+	$CloudConnectUtilitiesDll = Join-Path ($XAPPath)  "CloudConnectUtilities.dll"
+	
+	
+	add-type -Path (
+	$MegaConnectRuntimeApiDll,
+	$CloudConnectUtilitiesDll
+	)
                                                                                                                     `
-    $Assem = ( 
-        $MegaConnectRuntimeApiDll,
-        $CloudConnectUtilitiesDll
-        )
-  
-    return $Assem
+	$Assem = (
+	$MegaConnectRuntimeApiDll,
+	$CloudConnectUtilitiesDll
+	)
+	
+	return $Assem
 }
 
-function PublishAppU {
-    param(
-        [string]$DisplayName,
-        [string]$AppName,
-        [string]$HostGroupName,
-        [string]$User
-    )
-    PublishApplication -adminUser $adminUser -adminPassword $adminPassword -applicationName $AppName
+function PublishAppU
+{
+	param (
+		[string]$DisplayName,
+		[string]$AppName,
+		[string]$HostGroupName,
+		[string]$User
+	)
+	PublishApplication -adminUser $adminUser -adminPassword $adminPassword -applicationName $AppName
 }
-function PublishAppUG {
-    param(
-        [string]$DisplayName,
-        [string]$AppName,
-        [string]$HostGroupName,
-        [string]$UserGroup
-    )
-    PublishApplication -adminUser $adminUser -adminPassword $adminPassword -applicationName $AppName
+function PublishAppUG
+{
+	param (
+		[string]$DisplayName,
+		[string]$AppName,
+		[string]$HostGroupName,
+		[string]$UserGroup
+	)
+	PublishApplication -adminUser $adminUser -adminPassword $adminPassword -applicationName $AppName
 }
-function PublishDesktopU {
-    param(
-        [string]$DisplayName,
-        [string]$HostGroupName,
-        [string]$User
-    )
-    PublishApplication -adminUser $adminUser -adminPassword $adminPassword -applicationName $AppName
+function PublishDesktopU
+{
+	param (
+		[string]$DisplayName,
+		[string]$HostGroupName,
+		[string]$User
+	)
+	PublishApplication -adminUser $adminUser -adminPassword $adminPassword -applicationName $AppName
 }
-function PublishDesktopUG {
-    param(
-        [string]$DisplayName,
-        [string]$HostGroupName,
-        [string]$UserGroup
-    )
-    PublishApplication -adminUser $adminUser -adminPassword $adminPassword -applicationName $AppName
+function PublishDesktopUG
+{
+	param (
+		[string]$DisplayName,
+		[string]$HostGroupName,
+		[string]$UserGroup
+	)
+	PublishApplication -adminUser $adminUser -adminPassword $adminPassword -applicationName $AppName
 }
 
 # Main Code 
 
 # Prerequisite check that this machine is part of a domain
 CheckDomainRole
+
+#send inital mail 
+SendStartMail
 
 # Install the needed Windows Features 
 Install-WindowsFeatures
@@ -784,8 +874,8 @@ if ($PrepareSystem -eq $true)
 	# Configure Ericom Connect Grid
 	Config-CreateGrid -config $Settings
 	
-    # Run PostInstall Creating users,apps,desktops and publish them
-    PostInstall
+	# Run PostInstall Creating users,apps,desktops and publish them
+	PostInstall
 }
 #Write-Output $PSScriptRoot 
 
