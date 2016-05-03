@@ -24,15 +24,15 @@ $domainName = "test.local"
 #grid
 $AdminUser = "admin@test.local"
 $AdminPassword = "admin"
-$GridName = "EricomGrid"
-$HostOrIp = $env:COMPUTERNAME
+$GridName = "EricomGridTest3"
+$HostOrIp = [System.Net.Dns]::GetHostByName((hostname)).HostName
 $SaUser = ""
 $SaPassword = ""
-$DatabaseServer = $env:computername
-$DatabaseName = "ERICOMCONNECTDB"
+$DatabaseServer = $env:computername+"\ERICOMCONNECTDB"
+$DatabaseName = "ERICOMCONNECTDB4"
 $ConnectConfigurationToolPath = "\Ericom Software\Ericom Connect Configuration Tool\EricomConnectConfigurationTool.exe"
 $UseWinCredentials = "true"
-$LookUpHosts = $env:computername
+$LookUpHosts = [System.Net.Dns]::GetHostByName((hostname)).HostName
 
 #e-mail
 $To = "erez.pasternak@ericom.com"
@@ -181,6 +181,9 @@ function Config-CreateGrid($config = $Settings)
 	cd $folder;
 	Write-Output "List of ARGS"
 	Write-Output "$args"
+	Write-Output "base filename"
+	Write-Output "$baseFileName"
+
 	$exitCode = (Start-Process -Filepath "$baseFileName" -ArgumentList "$args" -Wait -Passthru).ExitCode
 	if ($exitCode -eq 0)
 	{
@@ -687,19 +690,19 @@ function PostInstall
 	PopulateWithRemoteHostGroups
 	
 	# Install varius applications on the machine
-	Install-Apps
+	#Install-Apps
 	
 	# publish apps and desktops and Ericon Connect
-	PopulateWithAppsAndDesktops
+	#PopulateWithAppsAndDesktops
 	
 	# Now we actuly publish 
-	PublishAppsAndDesktops
+	#PublishAppsAndDesktops
 	
 	# Setup background bitmap and user date using BGinfo
-	Setup-Bginfo -LocalPath C:\BgInfo
+	#Setup-Bginfo -LocalPath C:\BgInfo
 	
 	#Send Admin mail
-	SendAdminMail
+	#SendAdminMail
 	
 }
 Function PublishApplication
@@ -880,22 +883,22 @@ function PublishDesktopUG
 # Main Code 
 
 # Prerequisite check that this machine is part of a domain
-CheckDomainRole
+#CheckDomainRole
 
 #send inital mail 
-SendStartMail
+#SendStartMail
 
 # Install the needed Windows Features 
-Install-WindowsFeatures
+#Install-WindowsFeatures
 
 # Download Ericom Offical Installer from the Ericom Web site  
-Download-EricomConnect
+#Download-EricomConnect
 
 # Copy Ericom Connect install from local network share
 # Copy-EricomConnect
 
 # Install EC in a single machine mode including SQL express   
-Install-SingleMachine -sourceFile C:\Windows\Temp\EricomConnectPOC.exe
+#Install-SingleMachine -sourceFile C:\Windows\Temp\EricomConnectPOC.exe
 
 #we can stop here with a system ready and connected installed and not cofigured 
 if ($PrepareSystem -eq $true)
@@ -907,4 +910,5 @@ if ($PrepareSystem -eq $true)
 	PostInstall
 }
 #Write-Output $PSScriptRoot 
+
 
