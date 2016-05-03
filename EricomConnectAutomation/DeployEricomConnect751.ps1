@@ -14,6 +14,10 @@ Write-Host "BitsTransfer Module is loaded"
 #download 
 $EC_download_url = "https://www.ericom.com/demos/EricomConnectPOC.exe"
 $EC_local_path = "C:\Windows\Temp\EricomConnectPOC.exe"
+$LocalPathSetup  = "EricomConnectPOC.exe"
+$LocalPathVersion = "FULL_Release_EC752_20160502_7.5.2.8832"
+$LocalPathBase = "\\ericom.local\data\FinalBuilder\Deliverables\Release\FULL_Release_EC752" 
+$LocalPath = $LocalPathBase + "\" + $LocalPathVersion + "\" + $LocalPathSetup
 
 $domainName = "test.local"
 
@@ -74,6 +78,28 @@ function Download-EricomConnect()
 	}
 	Write-Output "Download-EricomConnect  -- End"
 }
+
+function Copy-EricomConnect()
+{
+	New-Item -Path "C:\Copy-EricomConnect" -ItemType Directory -Force -ErrorAction SilentlyContinue
+	Write-Output "Copy-EricomConnect  -- Start"
+	
+	#if we have an installer near the ps1 file we will use it and not download
+	$myInstaller = Join-Path $pwd "EricomConnectPOC.exe"
+	
+	if (Test-Path $myInstaller)
+	{
+		Copy-Item $myInstaller -Destination $EC_local_path
+	}
+	if (!(Test-Path $EC_local_path))
+	{
+		Write-Output "Copying $LocalPath"
+        Start-BitsTransfer -Source $LocalPath -Destination $EC_local_path
+	}
+	Write-Output "Copy-EricomConnect  -- End"
+}
+
+
 
 <#
 	.SYNOPSIS
@@ -864,6 +890,9 @@ Install-WindowsFeatures
 
 # Download Ericom Offical Installer from the Ericom Web site  
 Download-EricomConnect
+
+# Copy Ericom Connect install from local network share
+# Copy-EricomConnect
 
 # Install EC in a single machine mode including SQL express   
 Install-SingleMachine -sourceFile C:\Windows\Temp\EricomConnectPOC.exe
