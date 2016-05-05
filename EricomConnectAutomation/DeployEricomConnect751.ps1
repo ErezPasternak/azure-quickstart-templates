@@ -525,7 +525,185 @@ function CreateUser
 		Write-Error $_.Exception.Message
 	}
 }
+Function PublishApplication
+{
+	param (
 
+        [string]$DisplayName,
+		[Parameter()]
+        [string]$applicationName,
+		[Parameter()]
+		[bool]$DesktopShortcut = $true
+	)
+	
+	$adminApi = Start-EricomConnection
+	$adminSessionId = $adminApi.CreateAdminsession($adminUser, $adminPassword, "rooturl", "en-us")
+	
+	$response = $null;
+	
+	$RemoteHostList = $adminApi.RemoteHostStatusSearch($adminSessionId.AdminSessionId, "Running", "", "100", "100", "0", "", "true", "true")
+	
+	function FlattenFilesForDirectory ($browsingFolder, $rremoteAgentId, $rremoteHostId)
+	{
+		foreach ($browsingItem in $browsingFolder.Files.Values)
+		{
+			if (($browsingItem.Label -eq $applicationName))
+			{
+				$resourceDefinition = $adminApi.CreateResourceDefinition($adminSessionId.AdminSessionId, $applicationName)
+				
+				$val1 = $resourceDefinition.ConnectionProperties.GetLocalPropertyValue("remoteapplicationmode")
+				$val1.LocalValue = $true
+				$val1.ComputeBy = "Literal"
+				
+				$val2 = $resourceDefinition.ConnectionProperties.GetLocalPropertyValue("alternate_S_shell")
+				$val2.LocalValue = "'" + $browsingItem.Path + $browsingItem.Name + "'"
+				$val2.ComputeBy = "Literal"
+				$val2.LocalValue
+				
+				$val3 = $resourceDefinition.DisplayProperties.GetLocalPropertyValue("IconLength")
+				$val3.LocalValue = $browsingItem.ApplicationString.Length
+				$val3.ComputeBy = "Literal"
+
+                $valS = $resourceDefinition.DisplayProperties.GetLocalPropertyValue("ShortcutDesktop")
+				$valS.LocalValue = $DesktopShortcut
+				$valS.ComputeBy = "Literal"
+				
+				$val4 = $resourceDefinition.DisplayProperties.GetLocalPropertyValue("IconString")
+				$val4.LocalValue = $browsingItem.ApplicationString
+				$val4.ComputeBy = "Literal"
+				
+				$val5 = $resourceDefinition.DisplayProperties.GetLocalPropertyValue("DisplayName")
+				$val5.LocalValue = $applicationName
+				$val5.ComputeBy = "Literal"
+				
+				$response = @{ }
+				try
+				{
+					$adminApi.AddResourceDefinition($adminSessionId.AdminSessionId, $resourceDefinition, "true")
+					
+					$response = @{
+						status = "OK"
+						success = "true"
+						id = $resourceDefinition.ResourceDefinitionId
+						message = "The resource has been successfuly published."
+					}
+				}
+				catch [Exception]
+				{
+					$response = @{
+						status = "ERROR"
+						message = $_.Exception.Message
+					}
+				}
+				return $response
+			}
+		}
+		
+		foreach ($directory in $browsingFolder.SubFolders.Values)
+		{
+			FlattenFilesForDirectory($directory);
+		}
+	}
+	
+	
+	foreach ($RH in $RemoteHostList)
+	{
+		""
+		""
+		$RH.SystemInfo.ComputerName
+		"____________"
+		""
+		$browsingFolder = $adminApi.SendCustomRequestStandaloneServer($adminSessionId.AdminSessionId,
+		$RH.RemoteAgentId,
+		[Ericom.MegaConnect.Runtime.XapApi.StandaloneServerRequestType]::HostAgentApplications,
+		"null",
+		"false",
+		"999999999")
+		#$browsingFolder
+		FlattenFilesForDirectory ($browsingFolder, $RH.RemoteAgentId, $RH.RemoteHostId)
+		if ($goon -eq $false)
+		{
+			return
+		}
+	}
+}
+Function Publish-Desktop
+{
+	param (
+		[string]$aliasName,
+		[Parameter()]
+		[bool]$desktopShortcut = $false
+	)
+	
+	$applicationName = "Desktop"
+	
+	$adminApi = Start-EricomConnection
+	$adminSessionId = $adminApi.CreateAdminsession($adminUser, $adminPassword, "rooturl", "en-us")
+	
+	$response = $null;
+	
+	$appName = $applicationName
+	if ($aliasName.Length -gt 0)
+	{
+		$appName = $aliasName
+	}
+	$resourceDefinition = $adminApi.CreateResourceDefinition($adminSessionId.AdminSessionId, $applicationName)
+	
+	$iconfile = "$env:windir\system32\mstsc.exe"
+	
+	$val1 = $resourceDefinition.ConnectionProperties.GetLocalPropertyValue("remoteapplicationmode")
+	$val1.LocalValue = $false
+	$val1.ComputeBy = "Literal"
+	
+	try
+	{
+		$iconstring = [System.Drawing.Icon]::ExtractAssociatedIcon($iconfile).ToString();
+		$icon = [System.Drawing.Icon]::ExtractAssociatedIcon($iconfile);
+		$iconstream = New-Object System.IO.MemoryStream;
+		$icon.ToBitmap().Save($iconstream, [System.Drawing.Imaging.ImageFormat]::Png)
+		$iconbytes = $iconstream.ToArray();
+		$iconbase64 = [convert]::ToBase64String($iconbytes)
+		$iconstream.Flush();
+		$iconstream.Dispose();
+		
+		
+		$val3 = $resourceDefinition.DisplayProperties.GetLocalPropertyValue("IconLength")
+		$val3.LocalValue = $iconbase64.Length
+		$val3.ComputeBy = "Literal"
+		
+		$val4 = $resourceDefinition.DisplayProperties.GetLocalPropertyValue("IconString")
+		$val4.LocalValue = $iconbase64
+		$val4.ComputeBy = "Literal"
+	}
+	catch
+	{
+		if ($UseWriteHost -eq $true)
+		{
+			Write-Warning $_.Exception.Message
+		}
+	}
+	
+	$valS = $resourceDefinition.DisplayProperties.GetLocalPropertyValue("ShortcutDesktop")
+	$valS.LocalValue = $desktopShortcut
+	$valS.ComputeBy = "Literal"
+	
+	$val5 = $resourceDefinition.DisplayProperties.GetLocalPropertyValue("DisplayName")
+	$val5.LocalValue = $appName
+	$val5.ComputeBy = "Literal"
+	
+	$response = @{ }
+	try
+	{
+		$adminApi.AddResourceDefinition($adminSessionId.AdminSessionId, $resourceDefinition, "true") | Out-Null
+		
+		
+	}
+	catch [Exception]
+	{
+		
+	}
+	return $response
+}
 function CreateUserGroup
 {
 	param (
@@ -666,13 +844,18 @@ function PopulateWithUsers
 
 function PopulateWithRemoteHostGroups
 {
-	Create-RemoteHostsGroup -groupName Allservers -pattern "*"
+	#Create-RemoteHostsGroup -groupName Allservers -pattern "*"
 }
 
 function PopulateWithAppsAndDesktops
 {
-	Create-App -DisplayName chrome -AppName chrome
-	Create-Desktop -DisplayName MyDesktop
+	PublishApplication -DisplayName "Notepad" -applicationName "Notepad" -DesktopShortcut $true
+    PublishApplication -DisplayName "Firefox" -applicationName "Mozilla Firefox" -DesktopShortcut $true
+    PublishApplication -DisplayName "Notepad++" -applicationName "Notepad++" -DesktopShortcut $true
+    PublishApplication -DisplayName "PowerPoint" -applicationName "Microsoft PowerPoint Viewer " -DesktopShortcut $true
+    PublishApplication -DisplayName "Excel" -applicationName "Microsoft Office Excel Viewer" -DesktopShortcut $true
+    Publish-Desktop -aliasName "MyDesktop" -desktopShortcut $false
+    Publish-Desktop -aliasName "HisDesktop" -desktopShortcut $true
 }
 
 function PublishAppsAndDesktops
@@ -690,119 +873,22 @@ function PostInstall
 	PopulateWithRemoteHostGroups
 	
 	# Install varius applications on the machine
-	Install-Apps
+	 Install-Apps
 	
 	# publish apps and desktops and Ericon Connect
-	PopulateWithAppsAndDesktops
+	 PopulateWithAppsAndDesktops
 	
 	# Now we actuly publish 
-	PublishAppsAndDesktops
+	 PublishAppsAndDesktops
 	
 	# Setup background bitmap and user date using BGinfo
-	Setup-Bginfo -LocalPath C:\BgInfo
+	 Setup-Bginfo -LocalPath C:\BgInfo
 	
 	#Send Admin mail
 	SendAdminMail
 	
 }
-Function PublishApplication
-{
-	param (
-		[Parameter()]
-		[string]$adminUser,
-		[Parameter()]
-		[string]$adminPassword,
-		[Parameter()]
-		[String]$applicationName
-	)
-	
-	$adminApi = Start-EricomConnection
-	$adminSessionId = $adminApi.CreateAdminsession($adminUser, $adminPassword, "rooturl", "en-us")
-	
-	$response = $null;
-	
-	$RemoteHostList = $adminApi.RemoteHostStatusSearch($adminSessionId.AdminSessionId, "Running", "", "100", "100", "0", "", "true", "true", "true")
-	
-	function FlattenFilesForDirectory ($browsingFolder, $rremoteAgentId, $rremoteHostId)
-	{
-		foreach ($browsingItem in $browsingFolder.Files.Values)
-		{
-			if (($browsingItem.Label -eq $applicationName))
-			{
-				$resourceDefinition = $adminApi.CreateResourceDefinition($adminSessionId.AdminSessionId, $applicationName)
-				
-				$val1 = $resourceDefinition.ConnectionProperties.GetLocalPropertyValue("remoteapplicationmode")
-				$val1.LocalValue = $true
-				$val1.ComputeBy = "Literal"
-				
-				$val2 = $resourceDefinition.ConnectionProperties.GetLocalPropertyValue("alternate_S_shell")
-				$val2.LocalValue = "'" + $browsingItem.Path + $browsingItem.Name + "'"
-				$val2.ComputeBy = "Literal"
-				$val2.LocalValue
-				
-				$val3 = $resourceDefinition.DisplayProperties.GetLocalPropertyValue("IconLength")
-				$val3.LocalValue = $browsingItem.ApplicationString.Length
-				$val3.ComputeBy = "Literal"
-				
-				$val4 = $resourceDefinition.DisplayProperties.GetLocalPropertyValue("IconString")
-				$val4.LocalValue = $browsingItem.ApplicationString
-				$val4.ComputeBy = "Literal"
-				
-				$val5 = $resourceDefinition.DisplayProperties.GetLocalPropertyValue("DisplayName")
-				$val5.LocalValue = $applicationName
-				$val5.ComputeBy = "Literal"
-				
-				$response = @{ }
-				try
-				{
-					$adminApi.AddResourceDefinition($adminSessionId.AdminSessionId, $resourceDefinition, "true")
-					
-					$response = @{
-						status = "OK"
-						success = "true"
-						id = $resourceDefinition.ResourceDefinitionId
-						message = "The resource has been successfuly published."
-					}
-				}
-				catch [Exception]
-				{
-					$response = @{
-						status = "ERROR"
-						message = $_.Exception.Message
-					}
-				}
-				return $response
-			}
-		}
-		
-		foreach ($directory in $browsingFolder.SubFolders.Values)
-		{
-			FlattenFilesForDirectory($directory);
-		}
-	}
-	
-	
-	foreach ($RH in $RemoteHostList)
-	{
-		""
-		""
-		$RH.SystemInfo.ComputerName
-		"____________"
-		""
-		$browsingFolder = $adminApi.SendCustomRequestStandaloneServer($adminSessionId.AdminSessionId,
-		$RH.RemoteAgentId,
-		[Ericom.MegaConnect.Runtime.XapApi.StandaloneServerRequestType]::HostAgentApplications,
-		"null",
-		"false",
-		"999999999")
-		#$browsingFolder
-		FlattenFilesForDirectory ($browsingFolder, $RH.RemoteAgentId, $RH.RemoteHostId)
-		if ($goon -eq $false)
-		{
-			return
-		}
-	}
-}
+
 
 Function Start-EricomConnection
 {
@@ -886,7 +972,7 @@ function PublishDesktopUG
 CheckDomainRole
 
 #send inital mail 
-SendStartMail
+ SendStartMail
 
 # Install the needed Windows Features 
 Install-WindowsFeatures
@@ -898,13 +984,13 @@ Install-WindowsFeatures
 # Copy-EricomConnect
 
 # Install EC in a single machine mode including SQL express   
-Install-SingleMachine -sourceFile C:\Windows\Temp\EricomConnectPOC.exe
+ Install-SingleMachine -sourceFile C:\Windows\Temp\EricomConnectPOC.exe
 
 #we can stop here with a system ready and connected installed and not cofigured 
 if ($PrepareSystem -eq $true)
 {
 	# Configure Ericom Connect Grid
-	Config-CreateGrid -config $Settings
+	 Config-CreateGrid -config $Settings
 	
 	# Run PostInstall Creating users,apps,desktops and publish them
 	PostInstall
