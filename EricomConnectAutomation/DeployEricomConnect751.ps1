@@ -24,12 +24,12 @@ $domainName = "test.local"
 #grid
 $AdminUser = "admin@test.local"
 $AdminPassword = "admin"
-$GridName = "EricomGridTest3"
+$GridName = $env:computername
 $HostOrIp = [System.Net.Dns]::GetHostByName((hostname)).HostName
 $SaUser = ""
 $SaPassword = ""
 $DatabaseServer = $env:computername+"\ERICOMCONNECTDB"
-$DatabaseName = "ERICOMCONNECTDB4"
+$DatabaseName = "ERICOMCONNECTDB"
 $ConnectConfigurationToolPath = "\Ericom Software\Ericom Connect Configuration Tool\EricomConnectConfigurationTool.exe"
 $UseWinCredentials = "true"
 $LookUpHosts = [System.Net.Dns]::GetHostByName((hostname)).HostName
