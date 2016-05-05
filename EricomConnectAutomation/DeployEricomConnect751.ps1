@@ -690,19 +690,19 @@ function PostInstall
 	PopulateWithRemoteHostGroups
 	
 	# Install varius applications on the machine
-	#Install-Apps
+	Install-Apps
 	
 	# publish apps and desktops and Ericon Connect
-	#PopulateWithAppsAndDesktops
+	PopulateWithAppsAndDesktops
 	
 	# Now we actuly publish 
-	#PublishAppsAndDesktops
+	PublishAppsAndDesktops
 	
 	# Setup background bitmap and user date using BGinfo
-	#Setup-Bginfo -LocalPath C:\BgInfo
+	Setup-Bginfo -LocalPath C:\BgInfo
 	
 	#Send Admin mail
-	#SendAdminMail
+	SendAdminMail
 	
 }
 Function PublishApplication
@@ -883,19 +883,19 @@ function PublishDesktopUG
 # Main Code 
 
 # Prerequisite check that this machine is part of a domain
-#CheckDomainRole
+CheckDomainRole
 
 #send inital mail 
-#SendStartMail
+SendStartMail
 
 # Install the needed Windows Features 
-#Install-WindowsFeatures
+Install-WindowsFeatures
 
 # Download Ericom Offical Installer from the Ericom Web site  
-#Download-EricomConnect
+# Download-EricomConnect
 
 # Copy Ericom Connect install from local network share
-# Copy-EricomConnect
+ Copy-EricomConnect
 
 # Install EC in a single machine mode including SQL express   
 #Install-SingleMachine -sourceFile C:\Windows\Temp\EricomConnectPOC.exe
