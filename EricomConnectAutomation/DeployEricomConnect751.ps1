@@ -892,10 +892,10 @@ SendStartMail
 Install-WindowsFeatures
 
 # Download Ericom Offical Installer from the Ericom Web site  
-# Download-EricomConnect
+ Download-EricomConnect
 
 # Copy Ericom Connect install from local network share
- Copy-EricomConnect
+# Copy-EricomConnect
 
 # Install EC in a single machine mode including SQL express   
 #Install-SingleMachine -sourceFile C:\Windows\Temp\EricomConnectPOC.exe
