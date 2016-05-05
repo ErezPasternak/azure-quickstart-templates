@@ -898,7 +898,7 @@ Install-WindowsFeatures
 # Copy-EricomConnect
 
 # Install EC in a single machine mode including SQL express   
-#Install-SingleMachine -sourceFile C:\Windows\Temp\EricomConnectPOC.exe
+Install-SingleMachine -sourceFile C:\Windows\Temp\EricomConnectPOC.exe
 
 #we can stop here with a system ready and connected installed and not cofigured 
 if ($PrepareSystem -eq $true)
