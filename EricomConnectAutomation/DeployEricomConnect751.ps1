@@ -43,21 +43,29 @@ $SMTPassword = "1qaz@Wsx#"
 $SMTPPort = 25
 $externalFqdn = $env:COMPUTERNAME
 
+# internal 
+$adminApi = Start-EricomConnection
+$adminSessionId = EricomConnectConnector
 
-# Download EricomConnect
-<#
-	.SYNOPSIS
-		A brief description of the Download-EricomConnect function.
+function Start-EricomConnection
+{
+	$Assem = Import-EricomLib
 	
-	.DESCRIPTION
-		A detailed description of the Download-EricomConnect function.
+	$regularUser = New-Object Ericom.CloudConnect.Utilities.SpaceCredentials("regularUser")
+	$adminApi = [Ericom.MegaConnect.Runtime.XapApi.AdministrationProcessingUnitClassFactory]::GetInstance($regularUser)
 	
-	.EXAMPLE
-		PS C:\> Download-EricomConnect
-	
-	.NOTES
-		Additional information about the function.
-#>
+	return $adminApi
+}
+
+function EricomConnectConnector()
+{
+    if ( $adminSessionId -eq $null)
+    {
+        $adminSessionId = ($adminApi.CreateAdminsession($AdminUser, $AdminPassword, "rooturl", "en-us")).AdminSessionId 
+    }
+    return $adminSessionId
+}
+
 function Download-EricomConnect()
 {
 	New-Item -Path "C:\Download-EricomConnect" -ItemType Directory -Force -ErrorAction SilentlyContinue
@@ -100,23 +108,6 @@ function Copy-EricomConnect()
 }
 
 
-
-<#
-	.SYNOPSIS
-		A brief description of the Install-SingleMachine function.
-	
-	.DESCRIPTION
-		A detailed description of the Install-SingleMachine function.
-	
-	.PARAMETER sourceFile
-		A description of the sourceFile parameter.
-	
-	.EXAMPLE
-		PS C:\> Install-SingleMachine -sourceFile 'Value1'
-	
-	.NOTES
-		Additional information about the function.
-#>
 function Install-SingleMachine([string]$sourceFile)
 {
 	New-Item -Path "C:\Install-SingleMachine" -ItemType Directory -Force -ErrorAction SilentlyContinue
@@ -133,22 +124,7 @@ function Install-SingleMachine([string]$sourceFile)
 	Write-Output "Ericom Connect POC installation has been endded."
 }
 
-<#
-	.SYNOPSIS
-		A brief description of the Config-CreateGrid function.
-	
-	.DESCRIPTION
-		A detailed description of the Config-CreateGrid function.
-	
-	.PARAMETER config
-		A description of the config parameter.
-	
-	.EXAMPLE
-		PS C:\> Config-CreateGrid -config $value1
-	
-	.NOTES
-		Additional information about the function.
-#>
+
 function Config-CreateGrid($config = $Settings)
 {
 	New-Item -Path "C:\Config-CreateGrid" -ItemType Directory -Force -ErrorAction SilentlyContinue
@@ -196,19 +172,7 @@ function Config-CreateGrid($config = $Settings)
 	Write-Output "Ericom Connect Grid configuration has been ended."
 }
 
-<#
-	.SYNOPSIS
-		A brief description of the Install-Apps function.
-	
-	.DESCRIPTION
-		A detailed description of the Install-Apps function.
-	
-	.EXAMPLE
-		PS C:\> Install-Apps
-	
-	.NOTES
-		Additional information about the function.
-#>
+
 function Install-Apps
 {
 	New-Item -Path "C:\Install-Apps" -ItemType Directory -Force -ErrorAction SilentlyContinue
@@ -231,22 +195,6 @@ function Install-Apps
 	Write-Output "Apps installation has been ended."
 }
 
-<#
-	.SYNOPSIS
-		A brief description of the Setup-Bginfo function.
-	
-	.DESCRIPTION
-		A detailed description of the Setup-Bginfo function.
-	
-	.PARAMETER LocalPath
-		A description of the LocalPath parameter.
-	
-	.EXAMPLE
-		PS C:\> Setup-Bginfo -LocalPath 'Value1'
-	
-	.NOTES
-		Additional information about the function.
-#>
 function Setup-Bginfo ([string]$LocalPath)
 {
 	New-Item -Path "C:\Setup-Bginfo" -ItemType Directory -Force -ErrorAction SilentlyContinue
@@ -322,25 +270,7 @@ function SendStartMail ()
 		}
 	}
 }
-<#
-	.SYNOPSIS
-		A brief description of the Expand-ZIPFile function.
-	
-	.DESCRIPTION
-		A detailed description of the Expand-ZIPFile function.
-	
-	.PARAMETER file
-		A description of the file parameter.
-	
-	.PARAMETER destination
-		A description of the destination parameter.
-	
-	.EXAMPLE
-		PS C:\> Expand-ZIPFile -file $value1 -destination $value2
-	
-	.NOTES
-		Additional information about the function.
-#>
+
 function Expand-ZIPFile($file, $destination)
 {
 	$shell = new-object -com shell.application
@@ -353,19 +283,7 @@ function Expand-ZIPFile($file, $destination)
 	}
 }
 
-<#
-	.SYNOPSIS
-		A brief description of the Install-WindowsFeatures function.
-	
-	.DESCRIPTION
-		A detailed description of the Install-WindowsFeatures function.
-	
-	.EXAMPLE
-		PS C:\> Install-WindowsFeatures
-	
-	.NOTES
-		Additional information about the function.
-#>
+
 function Install-WindowsFeatures
 {
 	New-Item -Path "C:\Install-WindowsFeatures" -ItemType Directory -Force -ErrorAction SilentlyContinue
@@ -377,57 +295,21 @@ function Install-WindowsFeatures
 	Install-WindowsFeature NET-Framework-45-Features
 }
 
-<#
-	.SYNOPSIS
-		A brief description of the ConfigureFirewall function.
-	
-	.DESCRIPTION
-		A detailed description of the ConfigureFirewall function.
-	
-	.EXAMPLE
-		PS C:\> ConfigureFirewall
-	
-	.NOTES
-		Additional information about the function.
-#>
+
 function ConfigureFirewall
 {
 	Import-Module NetSecurity
 	Set-NetFirewallProfile -Profile Domain -Enabled False
 }
 #David - can we fix it for single machine install - just to add the Domain users to the local RemoteDesktopUsers ?
-<#
-	.SYNOPSIS
-		A brief description of the AddUsersToRemoteDesktopGroup function.
-	
-	.DESCRIPTION
-		A detailed description of the AddUsersToRemoteDesktopGroup function.
-	
-	.EXAMPLE
-		PS C:\> AddUsersToRemoteDesktopGroup
-	
-	.NOTES
-		Additional information about the function.
-#>
+
 function AddUsersToRemoteDesktopGroup
 {
 	$baseADGroupRDP = "Domain Users"
 	Invoke-Command { param ([String]$RDPGroup) net localgroup "Remote Desktop Users" "$RDPGroup" /ADD } -computername "localhost" -ArgumentList "$baseADGroupRDP"
 	
 }
-<#
-	.SYNOPSIS
-		A brief description of the CheckDomainRole function.
-	
-	.DESCRIPTION
-		A detailed description of the CheckDomainRole function.
-	
-	.EXAMPLE
-		PS C:\> CheckDomainRole
-	
-	.NOTES
-		Additional information about the function.
-#>
+
 function CheckDomainRole
 {
 	# Get-ComputerRole.ps1
@@ -448,18 +330,11 @@ function CheckDomainRole
 	{
 		Write-Warning "The machine should be in a domain!";
 		$response = $false;
+        Exit 
 	}
 	return $response;
 }
-Function Start-EricomConnection
-{
-	$Assem = Import-EricomLib
-	
-	$regularUser = New-Object Ericom.CloudConnect.Utilities.SpaceCredentials("regularUser")
-	$adminApi = [Ericom.MegaConnect.Runtime.XapApi.AdministrationProcessingUnitClassFactory]::GetInstance($regularUser)
-	
-	return $adminApi
-}
+
 
 Function Import-EricomLib
 {
@@ -525,7 +400,8 @@ function CreateUser
 		Write-Error $_.Exception.Message
 	}
 }
-Function PublishApplication
+# addes an application into Ericom Connect
+Function AddApplication
 {
 	param (
 
@@ -533,15 +409,23 @@ Function PublishApplication
 		[Parameter()]
         [string]$applicationName,
 		[Parameter()]
-		[bool]$DesktopShortcut = $true
+		[bool]$DesktopShortcut = $true,
+        [Parameter()]
+		[bool]$ForceUniqeApps = $true,
+        [Parameter()]
+		[bool]$StartMenuShortcut = $true
 	)
 	
-	$adminApi = Start-EricomConnection
-	$adminSessionId = $adminApi.CreateAdminsession($adminUser, $adminPassword, "rooturl", "en-us")
-	
+    EricomConnectConnector
+	$foundApp = CheckIfAppOrDesktopAreInConnect -applicationName $applicationName
+    if ($ForceUniqeApps -eq $true -And $foundApp -eq $true)
+        {
+            return 
+        }
+
 	$response = $null;
 	
-	$RemoteHostList = $adminApi.RemoteHostStatusSearch($adminSessionId.AdminSessionId, "Running", "", "100", "100", "0", "", "true", "true")
+	$RemoteHostList = $adminApi.RemoteHostStatusSearch($adminSessionId, "Running", "", "100", "100", "0", "", "true", "true")
 	
 	function FlattenFilesForDirectory ($browsingFolder, $rremoteAgentId, $rremoteHostId)
 	{
@@ -549,14 +433,14 @@ Function PublishApplication
 		{
 			if (($browsingItem.Label -eq $applicationName))
 			{
-				$resourceDefinition = $adminApi.CreateResourceDefinition($adminSessionId.AdminSessionId, $applicationName)
+				$resourceDefinition = $adminApi.CreateResourceDefinition($adminSessionId, $applicationName)
 				
 				$val1 = $resourceDefinition.ConnectionProperties.GetLocalPropertyValue("remoteapplicationmode")
 				$val1.LocalValue = $true
 				$val1.ComputeBy = "Literal"
 				
 				$val2 = $resourceDefinition.ConnectionProperties.GetLocalPropertyValue("alternate_S_shell")
-				$val2.LocalValue = "'" + $browsingItem.Path + $browsingItem.Name + "'"
+				$val2.LocalValue = '"' + $browsingItem.Path + $browsingItem.Name + '"'
 				$val2.ComputeBy = "Literal"
 				$val2.LocalValue
 				
@@ -576,10 +460,14 @@ Function PublishApplication
 				$val5.LocalValue = $applicationName
 				$val5.ComputeBy = "Literal"
 				
+        #      $val6 = $resourceDefinition.DisplayProperties.GetLocalPropertyValue("ShortcutMenuProgram")
+		#		$val6.LocalValue = $StartMenuShortcut
+		#		$val6.ComputeBy = "Literal"
+
 				$response = @{ }
 				try
 				{
-					$adminApi.AddResourceDefinition($adminSessionId.AdminSessionId, $resourceDefinition, "true")
+					$adminApi.AddResourceDefinition($adminSessionId, $resourceDefinition, "true")
 					
 					$response = @{
 						status = "OK"
@@ -613,7 +501,7 @@ Function PublishApplication
 		$RH.SystemInfo.ComputerName
 		"____________"
 		""
-		$browsingFolder = $adminApi.SendCustomRequestStandaloneServer($adminSessionId.AdminSessionId,
+		$browsingFolder = $adminApi.SendCustomRequestStandaloneServer($adminSessionId,
 		$RH.RemoteAgentId,
 		[Ericom.MegaConnect.Runtime.XapApi.StandaloneServerRequestType]::HostAgentApplications,
 		"null",
@@ -627,19 +515,20 @@ Function PublishApplication
 		}
 	}
 }
-Function Publish-Desktop
+# addes a desktop to Ericom Connect
+function AddDesktop
 {
 	param (
 		[string]$aliasName,
 		[Parameter()]
-		[bool]$desktopShortcut = $false
+		[bool]$desktopShortcut = $false,
+        [Parameter()]
+		[bool]$ForceUniqeApps = $true
 	)
 	
 	$applicationName = "Desktop"
 	
-	$adminApi = Start-EricomConnection
-	$adminSessionId = $adminApi.CreateAdminsession($adminUser, $adminPassword, "rooturl", "en-us")
-	
+    EricomConnectConnector
 	$response = $null;
 	
 	$appName = $applicationName
@@ -647,7 +536,14 @@ Function Publish-Desktop
 	{
 		$appName = $aliasName
 	}
-	$resourceDefinition = $adminApi.CreateResourceDefinition($adminSessionId.AdminSessionId, $applicationName)
+    
+    $foundApp = CheckIfAppOrDesktopAreInConnect -applicationName $appName
+    if ($ForceUniqeApps -eq $true -And $foundApp -eq $true)
+    {
+       return 
+    }
+
+	$resourceDefinition = $adminApi.CreateResourceDefinition($adminSessionId, $applicationName)
 	
 	$iconfile = "$env:windir\system32\mstsc.exe"
 	
@@ -694,7 +590,7 @@ Function Publish-Desktop
 	$response = @{ }
 	try
 	{
-		$adminApi.AddResourceDefinition($adminSessionId.AdminSessionId, $resourceDefinition, "true") | Out-Null
+		$adminApi.AddResourceDefinition($adminSessionId, $resourceDefinition, "true") | Out-Null
 		
 		
 	}
@@ -704,6 +600,29 @@ Function Publish-Desktop
 	}
 	return $response
 }
+function CheckIfAppOrDesktopAreInConnect
+{
+	param (
+		[string]$applicationName
+	)
+#	$applicationName = $applicationName.Trim();
+
+    EricomConnectConnector
+	
+	$AppList = $adminApi.ResourceDefinitionSearch($adminSessionId, $null, $null)
+	$foundApp = $false
+	foreach ($app in $AppList)
+	{
+		if ($app.DisplayName -eq $applicationName)
+		{
+			$foundApp = $true;
+		}
+	}
+	return $foundApp
+
+}
+
+#erez TBD
 function CreateUserGroup
 {
 	param (
@@ -716,84 +635,7 @@ function CreateUserGroup
 	#TBD
 	
 }
-function PublishAppU
-{
-	param (
-		[Parameter()]
-		[String]$DisplayName,
-		[Parameter()]
-		[String]$AppName,
-		[Parameter()]
-		[String]$HostGroupName,
-		[Parameter()]
-		[String]$User
-	)
-	#TBD
-	
-}
-function PublishAppUG
-{
-	param (
-		[Parameter()]
-		[String]$DisplayName,
-		[Parameter()]
-		[String]$AppName,
-		[Parameter()]
-		[String]$HostGroupName,
-		[Parameter()]
-		[String]$UserGroup
-	)
-	#TBD
-	
-}
-function PublishDesktopU
-{
-	param (
-		[Parameter()]
-		[String]$DisplayName,
-		[Parameter()]
-		[String]$HostGroupName,
-		[Parameter()]
-		[String]$User
-	)
-	#TBD
-	
-}
-<#
-	.SYNOPSIS
-		A brief description of the PublishDesktopUG function.
-	
-	.DESCRIPTION
-		A detailed description of the PublishDesktopUG function.
-	
-	.PARAMETER DisplayName
-		A description of the DisplayName parameter.
-	
-	.PARAMETER HostGroupName
-		A description of the HostGroupName parameter.
-	
-	.PARAMETER UserGroup
-		A description of the UserGroup parameter.
-	
-	.EXAMPLE
-		PS C:\> PublishDesktopUG -DisplayName 'Value1' -HostGroupName 'Value2'
-	
-	.NOTES
-		Additional information about the function.
-#>
-function PublishDesktopUG
-{
-	param (
-		[Parameter()]
-		[String]$DisplayName,
-		[Parameter()]
-		[String]$HostGroupName,
-		[Parameter()]
-		[String]$UserGroup
-	)
-	#TBD
-	
-}
+#erez TBD
 function AddUserToUserGroup
 {
 	param (
@@ -814,157 +656,286 @@ function Create-RemoteHostsGroup
 		[string]$pattern
 	)
 	
-	$adminApi = Start-EricomConnection
-	$adminSessionId = $adminApi.CreateAdminsession($AdminUser, $AdminPassword, "rooturl", "en-us");
-	[Ericom.MegaConnect.Runtime.XapApi.RemoteHostMembershipComputation]$rhmc = 0;
-	$rGroup = $adminApi.CreateRemoteHostGroup($adminSessionId.AdminSessionId, $groupName, $rhmc);
-	[System.Collections.Generic.List[String]]$remoteHostsList = New-Object System.Collections.Generic.List[String];
-	
-	[Ericom.MegaConnect.Runtime.XapApi.RemoteHostSearchConstraints]$rhsc = New-Object Ericom.MegaConnect.Runtime.XapApi.RemoteHostSearchConstraints;
-	$rhsc.HostnamePattern = $pattern; #TODO: Update HERE!
-	$rhl = $adminApi.GetRemoteHostList($adminSessionId.AdminSessionId, $rhsc)
-	foreach ($h in $rhl)
+    EricomConnectConnector
+    $rhmc = [Ericom.MegaConnect.Runtime.XapApi.RemoteHostMembershipComputation]::Explicit
+	$rhg = $adminApi.RemoteHostGroupSearch($adminSessionId, $rhmc, 100, $groupName)
+	if ($rhg.Count -eq 0)
 	{
-		$remoteHostsList.Add($h.RemoteHostId)
-	}
-	$rGroup.RemoteHostIds = $remoteHostsList;
-	$adminApi.AddRemoteHostGroup($adminSessionId.AdminSessionId, $rGroup) | Out-Null
+       [Ericom.MegaConnect.Runtime.XapApi.RemoteHostMembershipComputation]$rhmc = 0;
+	   $rGroup = $adminApi.CreateRemoteHostGroup($adminSessionId, $groupName, $rhmc); 
+    
+	    [System.Collections.Generic.List[String]]$remoteHostsList = New-Object System.Collections.Generic.List[String];
 	
+	    [Ericom.MegaConnect.Runtime.XapApi.RemoteHostSearchConstraints]$rhsc = New-Object Ericom.MegaConnect.Runtime.XapApi.RemoteHostSearchConstraints;
+	    $rhsc.HostnamePattern = $pattern; #TODO: Update HERE!
+	    $rhl = $adminApi.GetRemoteHostList($adminSessionId, $rhsc)
+	    foreach ($h in $rhl)
+	    {
+		    $remoteHostsList.Add($h.RemoteHostId)
+	    }
+	    $rGroup.RemoteHostIds = $remoteHostsList;
+	    $adminApi.AddRemoteHostGroup($adminSessionId, $rGroup) | Out-Null
+	}
 }
 
+function Create-ResourceGroup
+{
+	param (	
+		[String]$groupName
+	)
+	
+    EricomConnectConnector
+	
+	$resources = $adminApi.ResourceGroupSearch($adminSessionId, $null, $null, $null)
+	
+	# check if resource group already exists
+	$isPresent = $false;
+	foreach ($resource in $resources)
+	{
+		if ($resource.DisplayName -eq $groupName)
+		{
+			$isPresent = $true;
+		}
+	}
+	
+	# create resource group
+	if ($isPresent -eq $false)
+	{
+		$rGroup = $adminApi.CreateResourceGroup($adminSessionId, $groupName)
+		$adminApi.AddResourceGroup($adminSessionId, $rGroup) | Out-Null
+	}
+}
+function AddAppToResourceGroup
+{
+	param (
+		[String]$resourceGroup,
+        [string]$applicationName
+	)
+	
+    EricomConnectConnector
+	
+	$resources = $adminApi.ResourceGroupSearch($adminSessionId, $null, $null, $null)
+	$rGroup = $null;
+	# check if resource group already exists
+	$isPresent = $false;
+	foreach ($resource in $resources)
+	{
+		if ($resource.DisplayName -eq $resourceGroup)
+		{
+			$isPresent = $true;
+			$rGroup = $resource;
+		}
+	}
+	
+	# resource group found, now check for app
+	if ($isPresent)
+	{
+		$foundApp = CheckIfAppOrDesktopAreInConnect -applicationName $applicationName 
+		# try publish it
+		
+		if ($foundApp -ne $true)
+		{
+			$rlist = $rGroup.ResourceDefinitionIds
+			$rlist.Add($foundApp);
+			$rGroup.ResourceDefinitionIds = $rlist
+			try
+			{
+				$output = $adminApi.UpdateResourceGroup($adminSessionId, $rGroup) | Out-Null
+			}
+			catch
+			{
+				# Write-EventLogEricom -ErrorMessage ("Could not Update Resource Group adminSessionID `"$adminSessionId`" Group: $rGroup`n " + $app.Trim() + "`n" + $_.Exception.Message)
+			}
+		}
+	}
+}
+function AddHostGroupToResourceGroup
+{
+	param (
+		[String]$resourceGroup,
+		[Parameter()]
+		[string]$remoteHostGroup
+	)
+    EricomConnectConnector
+	
+	$resources = $adminApi.ResourceGroupSearch($adminSessionId, $null, $null, $null)
+	$rGroup = $null;
+	# check if resource group already exists
+	$isPresent = $false;
+	foreach ($resource in $resources)
+	{
+		if ($resource.DisplayName -eq $groupName)
+		{
+			$isPresent = $true;
+			$rGroup = $resource;
+		}
+	}
+	
+	# resource group found, now check for remote host group
+	if ($isPresent)
+	{
+		$rhmc = [Ericom.MegaConnect.Runtime.XapApi.RemoteHostMembershipComputation]::Explicit
+		$rhg = $adminApi.RemoteHostGroupSearch($adminSessionId, $rhmc, 100, $remoteHostGroup)
+		if ($rhg.Count -gt 0)
+		{
+			
+			[System.Collections.Generic.List[String]]$remoteHostsGroupList = New-Object System.Collections.Generic.List[String];
+			foreach ($g in $rhg)
+			{
+				$remoteHostsGroupList.Add($g.RemoteHostGroupId)
+			}
+			$rGroup.RemoteHostGroupIds = $remoteHostsGroupList
+			$adminApi.UpdateResourceGroup($adminSessionId, $rGroup) | Out-Null
+		}
+	}
+}
+function AddUserGroupToResourceGroup
+{
+	param (
+		[String]$resourceGroup,
+		[Parameter()]
+		[string]$adGroup
+	)
+	$groupName = $resourceGroup;
+	
+    EricomConnectConnector	
+	$resources = $adminApi.ResourceGroupSearch($adminSessionId, $null, $null, $null)
+	# check if resource group already exists
+	$rGroup = $null;
+	$isPresent = $false;
+	foreach ($resource in $resources)
+	{
+		if ($resource.DisplayName -eq $groupName)
+		{
+			$isPresent = $true;
+			$rGroup = $resource;
+		}
+	}
+	
+	if ($isPresent -eq $true)
+	{
+		[Ericom.MegaConnect.Runtime.XapApi.BindingGroupType]$adGroupBindingType = 2
+		$adName = $domainName
+		$rGroup.AddBindingGroup("$adGroup", $adGroupBindingType, $adName, $adGroup);
+		$adminApi.UpdateResourceGroup($adminSessionId, $rGroup) | Out-Null
+	}
+}
+function AddUserToResourceGroup
+{
+	param (
+		[String]$resourceGroup,
+		[Parameter()]
+		[string]$adUser
+	)
+	$groupName = $resourceGroup;
+	
+    EricomConnectConnector	
+	$resources = $adminApi.ResourceGroupSearch($adminSessionId, $null, $null, $null)
+	# check if resource group already exists
+	$rGroup = $null;
+	$isPresent = $false;
+	foreach ($resource in $resources)
+	{
+		if ($resource.DisplayName -eq $groupName)
+		{
+			$isPresent = $true;
+			$rGroup = $resource;
+		}
+	}
+	
+	if ($isPresent -eq $true)
+	{
+		[Ericom.MegaConnect.Runtime.XapApi.BindingGroupType]$adGroupBindingType = 1
+		$adName = $domainName
+		$adDomainId = $adUser + "@" + $adName;
+		$rGroup.AddBindingGroup("$adUser", $adGroupBindingType, $adName, $adDomainId);
+		$adminApi.UpdateResourceGroup($adminSessionId, $rGroup) | Out-Null
+	}
+}
 function PopulateWithUsers
 {
-	CreateUser -userName user1 -password P@55w0rd
-	CreateUser -userName user2 -password P@55w0rd
-	CreateUser -userName user3 -password P@55w0rd
+	CreateUser -userName "user1" -password "P@55w0rd"
+	CreateUser -userName "user2" -password "P@55w0rd"
+	CreateUser -userName "user3" -password "P@55w0rd"
 	
-	CreateUserGroup -GroupName Group1 -BaseGroup "Domain Users"
-	AddUserToUserGroup -GroupName Group1 -User user1
+	CreateUserGroup -GroupName "Group1" -BaseGroup "Domain Users"
+	AddUserToUserGroup -GroupName "Group1" -User "user1"
 }
-
 function PopulateWithRemoteHostGroups
 {
-	#Create-RemoteHostsGroup -groupName Allservers -pattern "*"
+	Create-RemoteHostsGroup -groupName "Allservers" -pattern "*"
+    Create-RemoteHostsGroup -groupName "MyServer" -pattern "*"
 }
-
-function PopulateWithAppsAndDesktops
+function AddAppsAndDesktopsToConnect
 {
-	PublishApplication -DisplayName "Notepad" -applicationName "Notepad" -DesktopShortcut $true
-    PublishApplication -DisplayName "Firefox" -applicationName "Mozilla Firefox" -DesktopShortcut $true
-    PublishApplication -DisplayName "Notepad++" -applicationName "Notepad++" -DesktopShortcut $true
-    PublishApplication -DisplayName "PowerPoint" -applicationName "Microsoft PowerPoint Viewer " -DesktopShortcut $true
-    PublishApplication -DisplayName "Excel" -applicationName "Microsoft Office Excel Viewer" -DesktopShortcut $true
-    Publish-Desktop -aliasName "MyDesktop" -desktopShortcut $false
-    Publish-Desktop -aliasName "HisDesktop" -desktopShortcut $true
+	AddApplication -DisplayName "Notepad" -applicationName "Notepad" -DesktopShortcut $true
+    AddApplication -DisplayName "Firefox" -applicationName "Mozilla Firefox" -DesktopShortcut $true
+    AddApplication -DisplayName "Notepad++" -applicationName "Notepad++" -DesktopShortcut $true
+    AddApplication -DisplayName "PowerPoint" -applicationName "Microsoft PowerPoint Viewer " -DesktopShortcut $true
+    AddApplication -DisplayName "Excel" -applicationName "Microsoft Office Excel Viewer" -DesktopShortcut $true
+    AddDesktop -aliasName "MyDesktop" -desktopShortcut $false
+    AddDesktop -aliasName "HisDesktop" -desktopShortcut $true
+}
+function Publish
+{
+    param (
+		[string]$GroupName,
+		[string]$AppName,
+		[string]$HostGroupName,
+		[string]$User,
+        [string]$UserGroup
+	)
+
+    Create-ResourceGroup -groupName $GroupName
+    AddAppToResourceGroup -resourceGroup $GroupName -applicationName $AppName
+    AddHostGroupToResourceGroup -resourceGroup $GroupName -remoteHostGroup $HostGroupName
+    if (![string]::IsNullOrWhiteSpace($User))
+    {
+        AddUserToResourceGroup -resourceGroup $GroupName -adUser $User
+    }
+    
+    if (![string]::IsNullOrWhiteSpace($UserGroup))
+    {
+        AddUserGroupToResourceGroup -resourceGroup $GroupName -adGroup $UserGroup
+    }
 }
 
 function PublishAppsAndDesktops
 {
-	PublishAppU -Name App1 -AppName chrome -HostGroupName Allservers -User user1
-	PublishAppUG -Name App1 -AppName Firefox -HostGroupName Allservers -UserGroup Group1
-	PublishDesktopU -Name DesktopGroup -DesktopName MyDesktop -HostGroupName Allservers -User user1
-	PublishDesktopUG -Name DesktopGroup1 -DesktopName MyDesktop -HostGroupName Allservers -UserGroup Group1
+	Publish -GroupName "AppGroup1" -AppName "Notepad" -HostGroupName "Allservers" -User "user1@test.local" -UserGroup "QA"
+    Publish -GroupName "AppGroup2" -AppName "Mozilla Firefox" -HostGroupName "Allservers" -User "user1@test.local" 
+    Publish -GroupName "AppGroup2" -AppName "Firefox" -HostGroupName "Allservers" -User "user1@test.local" 
+	Publish -GroupName "DesktopGroup" -AppName "MyDesktop" -HostGroupName "Allserver" -User "user2@test.local"
 }
 
 function PostInstall
 {
-	# Create users and groups in AD
-	PopulateWithUsers
-	PopulateWithRemoteHostGroups
+    # Create users and groups in AD
+    PopulateWithUsers
 	
-	# Install varius applications on the machine
-	 Install-Apps
+    # Install varius applications on the machine
+	Install-Apps
+    
+    # Connect to Ericom Connect server
+    EricomConnectConnector
+
+    # Create the needed Remote Host groups in Ericom Connect
+    PopulateWithRemoteHostGroups
+		
+	# Adds apps and desktops To Ericon Connect
+	AddAppsAndDesktopsToConnect
 	
-	# publish apps and desktops and Ericon Connect
-	 PopulateWithAppsAndDesktops
-	
-	# Now we actuly publish 
-	 PublishAppsAndDesktops
+	# Now we actuly publish apps and desktops to users
+	PublishAppsAndDesktops
 	
 	# Setup background bitmap and user date using BGinfo
-	 Setup-Bginfo -LocalPath C:\BgInfo
+	Setup-Bginfo -LocalPath C:\BgInfo
 	
 	#Send Admin mail
 	SendAdminMail
-	
 }
 
 
-Function Start-EricomConnection
-{
-	$Assem = Import-EricomLib
-	
-	$regularUser = New-Object Ericom.CloudConnect.Utilities.SpaceCredentials("regularUser")
-	$adminApi = [Ericom.MegaConnect.Runtime.XapApi.AdministrationProcessingUnitClassFactory]::GetInstance($regularUser)
-	
-	return $adminApi
-}
-
-Function Import-EricomLib
-{
-	$XAPPath = "C:\Program Files\Ericom Software\Ericom Connect Configuration Tool\"
-	
-	function Get-ScriptDirectory
-	{
-		$Invocation = (Get-Variable MyInvocation -Scope 1).Value
-		Split-Path $Invocation.MyCommand.Path
-	}
-	
-	$MegaConnectRuntimeApiDll = Join-Path ($XAPPath)  "MegaConnectRuntimeXapApi.dll"
-	$CloudConnectUtilitiesDll = Join-Path ($XAPPath)  "CloudConnectUtilities.dll"
-	
-	
-	add-type -Path (
-	$MegaConnectRuntimeApiDll,
-	$CloudConnectUtilitiesDll
-	)
-                                                                                                                    `
-	$Assem = (
-	$MegaConnectRuntimeApiDll,
-	$CloudConnectUtilitiesDll
-	)
-	
-	return $Assem
-}
-
-function PublishAppU
-{
-	param (
-		[string]$DisplayName,
-		[string]$AppName,
-		[string]$HostGroupName,
-		[string]$User
-	)
-	PublishApplication -adminUser $adminUser -adminPassword $adminPassword -applicationName $AppName
-}
-function PublishAppUG
-{
-	param (
-		[string]$DisplayName,
-		[string]$AppName,
-		[string]$HostGroupName,
-		[string]$UserGroup
-	)
-	PublishApplication -adminUser $adminUser -adminPassword $adminPassword -applicationName $AppName
-}
-function PublishDesktopU
-{
-	param (
-		[string]$DisplayName,
-		[string]$HostGroupName,
-		[string]$User
-	)
-	PublishApplication -adminUser $adminUser -adminPassword $adminPassword -applicationName $AppName
-}
-function PublishDesktopUG
-{
-	param (
-		[string]$DisplayName,
-		[string]$HostGroupName,
-		[string]$UserGroup
-	)
-	PublishApplication -adminUser $adminUser -adminPassword $adminPassword -applicationName $AppName
-}
 
 # Main Code 
 
@@ -972,29 +943,26 @@ function PublishDesktopUG
 CheckDomainRole
 
 #send inital mail 
- SendStartMail
+SendStartMail
 
 # Install the needed Windows Features 
 Install-WindowsFeatures
 
 # Download Ericom Offical Installer from the Ericom Web site  
- Download-EricomConnect
+Download-EricomConnect
 
 # Copy Ericom Connect install from local network share
 # Copy-EricomConnect
 
 # Install EC in a single machine mode including SQL express   
- Install-SingleMachine -sourceFile C:\Windows\Temp\EricomConnectPOC.exe
+Install-SingleMachine -sourceFile C:\Windows\Temp\EricomConnectPOC.exe
 
 #we can stop here with a system ready and connected installed and not cofigured 
 if ($PrepareSystem -eq $true)
 {
 	# Configure Ericom Connect Grid
-	 Config-CreateGrid -config $Settings
+	Config-CreateGrid -config $Settings
 	
 	# Run PostInstall Creating users,apps,desktops and publish them
 	PostInstall
 }
-#Write-Output $PSScriptRoot 
-
-
