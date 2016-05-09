@@ -29,7 +29,7 @@ $HostOrIp = [System.Net.Dns]::GetHostByName((hostname)).HostName
 $SaUser = ""
 $SaPassword = ""
 $DatabaseServer = $env:computername+"\ERICOMCONNECTDB"
-$DatabaseName = "ERICOMCONNECTDB"
+$DatabaseName = $env:computername
 $ConnectConfigurationToolPath = "\Ericom Software\Ericom Connect Configuration Tool\EricomConnectConfigurationTool.exe"
 $UseWinCredentials = "true"
 $LookUpHosts = [System.Net.Dns]::GetHostByName((hostname)).HostName
@@ -44,24 +44,25 @@ $SMTPPort = 25
 $externalFqdn = $env:COMPUTERNAME
 
 # internal 
-
+$global:adminApi = $null
+$global:adminSessionId = $null
 function Start-EricomConnection
 {
 	$Assem = Import-EricomLib
 	
 	$regularUser = New-Object Ericom.CloudConnect.Utilities.SpaceCredentials("regularUser")
-	$adminApi = [Ericom.MegaConnect.Runtime.XapApi.AdministrationProcessingUnitClassFactory]::GetInstance($regularUser)
+	$_adminApi = [Ericom.MegaConnect.Runtime.XapApi.AdministrationProcessingUnitClassFactory]::GetInstance($regularUser)
 	
-	return $adminApi
+	return $_adminApi
 }
 
 function EricomConnectConnector()
 {
     if ( $adminSessionId -eq $null)
     {
-        $adminSessionId = ($adminApi.CreateAdminsession($AdminUser, $AdminPassword, "rooturl", "en-us")).AdminSessionId 
+        $_adminSessionId = ($adminApi.CreateAdminsession($AdminUser, $AdminPassword, "rooturl", "en-us")).AdminSessionId 
+        return $_adminSessionId
     }
-    return $adminSessionId
 }
 
 
@@ -143,7 +144,7 @@ function Config-CreateGrid($config = $Settings)
 	if ($UseWinCredentials -eq $true)
 	{
 		Write-Output "Configuration mode: with windows credentials"
-		$args = " NewGrid /AdminUser $_adminUser /AdminPassword $_adminPass /GridName $_gridName /HostOrIp $_hostOrIp /DatabaseServer $_databaseServer /DatabaseName $_databaseName /UseWinCredForDBAut"
+		$args = " NewGrid /AdminUser $_adminUser /AdminPassword $_adminPass /GridName $_gridName /HostOrIp $_hostOrIp /DatabaseServer $_databaseServer /DatabaseName $_databaseName /disconnect /UseWinCredForDBAut /LookupHosts $_hostOrIp "
 	}
 	else
 	{
@@ -151,10 +152,7 @@ function Config-CreateGrid($config = $Settings)
 		$args = " NewGrid /AdminUser $_adminUser /AdminPassword $_adminPass /GridName $_gridName /SaDatabaseUser $_saUser /SaDatabasePassword $_saPass /DatabaseServer $_databaseServer /disconnect /noUseWinCredForDBAut"
 	}
 	
-#
-    $adminApi = Start-EricomConnection
-    $adminSessionId = EricomConnectConnector
-#
+
 	$baseFileName = [System.IO.Path]::GetFileName($configPath);
 	$folder = Split-Path $configPath;
 	cd $folder;
@@ -162,8 +160,11 @@ function Config-CreateGrid($config = $Settings)
 	Write-Output "$args"
 	Write-Output "base filename"
 	Write-Output "$baseFileName"
-
-	$exitCode = (Start-Process -Filepath "$baseFileName" -ArgumentList "$args" -Wait -Passthru).ExitCode
+    
+    $global:adminApi = Start-EricomConnection
+    $global:adminSessionId = EricomConnectConnector
+	
+    $exitCode = (Start-Process -Filepath "$baseFileName" -ArgumentList "$args" -Wait -Passthru).ExitCode
 	if ($exitCode -eq 0)
 	{
 		Write-Output "Ericom Connect Grid Server has been succesfuly configured."
@@ -171,7 +172,9 @@ function Config-CreateGrid($config = $Settings)
 	else
 	{
 		Write-Output "Ericom Connect Grid Server could not be configured. Exit Code: "  $exitCode
+        exit
 	}
+
 	Write-Output "Ericom Connect Grid configuration has been ended."
     
 }
@@ -276,7 +279,12 @@ function CreateUser
 	try
 	{
 		Write-Host "Creating new AD user <<$username>>" -ForegroundColor Green
-		New-ADUser -Server $domainName -PasswordNeverExpires $true -SamAccountName $userName -Name "$userName" -Credential $AdminCredentials -Enabled $true -Verbose -AccountPassword $securePassword
+        $current = Get-ADUser -Server $domainName -Credential $AdminCredentials -Filter {sAMAccountName -eq $userName}
+        
+        If ($current -eq $null)
+        {
+		    New-ADUser -Server $domainName -PasswordNeverExpires $true -SamAccountName $userName -Name "$userName" -Credential $AdminCredentials -Enabled $true -Verbose -AccountPassword $securePassword
+        }
 	}
 	catch
 	{
@@ -311,7 +319,7 @@ Function AddApplication
 	
     EricomConnectConnector
 	$foundApp = CheckIfAppOrDesktopAreInConnect -applicationName $applicationName
-    if ($ForceUniqeApps -eq $true -And $foundApp -eq $true)
+    if ($ForceUniqeApps -eq $true -And $foundApp -ne $null)
         {
             return 
         }
@@ -431,7 +439,7 @@ function AddDesktop
 	}
     
     $foundApp = CheckIfAppOrDesktopAreInConnect -applicationName $appName
-    if ($ForceUniqeApps -eq $true -And $foundApp -eq $true)
+    if ($ForceUniqeApps -eq $true -And $foundApp -ne $null)
     {
        return 
     }
@@ -503,12 +511,14 @@ function CheckIfAppOrDesktopAreInConnect
     EricomConnectConnector
 	
 	$AppList = $adminApi.ResourceDefinitionSearch($adminSessionId, $null, $null)
-	$foundApp = $false
+	$foundApp = $null
 	foreach ($app in $AppList)
 	{
 		if ($app.DisplayName -eq $applicationName)
+
 		{
-			$foundApp = $true;
+			$foundApp = $app.ResourceDefinitionId;
+            break;
 		}
 	}
 	return $foundApp
@@ -626,7 +636,7 @@ function AddAppToResourceGroup
 		$foundApp = CheckIfAppOrDesktopAreInConnect -applicationName $applicationName 
 		# try publish it
 		
-		if ($foundApp -ne $true)
+		if ($foundApp -ne $null)
 		{
 			$rlist = $rGroup.ResourceDefinitionIds
 			$rlist.Add($foundApp);
@@ -913,8 +923,8 @@ function AddAppsAndDesktopsToConnect
 function PublishAppsAndDesktops
 {
 	Publish -GroupName "AppGroup1" -AppName "Notepad" -HostGroupName "Allservers" -User "user1@test.local" -UserGroup "QA"
-    Publish -GroupName "AppGroup2" -AppName "Mozilla Firefox" -HostGroupName "Allservers" -User "user1@test.local" 
-    Publish -GroupName "AppGroup2" -AppName "Firefox" -HostGroupName "Allservers" -User "user1@test.local" 
+    Publish -GroupName "AppGroup2" -AppName "Mozilla Firefox" -HostGroupName "Allservers" 
+    Publish -GroupName "AppGroup2" -AppName "Notepad" -HostGroupName "Allservers" -User "user1@test.local" 
 	Publish -GroupName "DesktopGroup" -AppName "MyDesktop" -HostGroupName "Allserver" -User "user2@test.local"
 }
 
@@ -926,10 +936,6 @@ function PostInstall
     # Install varius applications on the machine
 	Install-Apps
     
-    # Connect to Ericom Connect server
-    Start-EricomConnection
-    EricomConnectConnector
-
     # Create the needed Remote Host groups in Ericom Connect
     PopulateWithRemoteHostGroups
 		
