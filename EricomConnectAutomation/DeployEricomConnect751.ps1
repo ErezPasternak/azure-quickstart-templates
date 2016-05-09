@@ -64,9 +64,6 @@ function EricomConnectConnector()
     return $adminSessionId
 }
 
-#$adminApi = $null
-#$adminSessionId = $null
-
 
 function Download-EricomConnect()
 {
