@@ -64,8 +64,8 @@ function EricomConnectConnector()
     return $adminSessionId
 }
 
-$adminApi = $null
-$adminSessionId = $null
+#$adminApi = $null
+#$adminSessionId = $null
 
 
 function Download-EricomConnect()
@@ -154,6 +154,10 @@ function Config-CreateGrid($config = $Settings)
 		$args = " NewGrid /AdminUser $_adminUser /AdminPassword $_adminPass /GridName $_gridName /SaDatabaseUser $_saUser /SaDatabasePassword $_saPass /DatabaseServer $_databaseServer /disconnect /noUseWinCredForDBAut"
 	}
 	
+#
+    $adminApi = Start-EricomConnection
+    $adminSessionId = EricomConnectConnector
+#
 	$baseFileName = [System.IO.Path]::GetFileName($configPath);
 	$folder = Split-Path $configPath;
 	cd $folder;
@@ -172,8 +176,7 @@ function Config-CreateGrid($config = $Settings)
 		Write-Output "Ericom Connect Grid Server could not be configured. Exit Code: "  $exitCode
 	}
 	Write-Output "Ericom Connect Grid configuration has been ended."
-    $adminApi = Start-EricomConnection
-    $adminSessionId = EricomConnectConnector
+    
 }
 
 
@@ -228,7 +231,32 @@ function CheckDomainRole
 	return $response;
 }
 
-
+Function Import-EricomLib
+{
+	$XAPPath = "C:\Program Files\Ericom Software\Ericom Connect Configuration Tool\"
+	
+	function Get-ScriptDirectory
+	{
+		$Invocation = (Get-Variable MyInvocation -Scope 1).Value
+		Split-Path $Invocation.MyCommand.Path
+	}
+	
+	$MegaConnectRuntimeApiDll = Join-Path ($XAPPath)  "MegaConnectRuntimeXapApi.dll"
+	$CloudConnectUtilitiesDll = Join-Path ($XAPPath)  "CloudConnectUtilities.dll"
+	
+	
+	add-type -Path (
+	$MegaConnectRuntimeApiDll,
+	$CloudConnectUtilitiesDll
+	)
+                                                                                                                    `
+	$Assem = (
+	$MegaConnectRuntimeApiDll,
+	$CloudConnectUtilitiesDll
+	)
+	
+	return $Assem
+}
 
 
 function CreateUser
@@ -545,32 +573,7 @@ function Create-RemoteHostsGroup
 	    $adminApi.AddRemoteHostGroup($adminSessionId, $rGroup) | Out-Null
 	}
 }
-Function Import-EricomLib
-{
-	$XAPPath = "C:\Program Files\Ericom Software\Ericom Connect Configuration Tool\"
-	
-	function Get-ScriptDirectory
-	{
-		$Invocation = (Get-Variable MyInvocation -Scope 1).Value
-		Split-Path $Invocation.MyCommand.Path
-	}
-	
-	$MegaConnectRuntimeApiDll = Join-Path ($XAPPath)  "MegaConnectRuntimeXapApi.dll"
-	$CloudConnectUtilitiesDll = Join-Path ($XAPPath)  "CloudConnectUtilities.dll"
-	
-	
-	add-type -Path (
-	$MegaConnectRuntimeApiDll,
-	$CloudConnectUtilitiesDll
-	)
-                                                                                                                    `
-	$Assem = (
-	$MegaConnectRuntimeApiDll,
-	$CloudConnectUtilitiesDll
-	)
-	
-	return $Assem
-}
+
 function Create-ResourceGroup
 {
 	param (	
@@ -865,8 +868,8 @@ function Install-Apps
 	Write-Output "Installing notepadplusplus.install"
 	choco install -y notepadplusplus.install
 	
-	Write-Output "Installing Libre Office"
-	choco install -y libreoffice
+	#Write-Output "Installing Libre Office"
+	#choco install -y libreoffice
 	
 	Write-Output "Apps installation has been ended."
 }
@@ -927,6 +930,7 @@ function PostInstall
 	Install-Apps
     
     # Connect to Ericom Connect server
+    Start-EricomConnection
     EricomConnectConnector
 
     # Create the needed Remote Host groups in Ericom Connect
