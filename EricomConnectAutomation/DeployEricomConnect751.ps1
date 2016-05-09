@@ -865,7 +865,7 @@ function Install-Apps
 	
 	iex ((new-object net.webclient).DownloadString('https://chocolatey.org/install.ps1'))
 	
-	Write-Output "Installing fireofx"
+	Write-Output "Installing firefox"
 	choco install -y firefox
 	
 	Write-Output "Installing powerpoint.viewer"
