@@ -1379,6 +1379,19 @@ configuration EricomConnectServerSetup
             GetScript = {@{Result = "InstallDaaSService"}}
         }
         
+        Script CopyRecursiveFolder
+        {
+            TestScript = {
+                return $false
+            }
+            SetScript = {
+                $DestDirectory = "C:\Program Files\Ericom Software\Ericom DaaS Service\"
+                $FromDirectory = "$env:ProgramFiles\Ericom Software\Ericom Connect Configuration Tool\*"
+                Copy-Item $FromDirectory $DestDirectory -recurse -force
+            }
+            GetScript = {@{Result = "SetRDA"}}
+        }
+        
         Script ConfigureDaaSService
         {
             TestScript = {

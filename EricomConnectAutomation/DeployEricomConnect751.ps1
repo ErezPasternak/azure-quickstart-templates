@@ -41,7 +41,7 @@ $SMTPServer = "ericom-com.mail.protection.outlook.com"
 $SMTPSUser = "daas@ericom.com"
 $SMTPassword = "1qaz@Wsx#"
 $SMTPPort = 25
-$externalFqdn = $env:COMPUTERNAME
+$externalFqdn = [System.Net.Dns]::GetHostByName((hostname)).HostName
 
 # internal 
 $global:adminApi = $null
@@ -144,7 +144,7 @@ function Config-CreateGrid($config = $Settings)
 	if ($UseWinCredentials -eq $true)
 	{
 		Write-Output "Configuration mode: with windows credentials"
-		$args = " NewGrid /AdminUser $_adminUser /AdminPassword $_adminPass /GridName $_gridName /HostOrIp $_hostOrIp /DatabaseServer $_databaseServer /DatabaseName $_databaseName /disconnect /UseWinCredForDBAut /LookupHosts $_hostOrIp "
+		$args = " NewGrid /AdminUser $_adminUser /AdminPassword $_adminPass /GridName $_gridName /HostOrIp $_hostOrIp /DatabaseServer $_databaseServer /DatabaseName $_databaseName /UseWinCredForDBAut /disconnect "
 	}
 	else
 	{
@@ -160,9 +160,7 @@ function Config-CreateGrid($config = $Settings)
 	Write-Output "$args"
 	Write-Output "base filename"
 	Write-Output "$baseFileName"
-    
-    $global:adminApi = Start-EricomConnection
-    $global:adminSessionId = EricomConnectConnector
+  
 	
     $exitCode = (Start-Process -Filepath "$baseFileName" -ArgumentList "$args" -Wait -Passthru).ExitCode
 	if ($exitCode -eq 0)
@@ -174,7 +172,9 @@ function Config-CreateGrid($config = $Settings)
 		Write-Output "Ericom Connect Grid Server could not be configured. Exit Code: "  $exitCode
         exit
 	}
-
+  
+    $global:adminApi = Start-EricomConnection
+    $global:adminSessionId = EricomConnectConnector
 	Write-Output "Ericom Connect Grid configuration has been ended."
     
 }
@@ -361,9 +361,9 @@ Function AddApplication
 				$val5.LocalValue = $applicationName
 				$val5.ComputeBy = "Literal"
 				
-        #      $val6 = $resourceDefinition.DisplayProperties.GetLocalPropertyValue("ShortcutMenuProgram")
-		#		$val6.LocalValue = $StartMenuShortcut
-		#		$val6.ComputeBy = "Literal"
+                $val6 = $resourceDefinition.DisplayProperties.GetLocalPropertyValue("ShortcutMenuAccessPad")
+				$val6.LocalValue = $StartMenuShortcut
+			    $val6.ComputeBy = "Literal"
 
 				$response = @{ }
 				try
@@ -813,7 +813,7 @@ function SendAdminMail ()
 	
 	Write-Verbose "Ericom Connect Grid Server has been succesfuly configured."
 	$Keyword = "CB: Ericom Connect Grid Server has been succesfuly configured."
-	$Message = '<h1>Congratulations! Your Ericom Connect Environment is now Ready!</h1><p>Dear ' + $ToName + ',<br><br>Thank you for deploying <a href="http://www.ericom.com/connect-enterprise.asp">Ericom Connect</a>.<br><br>Your deployment is now complete and you can start using the system.<br><br>To launch Ericom Portal Client please click <a href="https://' + $externalFqdn + '/EricomAutomation/DaaS/index.html#/register">here.</a><br><br>To log-in to Ericom Connect management console please click <a href="https://' + $externalFqdn + '/Admin">here.</a><br><br>Below are your Admin credentials. Please make sure you save them for future use:<br><br>Username: ' + $AdminUser + ' <br>Password: ' + $AdminPassword + '<br><br><br>Regards,<br><a href="http://www.ericom.com">Ericom</a> Automation Team'
+	$Message = '<h1>Congratulations! Your Ericom Connect Environment is now Ready!</h1><p>Dear ' + $ToName + ',<br><br>Thank you for deploying <a href="http://www.ericom.com/connect-enterprise.asp">Ericom Connect</a>.<br><br>Your deployment is now complete and you can start using the system.<br><br>To launch Ericom Portal Client please click <a href="http://' + $externalFqdn + ':8033/EricomXml/AccessPortal/Start.html#/login">here.</a><br><br>To log-in to Ericom Connect management console please click <a href="https://' + $externalFqdn + ':8033/EricomXml/AccessPortal/Start.html#/login">here.</a><br><br>Below are your Admin credentials. Please make sure you save them for future use:<br><br>Username: ' + $AdminUser + ' <br>Password: ' + $AdminPassword + '<br><br><br>Regards,<br><a href="http://www.ericom.com">Ericom</a> Automation Team'
 	if ($To -ne "nobody")
 	{
 		try
@@ -826,6 +826,8 @@ function SendAdminMail ()
 		}
 	}
 }
+$AdminUrl = "https://" + $externalFqdn + ":8022/Admin/index.html#/connect"
+    $PortalUrl  = "http://" + $externalFqdn + ""
 
 function SendStartMail ()
 {
@@ -948,7 +950,14 @@ function PostInstall
 	# Setup background bitmap and user date using BGinfo
 	Setup-Bginfo -LocalPath C:\BgInfo
 	
-	#Send Admin mail
+    # open browser for both Admin and Portal
+	$AdminUrl = "https://" + $externalFqdn + ":8022/Admin/index.html#/connect"
+    $PortalUrl  = "http://" + $externalFqdn + ":8033/EricomXml/AccessPortal/Start.html#/login"
+ 
+    Start-Process -FilePath $AdminUrl
+    Start-Process -FilePath $PortalUrl
+
+    #Send Admin mail
 	SendAdminMail
 }
 
