@@ -826,8 +826,6 @@ function SendAdminMail ()
 		}
 	}
 }
-$AdminUrl = "https://" + $externalFqdn + ":8022/Admin/index.html#/connect"
-    $PortalUrl  = "http://" + $externalFqdn + ""
 
 function SendStartMail ()
 {
@@ -865,7 +863,7 @@ function Install-Apps
 	
 	iex ((new-object net.webclient).DownloadString('https://chocolatey.org/install.ps1'))
 	
-	Write-Output "Installing firefox"
+	Write-Output "Installing fireofx"
 	choco install -y firefox
 	
 	Write-Output "Installing powerpoint.viewer"
@@ -929,6 +927,26 @@ function PublishAppsAndDesktops
     Publish -GroupName "AppGroup2" -AppName "Notepad" -HostGroupName "Allservers" -User "user1@test.local" 
 	Publish -GroupName "DesktopGroup" -AppName "MyDesktop" -HostGroupName "Allserver" -User "user2@test.local"
 }
+function CreateEricomConnectShortcuts
+{
+    # open browser for both Admin and Portal
+	$AdminUrl = "https://" + $externalFqdn + ":8022/Admin/index.html#/connect"
+    $PortalUrl  = "http://" + $externalFqdn + ":8033/EricomXml/AccessPortal/Start.html#/login"
+ 
+    $ws = New-Object -comObject WScript.Shell
+    $Dt = $ws.SpecialFolders.item("Desktop")
+    $URL = $ws.CreateShortcut($Dt + "\Ericom Connect Admin.url")
+    $URL.TargetPath = $AdminUrl
+    $URL.Save()
+
+    $URL1 = $ws.CreateShortcut($Dt + "\Ericom Connect AccessPortal.url")
+    $URL1.TargetPath = $PortalUrl
+    $URL1.Save()
+
+    Start-Process -FilePath $AdminUrl
+    Start-Sleep -s 5
+    Start-Process -FilePath $PortalUrl
+}
 
 function PostInstall
 {
@@ -950,12 +968,8 @@ function PostInstall
 	# Setup background bitmap and user date using BGinfo
 	Setup-Bginfo -LocalPath C:\BgInfo
 	
-    # open browser for both Admin and Portal
-	$AdminUrl = "https://" + $externalFqdn + ":8022/Admin/index.html#/connect"
-    $PortalUrl  = "http://" + $externalFqdn + ":8033/EricomXml/AccessPortal/Start.html#/login"
- 
-    Start-Process -FilePath $AdminUrl
-    Start-Process -FilePath $PortalUrl
+    # Create Desktop shortcuts for Admin and Portal
+    CreateEricomConnectShortcuts
 
     #Send Admin mail
 	SendAdminMail
