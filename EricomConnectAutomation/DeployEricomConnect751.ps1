@@ -88,8 +88,9 @@ function EricomConnectConnector()
     }
     return $adminSessionId
 }
-$adminApi = Start-EricomConnection
-$adminSessionId = EricomConnectConnector
+
+$adminApi = $null
+$adminSessionId = $null
 
 
 function Download-EricomConnect()
@@ -196,6 +197,8 @@ function Config-CreateGrid($config = $Settings)
 		Write-Output "Ericom Connect Grid Server could not be configured. Exit Code: "  $exitCode
 	}
 	Write-Output "Ericom Connect Grid configuration has been ended."
+    $adminApi = Start-EricomConnection
+    $adminSessionId = EricomConnectConnector
 }
 
 
