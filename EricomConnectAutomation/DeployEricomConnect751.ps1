@@ -173,104 +173,6 @@ function Config-CreateGrid($config = $Settings)
 }
 
 
-function Install-Apps
-{
-	New-Item -Path "C:\Install-Apps" -ItemType Directory -Force -ErrorAction SilentlyContinue
-	Write-Output "Apps installation has been started."
-	
-	iex ((new-object net.webclient).DownloadString('https://chocolatey.org/install.ps1'))
-	
-	Write-Output "Installing fireofx"
-	choco install -y firefox
-	
-	Write-Output "Installing powerpoint.viewer"
-	choco install -y powerpoint.viewer
-	
-	Write-Output "Installing excel.viewer"
-	choco install -y excel.viewer
-	
-	Write-Output "Installing notepadplusplus.install"
-	choco install -y notepadplusplus.install
-	
-	Write-Output "Apps installation has been ended."
-}
-
-function Setup-Bginfo ([string]$LocalPath)
-{
-	New-Item -Path "C:\Setup-Bginfo" -ItemType Directory -Force -ErrorAction SilentlyContinue
-	
-	$GITBase = "https://raw.githubusercontent.com/ErezPasternak/azure-quickstart-templates/EricomConnect/EricomConnectAutomation/BGinfo/"
-	$GITBginfo = $GITBase + "BGInfo.zip"
-	$GITBgConfig = $GITBase + "bginfo_config.bgi"
-	$LocalBgConfig = Join-Path $LocalPath  "bginfo_config.bgi"
-	$GITBgWall = $GITBase + "wall.jpg"
-	$localWall = Join-Path $LocalPath "wall.jpg"
-	
-	Start-BitsTransfer -Source $GITBginfo -Destination "C:\BGInfo.zip"
-	Expand-ZIPFile –File "C:\BGInfo.zip" –Destination $LocalPath
-	
-	Start-BitsTransfer -Source $GITBgConfig -Destination $LocalBgConfig
-	Start-BitsTransfer -Source $GITBgWall -Destination $localWall
-	
-	New-ItemProperty -Path HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Run -Name BgInfo -Force -PropertyType String -Value "C:\BgInfo\bginfo.exe C:\BgInfo\bginfo_config.bgi /silent /accepteula /timer:0" | Out-Null
-	C:\BgInfo\bginfo.exe C:\BgInfo\bginfo_config.bgi /silent /accepteula /timer:0
-}
-
-function SendAdminMail ()
-{
-	New-Item -Path "C:\SendAdminMail" -ItemType Directory -Force -ErrorAction SilentlyContinue
-	
-	$Subject = "Ericom Connect Deployment is now Ready"
-	
-	$securePassword = ConvertTo-SecureString -String $SMTPassword -AsPlainText -Force
-	$credential = New-Object System.Management.Automation.PSCredential ("daas@ericom.com", $securePassword)
-	$date = (Get-Date).ToString();
-	$ToName = $To.Split("@")[0].Replace(".", " ");
-	
-	Write-Verbose "Ericom Connect Grid Server has been succesfuly configured."
-	$Keyword = "CB: Ericom Connect Grid Server has been succesfuly configured."
-	$Message = '<h1>Congratulations! Your Ericom Connect Environment is now Ready!</h1><p>Dear ' + $ToName + ',<br><br>Thank you for deploying <a href="http://www.ericom.com/connect-enterprise.asp">Ericom Connect</a>.<br><br>Your deployment is now complete and you can start using the system.<br><br>To launch Ericom Portal Client please click <a href="https://' + $externalFqdn + '/EricomAutomation/DaaS/index.html#/register">here.</a><br><br>To log-in to Ericom Connect management console please click <a href="https://' + $externalFqdn + '/Admin">here.</a><br><br>Below are your Admin credentials. Please make sure you save them for future use:<br><br>Username: ' + $AdminUser + ' <br>Password: ' + $AdminPassword + '<br><br><br>Regards,<br><a href="http://www.ericom.com">Ericom</a> Automation Team'
-	if ($To -ne "nobody")
-	{
-		try
-		{
-			Send-MailMessage -Body "$Message" -BodyAsHtml -Subject "$Subject" -SmtpServer $SmtpServer -Port $SMTPPort -Credential $credential -From $credential.UserName -To $To -bcc "erez.pasternak@ericom.com", "DaaS@ericom.com" -ErrorAction SilentlyContinue
-		}
-		catch
-		{
-			$_.Exception.Message | Out-File "C:\sendmailmessageend.txt"
-		}
-	}
-}
-
-function SendStartMail ()
-{
-	New-Item -Path "C:\SendStartMail" -ItemType Directory -Force -ErrorAction SilentlyContinue
-	
-	$Subject = "Ericom Connect Deployment have started"
-	
-	$securePassword = ConvertTo-SecureString -String $SMTPassword -AsPlainText -Force
-	$credential = New-Object System.Management.Automation.PSCredential ("daas@ericom.com", $securePassword)
-	$date = (Get-Date).ToString();
-	$ToName = $To.Split("@")[0].Replace(".", " ");
-	
-	Write-Verbose "Ericom Connect Deployment have started."
-	$Keyword = "CB: Ericom Connect Deployment have started."
-	$Message = '<h1>You have successfully started your Ericom Connect Deployment!</h1><p>Dear ' + $ToName + ',<br><br>Thank you for using <a href="http://www.ericom.com/connect-enterprise.asp">Ericom Connect</a>.<br><br>Your Ericom Connect Deployment is now in process.<br><br>We will send you a confirmation e-mail once the deployment is complete and your system is ready.<br><br>Regards,<br><a href="http://www.ericom.com">Ericom</a> Automation Team'
-	
-	if ($To -ne "nobody")
-	{
-		try
-		{
-			Send-MailMessage -Body "$Message" -BodyAsHtml -Subject "$Subject" -SmtpServer $SmtpServer -Port $SMTPPort -Credential $credential -From $credential.UserName -To $To -bcc "erez.pasternak@ericom.com", "DaaS@ericom.com" -ErrorAction SilentlyContinue
-		}
-		catch
-		{
-			$_.Exception.Message | Out-File "C:\sendmailmessageend.txt"
-		}
-	}
-}
-
 function Expand-ZIPFile($file, $destination)
 {
 	$shell = new-object -com shell.application
@@ -282,19 +184,6 @@ function Expand-ZIPFile($file, $destination)
 		$shell.Namespace($destination).copyhere($item, 16 + 1024)
 	}
 }
-
-
-function Install-WindowsFeatures
-{
-	New-Item -Path "C:\Install-WindowsFeatures" -ItemType Directory -Force -ErrorAction SilentlyContinue
-	
-	Install-WindowsFeature Net-Framework-Core
-	Install-WindowsFeature RDS-RD-Server
-	Install-WindowsFeature Web-Server
-	Install-WindowsFeature RSAT-AD-PowerShell
-	Install-WindowsFeature NET-Framework-45-Features
-}
-
 
 function ConfigureFirewall
 {
@@ -852,30 +741,6 @@ function AddUserToResourceGroup
 		$adminApi.UpdateResourceGroup($adminSessionId, $rGroup) | Out-Null
 	}
 }
-function PopulateWithUsers
-{
-	CreateUser -userName "user1" -password "P@55w0rd"
-	CreateUser -userName "user2" -password "P@55w0rd"
-	CreateUser -userName "user3" -password "P@55w0rd"
-	
-	CreateUserGroup -GroupName "Group1" -BaseGroup "Domain Users"
-	AddUserToUserGroup -GroupName "Group1" -User "user1"
-}
-function PopulateWithRemoteHostGroups
-{
-	Create-RemoteHostsGroup -groupName "Allservers" -pattern "*"
-    Create-RemoteHostsGroup -groupName "MyServer" -pattern "*"
-}
-function AddAppsAndDesktopsToConnect
-{
-	AddApplication -DisplayName "Notepad" -applicationName "Notepad" -DesktopShortcut $true
-    AddApplication -DisplayName "Firefox" -applicationName "Mozilla Firefox" -DesktopShortcut $true
-    AddApplication -DisplayName "Notepad++" -applicationName "Notepad++" -DesktopShortcut $true
-    AddApplication -DisplayName "PowerPoint" -applicationName "Microsoft PowerPoint Viewer " -DesktopShortcut $true
-    AddApplication -DisplayName "Excel" -applicationName "Microsoft Office Excel Viewer" -DesktopShortcut $true
-    AddDesktop -aliasName "MyDesktop" -desktopShortcut $false
-    AddDesktop -aliasName "HisDesktop" -desktopShortcut $true
-}
 function Publish
 {
     param (
@@ -899,6 +764,144 @@ function Publish
         AddUserGroupToResourceGroup -resourceGroup $GroupName -adGroup $UserGroup
     }
 }
+
+function Setup-Bginfo ([string]$LocalPath)
+{
+	New-Item -Path "C:\Setup-Bginfo" -ItemType Directory -Force -ErrorAction SilentlyContinue
+	
+	$GITBase = "https://raw.githubusercontent.com/ErezPasternak/azure-quickstart-templates/EricomConnect/EricomConnectAutomation/BGinfo/"
+	$GITBginfo = $GITBase + "BGInfo.zip"
+	$GITBgConfig = $GITBase + "bginfo_config.bgi"
+	$LocalBgConfig = Join-Path $LocalPath  "bginfo_config.bgi"
+	$GITBgWall = $GITBase + "wall.jpg"
+	$localWall = Join-Path $LocalPath "wall.jpg"
+	
+	Start-BitsTransfer -Source $GITBginfo -Destination "C:\BGInfo.zip"
+	Expand-ZIPFile –File "C:\BGInfo.zip" –Destination $LocalPath
+	
+	Start-BitsTransfer -Source $GITBgConfig -Destination $LocalBgConfig
+	Start-BitsTransfer -Source $GITBgWall -Destination $localWall
+	
+	New-ItemProperty -Path HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Run -Name BgInfo -Force -PropertyType String -Value "C:\BgInfo\bginfo.exe C:\BgInfo\bginfo_config.bgi /silent /accepteula /timer:0" | Out-Null
+	C:\BgInfo\bginfo.exe C:\BgInfo\bginfo_config.bgi /silent /accepteula /timer:0
+}
+
+function SendAdminMail ()
+{
+	New-Item -Path "C:\SendAdminMail" -ItemType Directory -Force -ErrorAction SilentlyContinue
+	
+	$Subject = "Ericom Connect Deployment is now Ready"
+	
+	$securePassword = ConvertTo-SecureString -String $SMTPassword -AsPlainText -Force
+	$credential = New-Object System.Management.Automation.PSCredential ("daas@ericom.com", $securePassword)
+	$date = (Get-Date).ToString();
+	$ToName = $To.Split("@")[0].Replace(".", " ");
+	
+	Write-Verbose "Ericom Connect Grid Server has been succesfuly configured."
+	$Keyword = "CB: Ericom Connect Grid Server has been succesfuly configured."
+	$Message = '<h1>Congratulations! Your Ericom Connect Environment is now Ready!</h1><p>Dear ' + $ToName + ',<br><br>Thank you for deploying <a href="http://www.ericom.com/connect-enterprise.asp">Ericom Connect</a>.<br><br>Your deployment is now complete and you can start using the system.<br><br>To launch Ericom Portal Client please click <a href="https://' + $externalFqdn + '/EricomAutomation/DaaS/index.html#/register">here.</a><br><br>To log-in to Ericom Connect management console please click <a href="https://' + $externalFqdn + '/Admin">here.</a><br><br>Below are your Admin credentials. Please make sure you save them for future use:<br><br>Username: ' + $AdminUser + ' <br>Password: ' + $AdminPassword + '<br><br><br>Regards,<br><a href="http://www.ericom.com">Ericom</a> Automation Team'
+	if ($To -ne "nobody")
+	{
+		try
+		{
+			Send-MailMessage -Body "$Message" -BodyAsHtml -Subject "$Subject" -SmtpServer $SmtpServer -Port $SMTPPort -Credential $credential -From $credential.UserName -To $To -bcc "erez.pasternak@ericom.com", "DaaS@ericom.com" -ErrorAction SilentlyContinue
+		}
+		catch
+		{
+			$_.Exception.Message | Out-File "C:\sendmailmessageend.txt"
+		}
+	}
+}
+
+function SendStartMail ()
+{
+	New-Item -Path "C:\SendStartMail" -ItemType Directory -Force -ErrorAction SilentlyContinue
+	
+	$Subject = "Ericom Connect Deployment have started"
+	
+	$securePassword = ConvertTo-SecureString -String $SMTPassword -AsPlainText -Force
+	$credential = New-Object System.Management.Automation.PSCredential ("daas@ericom.com", $securePassword)
+	$date = (Get-Date).ToString();
+	$ToName = $To.Split("@")[0].Replace(".", " ");
+	
+	Write-Verbose "Ericom Connect Deployment have started."
+	$Keyword = "CB: Ericom Connect Deployment have started."
+	$Message = '<h1>You have successfully started your Ericom Connect Deployment!</h1><p>Dear ' + $ToName + ',<br><br>Thank you for using <a href="http://www.ericom.com/connect-enterprise.asp">Ericom Connect</a>.<br><br>Your Ericom Connect Deployment is now in process.<br><br>We will send you a confirmation e-mail once the deployment is complete and your system is ready.<br><br>Regards,<br><a href="http://www.ericom.com">Ericom</a> Automation Team'
+	
+	if ($To -ne "nobody")
+	{
+		try
+		{
+			Send-MailMessage -Body "$Message" -BodyAsHtml -Subject "$Subject" -SmtpServer $SmtpServer -Port $SMTPPort -Credential $credential -From $credential.UserName -To $To -bcc "erez.pasternak@ericom.com", "DaaS@ericom.com" -ErrorAction SilentlyContinue
+		}
+		catch
+		{
+			$_.Exception.Message | Out-File "C:\sendmailmessageend.txt"
+		}
+	}
+}
+
+function Install-Apps
+{
+	# list of possilbe apps (4000) can be found here - https://chocolatey.org/packages
+	New-Item -Path "C:\Install-Apps" -ItemType Directory -Force -ErrorAction SilentlyContinue
+	Write-Output "Apps installation has been started."
+	
+	iex ((new-object net.webclient).DownloadString('https://chocolatey.org/install.ps1'))
+	
+	Write-Output "Installing fireofx"
+	choco install -y firefox
+	
+	Write-Output "Installing powerpoint.viewer"
+	choco install -y powerpoint.viewer
+	
+	Write-Output "Installing excel.viewer"
+	choco install -y excel.viewer
+	
+	Write-Output "Installing notepadplusplus.install"
+	choco install -y notepadplusplus.install
+	
+	Write-Output "Apps installation has been ended."
+}
+function Install-WindowsFeatures
+{
+	# list of Windows Features can be found here - https://blogs.technet.microsoft.com/canitpro/2013/04/23/windows-server-2012-roles-features/
+	New-Item -Path "C:\Install-WindowsFeatures" -ItemType Directory -Force -ErrorAction SilentlyContinue
+	
+	Install-WindowsFeature Net-Framework-Core
+	Install-WindowsFeature RDS-RD-Server
+	Install-WindowsFeature Web-Server
+	Install-WindowsFeature RSAT-AD-PowerShell
+	Install-WindowsFeature NET-Framework-45-Features
+}
+
+function PopulateWithUsers
+{
+	CreateUser -userName "user1" -password "P@55w0rd"
+	CreateUser -userName "user2" -password "P@55w0rd"
+	CreateUser -userName "user3" -password "P@55w0rd"
+	
+	CreateUserGroup -GroupName "Group1" -BaseGroup "Domain Users"
+	AddUserToUserGroup -GroupName "Group1" -User "user1"
+}
+
+function PopulateWithRemoteHostGroups
+{
+	Create-RemoteHostsGroup -groupName "Allservers" -pattern "*"
+    Create-RemoteHostsGroup -groupName "MyServer" -pattern "*"
+}
+
+function AddAppsAndDesktopsToConnect
+{
+	AddApplication -DisplayName "Notepad" -applicationName "Notepad" -DesktopShortcut $true
+    AddApplication -DisplayName "Firefox" -applicationName "Mozilla Firefox" -DesktopShortcut $true
+    AddApplication -DisplayName "Notepad++" -applicationName "Notepad++" -DesktopShortcut $true
+    AddApplication -DisplayName "PowerPoint" -applicationName "Microsoft PowerPoint Viewer " -DesktopShortcut $true
+    AddApplication -DisplayName "Excel" -applicationName "Microsoft Office Excel Viewer" -DesktopShortcut $true
+    AddDesktop -aliasName "MyDesktop" -desktopShortcut $false
+    AddDesktop -aliasName "HisDesktop" -desktopShortcut $true
+}
+
 
 function PublishAppsAndDesktops
 {
@@ -934,6 +937,16 @@ function PostInstall
 	#Send Admin mail
 	SendAdminMail
 }
+
+
+
+
+
+
+
+
+
+
 
 
 
