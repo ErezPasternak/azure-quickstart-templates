@@ -44,6 +44,32 @@ $SMTPPort = 25
 $externalFqdn = $env:COMPUTERNAME
 
 # internal 
+Function Import-EricomLib
+{
+	$XAPPath = "C:\Program Files\Ericom Software\Ericom Connect Configuration Tool\"
+	
+	function Get-ScriptDirectory
+	{
+		$Invocation = (Get-Variable MyInvocation -Scope 1).Value
+		Split-Path $Invocation.MyCommand.Path
+	}
+	
+	$MegaConnectRuntimeApiDll = Join-Path ($XAPPath)  "MegaConnectRuntimeXapApi.dll"
+	$CloudConnectUtilitiesDll = Join-Path ($XAPPath)  "CloudConnectUtilities.dll"
+	
+	
+	add-type -Path (
+	$MegaConnectRuntimeApiDll,
+	$CloudConnectUtilitiesDll
+	)
+                                                                                                                    `
+	$Assem = (
+	$MegaConnectRuntimeApiDll,
+	$CloudConnectUtilitiesDll
+	)
+	
+	return $Assem
+}
 function Start-EricomConnection
 {
 	$Assem = Import-EricomLib
@@ -225,32 +251,7 @@ function CheckDomainRole
 }
 
 
-Function Import-EricomLib
-{
-	$XAPPath = "C:\Program Files\Ericom Software\Ericom Connect Configuration Tool\"
-	
-	function Get-ScriptDirectory
-	{
-		$Invocation = (Get-Variable MyInvocation -Scope 1).Value
-		Split-Path $Invocation.MyCommand.Path
-	}
-	
-	$MegaConnectRuntimeApiDll = Join-Path ($XAPPath)  "MegaConnectRuntimeXapApi.dll"
-	$CloudConnectUtilitiesDll = Join-Path ($XAPPath)  "CloudConnectUtilities.dll"
-	
-	
-	add-type -Path (
-	$MegaConnectRuntimeApiDll,
-	$CloudConnectUtilitiesDll
-	)
-                                                                                                                    `
-	$Assem = (
-	$MegaConnectRuntimeApiDll,
-	$CloudConnectUtilitiesDll
-	)
-	
-	return $Assem
-}
+
 
 function CreateUser
 {
