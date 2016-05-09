@@ -44,9 +44,6 @@ $SMTPPort = 25
 $externalFqdn = $env:COMPUTERNAME
 
 # internal 
-$adminApi = Start-EricomConnection
-$adminSessionId = EricomConnectConnector
-
 function Start-EricomConnection
 {
 	$Assem = Import-EricomLib
@@ -65,6 +62,9 @@ function EricomConnectConnector()
     }
     return $adminSessionId
 }
+$adminApi = Start-EricomConnection
+$adminSessionId = EricomConnectConnector
+
 
 function Download-EricomConnect()
 {
@@ -860,6 +860,9 @@ function Install-Apps
 	
 	Write-Output "Installing notepadplusplus.install"
 	choco install -y notepadplusplus.install
+	
+	Write-Output "Installing Libre Office"
+	choco install -y libreoffice
 	
 	Write-Output "Apps installation has been ended."
 }
