@@ -29,7 +29,7 @@ $HostOrIp = [System.Net.Dns]::GetHostByName((hostname)).HostName
 $SaUser = ""
 $SaPassword = ""
 $DatabaseServer = $env:computername+"\ERICOMCONNECTDB"
-$DatabaseName = $env:computername
+$DatabaseName = $env:computername+"1"
 $ConnectConfigurationToolPath = "\Ericom Software\Ericom Connect Configuration Tool\EricomConnectConfigurationTool.exe"
 $UseWinCredentials = "true"
 $LookUpHosts = [System.Net.Dns]::GetHostByName((hostname)).HostName
@@ -163,16 +163,16 @@ function Config-CreateGrid($config = $Settings)
 	Write-Output "$baseFileName"
   
 	
-    $exitCode = (Start-Process -Filepath "$baseFileName" -ArgumentList "$args" -Wait -Passthru).ExitCode
-	if ($exitCode -eq 0)
-	{
-		Write-Output "Ericom Connect Grid Server has been succesfuly configured."
-	}
-	else
-	{
-		Write-Output "Ericom Connect Grid Server could not be configured. Exit Code: "  $exitCode
-        exit
-	}
+  #  $exitCode = (Start-Process -Filepath "$baseFileName" -ArgumentList "$args" -Wait -Passthru).ExitCode
+#	if ($exitCode -eq 0)
+#	{
+#		Write-Output "Ericom Connect Grid Server has been succesfuly configured."
+#	}
+#	else
+#	{
+#		Write-Output "Ericom Connect Grid Server could not be configured. Exit Code: "  $exitCode
+#       exit
+#	}
   
     $global:adminApi = Start-EricomConnection
     $global:adminSessionId = EricomConnectConnector
@@ -807,8 +807,8 @@ function Setup-AutomationService ([string]$LocalPath)
 	$HttpBase = "http://tswc.ericom.com:501/erez/751/"
 	$DaaSZip = $HttpBase + "DaaSService.zip"
 	
-	Start-BitsTransfer -Source $DaaSZip -Destination "C:\DaaSService.zip"
-	Expand-ZIPFile –File "C:\DaaSService.zip" –Destination "C:\Program Files\Ericom Software\Ericom Automation Service"
+	#Start-BitsTransfer -Source $DaaSZip -Destination "C:\DaaSService.zip"
+	#Expand-ZIPFile –File "C:\DaaSService.zip" –Destination "C:\Program Files\Ericom Software\Ericom Automation Service"
 	
     $portNumber = 2244; # DaaS WebService port number
     $baseRDPGroup = "DaaS-RDP"           
@@ -826,7 +826,7 @@ function Setup-AutomationService ([string]$LocalPath)
     $ec_admin = "ConnectSettings/EC_AdminUser $AdminUser"; # EC_Admin User
     $ec_pass = "ConnectSettings/EC_AdminPass $AdminUser"; # EC_Admin Pass
     $RDCB_GridName = "ConnectSettings/EC_GridName $GridName"; # RDCB info - gridname
-    $run_boot_strap = "appSettings/LoadBootstrapData False"; # Run bootstrap code
+    $run_boot_strap = "appSettings/LoadBootstrapData True"; # Run bootstrap code
                
     $MAilTemplate = "EmailSettings/EmailTemplatePath $emailTemplate";
     $MAilServer   = "EmailSettings/SMTPServer $SMTPServer";
@@ -847,7 +847,7 @@ function Setup-AutomationService ([string]$LocalPath)
         Write-Verbose ("DaaSService: Service could not be registerd.. Exit Code: " + $exitCode)
     }        
     # configure the service
-    $argumentsService = "/changesettings $fqdn $port $adDomain $adAdmin $adPassword $ec_admin $ec_pass $rhp $run_boot_strap $RDCB_GridName $adBaseGroup $MAilTemplate $MAilServer $MAilPort $MAilFrom $MAilUser $MAilPassword";
+    $argumentsService = "/changesettings $fqdn $port $adDomain $adAdmin $adPassword $ec_admin $ec_pass $rhp $RDCB_GridName $adBaseGroup $MAilTemplate $MAilServer $MAilPort $MAilFrom $MAilUser $MAilPassword";
     Write-Verbose "$ServicePath $argumentsService"           
     $exitCodeCli = (Start-Process -Filepath $ServicePath -ArgumentList "$argumentsService" -Wait -Passthru).ExitCode;
     if ($exitCodeCli -eq 0) {
@@ -866,6 +866,17 @@ function Setup-AutomationService ([string]$LocalPath)
         Write-Verbose "$ServicePath $argumentsService"
         Write-Verbose ("DaaSService: Service could not be started.. Exit Code: " + $exitCode)
     } 
+
+    # run bootstrap
+    $argumentsService = "/changesettings $run_boot_strap";
+    $exitCodeCli = (Start-Process -Filepath $ServicePath -ArgumentList "$argumentsService" -Wait -Passthru).ExitCode;
+    if ($exitCodeCli -eq 0) {
+        Write-Verbose "DaaSService: Service has been succesfuly bootstrap."
+    } else {
+        Write-Verbose "$ServicePath $argumentsService"
+        Write-Verbose ("DaaSService: Service could not be bootstrap.. Exit Code: " + $exitCode)
+    } 
+
     #$DaaSUrl = "http://" + $externalFqdn + ":2244/EricomAutomation/DaaS/index.html#/register"
     $DaaSUrl = "http://" + "localhost" + ":2244/EricomAutomation/DaaS/index.html#/register"
     $ws = New-Object -comObject WScript.Shell
@@ -1065,30 +1076,30 @@ function PostInstall
 # Main Code 
 
 # Prerequisite check that this machine is part of a domain
-# CheckDomainRole
+ CheckDomainRole
 
 #send inital mail 
 #SendStartMail
 
 # Install the needed Windows Features 
-# Install-WindowsFeatures
+ Install-WindowsFeatures
 
 # Download Ericom Offical Installer from the Ericom Web site  
-# Download-EricomConnect
+ Download-EricomConnect
  
 # Copy Ericom Connect install from local network share
 # Copy-EricomConnect
 
 # Install EC in a single machine mode including SQL express   
-# Install-SingleMachine -sourceFile C:\Windows\Temp\EricomConnectPOC.exe
+ Install-SingleMachine -sourceFile C:\Windows\Temp\EricomConnectPOC.exe
 
 #we can stop here with a system ready and connected installed and not cofigured 
 if ($PrepareSystem -eq $true)
 {
 	# Configure Ericom Connect Grid
-	#Config-CreateGrid -config $Settings
+	Config-CreateGrid -config $Settings
 	
 	# Run PostInstall Creating users,apps,desktops and publish them
-	# PostInstall
+	 PostInstall
 }
 Setup-AutomationService
