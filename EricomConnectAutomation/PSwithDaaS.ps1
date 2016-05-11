@@ -179,7 +179,7 @@ function Config-CreateGrid($config = $Settings)
 	Write-Output "Ericom Connect Grid configuration has been ended."
     
 }
-# remove the secrty settings of IE 
+# remove the security settings of IE 
 function Disable-IEESC
 {
 	$AdminKey = “HKLM:\SOFTWARE\Microsoft\Active Setup\Installed Components\{A509B1A7-37EF-4b3f-8CFC-4F3A74704073}”
