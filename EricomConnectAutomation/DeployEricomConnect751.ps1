@@ -456,7 +456,7 @@ function DeleteDatabase
 	{
 		#instead of drop we will use KillDatabase
 		#KillDatabase drops all active connections before dropping the database.
-	$	Server.KillDatabase($DatabaseName)
+		$Server.KillDatabase($DatabaseName)
 	}
 }
 function CheckDomainRole
