@@ -454,6 +454,7 @@ function DeleteDatabase
 	#check database exists on server
 	if ($DBObject)
 	{
+		Write-Output "Deleting Database named $DatabaseName"
 		#instead of drop we will use KillDatabase
 		#KillDatabase drops all active connections before dropping the database.
 		$Server.KillDatabase($DatabaseName)
@@ -1256,11 +1257,11 @@ function PostInstall
 # Prerequisite check that this machine is part of a domain
 CheckDomainRole
 
-#send inital mail 
-SendStartMail
-
 # Install the needed Windows Features 
 Install-WindowsFeatures
+
+#send inital mail 
+SendStartMail
 
 # Download Ericom Offical Installer from the Ericom Web site  
 Download-EricomConnect
