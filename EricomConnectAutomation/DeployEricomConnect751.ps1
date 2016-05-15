@@ -140,6 +140,9 @@ function Config-CreateGrid($config = $Settings)
 	$_databaseName = $DatabaseName
 	
 	$configPath = Join-Path $env:ProgramFiles -ChildPath $ConnectConfigurationToolPath.Trim()
+	# in case we have a database allready, we will delete it before creating it again
+	
+	DeleteDatabase
 	
 	if ($UseWinCredentials -eq $true)
 	{
@@ -435,7 +438,27 @@ function AddUsersToRemoteDesktopGroup
 	Invoke-Command { param ([String]$RDPGroup) net localgroup "Remote Desktop Users" "$RDPGroup" /ADD } -computername "localhost" -ArgumentList "$baseADGroupRDP"
 	
 }
-
+function DeleteDatabase
+{
+	#import SQL Server module
+	Import-Module SQLPS -DisableNameChecking
+ 
+	#your SQL Server Instance Name
+	$SQLInstanceName = "localhost\ERICOMCONNECTDB"
+	
+	$Server = New-Object -TypeName Microsoft.SqlServer.Management.Smo.Server -ArgumentList $SQLInstanceName
+	
+	#create SMO handle to your database
+	$DBObject = $Server.Databases[$DatabaseName]
+ 
+	#check database exists on server
+	if ($DBObject)
+	{
+		#instead of drop we will use KillDatabase
+		#KillDatabase drops all active connections before dropping the database.
+	$	Server.KillDatabase($DatabaseName)
+	}
+}
 function CheckDomainRole
 {
 	# Get-ComputerRole.ps1
