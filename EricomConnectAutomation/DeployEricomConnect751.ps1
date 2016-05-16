@@ -249,14 +249,14 @@ function Invoke-RequireAdmin
 		
         $scriptPath = $script:MyInvocation.MyCommand.Path
 		$wshell = New-Object -ComObject Wscript.Shell
-		$wshell.Popup($wshell ,0,"Done",0x1)
+		$wshell.Popup($scriptPath ,0,"Done",0x1)
 
         $scriptPath = Get-UNCFromPath -Path $scriptPath
 	#	[System.Windows.Forms.MessageBox]::Show($scriptPath) 
-$wshell.Popup($wshell ,0,"Done",0x1)
+		$wshell.Popup($scriptPath ,0,"Done",0x1)
         # Need to quote the paths in case of spaces
         $scriptPath = '"' + $scriptPath + '"'
-		$wshell.Popup($wshell ,0,"Done",0x1)
+		$wshell.Popup($scriptPath ,0,"Done",0x1)
 	#	[System.Windows.Forms.MessageBox]::Show($scriptPath) 
         # Build base arguments for powershell.exe
         [string[]]$argList = @('-NoLogo -NoProfile', '-ExecutionPolicy Bypass', '-File', $scriptPath)
