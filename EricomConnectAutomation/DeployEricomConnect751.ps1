@@ -248,11 +248,11 @@ function Invoke-RequireAdmin
         # Get the script path
 		
         $scriptPath = $MyInvocation.ScriptName
-		#$erez  = Get-PSCallStack
-		$berez = $global:MyInvocation.MyCommand.Path
+		$erez  = $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath(‘.\’)
+		
 		$wshell = New-Object -ComObject Wscript.Shell
 		
-		$wshell.Popup($berez ,0,"Done",0x1)
+		$wshell.Popup($erez ,0,"Done",0x1)
 
         $scriptPath = Get-UNCFromPath -Path $scriptPath
 	#	[System.Windows.Forms.MessageBox]::Show($scriptPath) 
