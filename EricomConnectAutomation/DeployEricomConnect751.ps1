@@ -251,8 +251,8 @@ function Invoke-RequireAdmin
 		$erez  = Get-PSCallStack
 		$berez = $global:MyInvocation.MyCommand.Path
 		$wshell = New-Object -ComObject Wscript.Shell
-		$wshell.Popup($erez ,0,"Done",0x1)
-			$wshell.Popup($berez ,0,"Done",0x1)
+		
+		$wshell.Popup($berez ,0,"Done",0x1)
 
         $scriptPath = Get-UNCFromPath -Path $scriptPath
 	#	[System.Windows.Forms.MessageBox]::Show($scriptPath) 
