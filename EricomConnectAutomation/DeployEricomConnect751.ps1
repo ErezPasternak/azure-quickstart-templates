@@ -246,12 +246,16 @@ function Invoke-RequireAdmin
     if (-not (Test-IsAdmin))
     {
         # Get the script path
-        $scriptPath = $MyInvocation.MyCommand.Path
-       # $scriptPath = Get-UNCFromPath -Path $scriptPath
+		
+        $scriptPath = $script:MyInvocation.MyCommand.Path
+		[System.Windows.Forms.MessageBox]::Show($scriptPath) 
+
+        $scriptPath = Get-UNCFromPath -Path $scriptPath
+		[System.Windows.Forms.MessageBox]::Show($scriptPath) 
 
         # Need to quote the paths in case of spaces
         $scriptPath = '"' + $scriptPath + '"'
-
+		[System.Windows.Forms.MessageBox]::Show($scriptPath) 
         # Build base arguments for powershell.exe
         [string[]]$argList = @('-NoLogo -NoProfile', '-ExecutionPolicy Bypass', '-File', $scriptPath)
 
