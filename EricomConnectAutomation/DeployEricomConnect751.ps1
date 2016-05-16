@@ -248,7 +248,7 @@ function Invoke-RequireAdmin
         # Get the script path
 		
         $scriptPath = $MyInvocation.ScriptName
-		$erez  = Get-PSCallStack
+		#$erez  = Get-PSCallStack
 		$berez = $global:MyInvocation.MyCommand.Path
 		$wshell = New-Object -ComObject Wscript.Shell
 		
