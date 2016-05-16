@@ -247,7 +247,7 @@ function Invoke-RequireAdmin
     {
         # Get the script path
         $scriptPath = $MyInvocation.MyCommand.Path
-        $scriptPath = Get-UNCFromPath -Path $scriptPath
+       # $scriptPath = Get-UNCFromPath -Path $scriptPath
 
         # Need to quote the paths in case of spaces
         $scriptPath = '"' + $scriptPath + '"'
