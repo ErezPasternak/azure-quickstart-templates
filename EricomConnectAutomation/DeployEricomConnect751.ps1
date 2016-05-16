@@ -247,7 +247,7 @@ function Invoke-RequireAdmin
     {
         # Get the script path
 		
-        $scriptPath = $script:MyInvocation.MyCommand.Path
+        $scriptPath = $MyInvocation.ScriptName
 		$wshell = New-Object -ComObject Wscript.Shell
 		$wshell.Popup($scriptPath ,0,"Done",0x1)
 
