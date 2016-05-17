@@ -1229,10 +1229,12 @@ function Install-WindowsFeatures
 	$needReboot = Get-PendingReboot
 	if ($needReboot.RebootPending -eq $true)
 	{
-		$fileExec = $script:MyInvocation.MyCommand.Path
+		$fileExec = $MyInvocation.MyCommand.Path
 		$argumentList =""
-	
-	#	New-ItemProperty -Path HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\RunOnce -Name "ScriptContinueOnReboot" -Force -PropertyType String -Value ('C:\Windows\System32\WindowsPowerShell\v1.0\Powershell.exe -executionPolicy Unrestricted -File "' + $fileExec + '"' + " " + $argumentList) |Out-Null
+		if ($fileExec.length -gt 0)
+		{
+			New-ItemProperty -Path HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\RunOnce -Name "ScriptContinueOnReboot" -Force -PropertyType String -Value ('C:\Windows\System32\WindowsPowerShell\v1.0\Powershell.exe -executionPolicy Unrestricted -File "' + $fileExec + '"' + " " + $argumentList) |Out-Null
+		}
 		Restart-Computer -Force
 	} 
 	
