@@ -247,20 +247,13 @@ function Invoke-RequireAdmin
     {
         # Get the script path
 		
-        $scriptPath = $MyInvocation.ScriptName
-		$erez  = $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath('.\')
-		
-	#	$wshell = New-Object -ComObject Wscript.Shell
-		
-	#	$wshell.Popup($erez ,0,"Done",0x1)
-
+        $scriptPath = $MyInvocation.MyCommand.Path
+	
         $scriptPath = Get-UNCFromPath -Path $scriptPath
-	#	[System.Windows.Forms.MessageBox]::Show($scriptPath) 
-	#	$wshell.Popup($scriptPath ,0,"Done",0x1)
+	
         # Need to quote the paths in case of spaces
         $scriptPath = '"' + $scriptPath + '"'
-	#	$wshell.Popup($scriptPath ,0,"Done",0x1)
-	#	[System.Windows.Forms.MessageBox]::Show($scriptPath) 
+	
         # Build base arguments for powershell.exe
         [string[]]$argList = @('-NoLogo -NoProfile', '-ExecutionPolicy Bypass', '-File', $scriptPath)
 
@@ -270,7 +263,7 @@ function Invoke-RequireAdmin
 
         try
         {    
-            $process = Start-Process PowerShell.exe -PassThru -Verb Runas -Wait -WorkingDirectory $pwd -ArgumentList $argList
+            $process = Start-Process PowerShell.exe -PassThru -Verb Runas -WorkingDirectory $pwd -ArgumentList $argList
             exit $process.ExitCode
         }
         catch {}
@@ -1225,12 +1218,12 @@ function Install-WindowsFeatures
 {
 	# list of Windows Features can be found here - https://blogs.technet.microsoft.com/canitpro/2013/04/23/windows-server-2012-roles-features/
 	New-Item -Path "C:\Install-WindowsFeatures" -ItemType Directory -Force -ErrorAction SilentlyContinue
-	DISM /Online /Enable-Feature /FeatureName:NetFx3 /All  
+	DISM /Online /Enable-Feature /FeatureName:NetFx3 /All
 	#Install-WindowsFeature Net-Framework-Core
 	Install-WindowsFeature RDS-RD-Server
 	Install-WindowsFeature Web-Server
 	Install-WindowsFeature RSAT-AD-PowerShell
-	Install-WindowsFeature NET-Framework-45
+	Install-WindowsFeature Net-Framework-45-Core
 	
 	$needReboot = Get-PendingReboot
 	if ($needReboot.RebootPending -eq $true)
