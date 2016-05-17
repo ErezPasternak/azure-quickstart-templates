@@ -250,9 +250,9 @@ function Invoke-RequireAdmin
         $scriptPath = $MyInvocation.ScriptName
 		$erez  = $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath('.\')
 		
-		$wshell = New-Object -ComObject Wscript.Shell
+	#	$wshell = New-Object -ComObject Wscript.Shell
 		
-		$wshell.Popup($erez ,0,"Done",0x1)
+	#	$wshell.Popup($erez ,0,"Done",0x1)
 
         $scriptPath = Get-UNCFromPath -Path $scriptPath
 	#	[System.Windows.Forms.MessageBox]::Show($scriptPath) 
@@ -1238,7 +1238,7 @@ function Install-WindowsFeatures
 		$fileExec = $script:MyInvocation.MyCommand.Path
 		$argumentList =""
 	
-		New-ItemProperty -Path HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\RunOnce -Name "ScriptContinueOnReboot" -Force -PropertyType String -Value ('C:\Windows\System32\WindowsPowerShell\v1.0\Powershell.exe -executionPolicy Unrestricted -File "' + $fileExec + '"' + " " + $argumentList) |Out-Null
+	#	New-ItemProperty -Path HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\RunOnce -Name "ScriptContinueOnReboot" -Force -PropertyType String -Value ('C:\Windows\System32\WindowsPowerShell\v1.0\Powershell.exe -executionPolicy Unrestricted -File "' + $fileExec + '"' + " " + $argumentList) |Out-Null
 		Restart-Computer -Force
 	} 
 	
