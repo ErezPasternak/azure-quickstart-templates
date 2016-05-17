@@ -3,7 +3,6 @@
 )
 
 Write-Output "AutoStart: $AutoStart"
-#Requires -RunAsAdministrator
 
 # loads the BitsTransfer Module
 Import-Module BitsTransfer
@@ -192,7 +191,88 @@ function Disable-IEESC
 	Stop-Process -Name Explorer
 	Write-Host "IE Enhanced Security Configuration (ESC) has been disabled." -ForegroundColor Green
 }
+# Test if admin
+function Test-IsAdmin() 
+{
+    # Get the current ID and its security principal
+    $windowsID = [System.Security.Principal.WindowsIdentity]::GetCurrent()
+    $windowsPrincipal = new-object System.Security.Principal.WindowsPrincipal($windowsID)
+ 
+    # Get the Admin role security principal
+    $adminRole=[System.Security.Principal.WindowsBuiltInRole]::Administrator
+ 
+    # Are we an admin role?
+    if ($windowsPrincipal.IsInRole($adminRole))
+    {
+        $true
+    }
+    else
+    {
+        $false
+    }
+}
 
+
+# Get UNC path from mapped drive
+function Get-UNCFromPath
+{
+   Param(
+    [Parameter(Position=0, Mandatory=$true, ValueFromPipeline=$true)]
+    [String]
+    $Path)
+
+    if ($Path.Contains([io.path]::VolumeSeparatorChar)) 
+    {
+        $psdrive = Get-PSDrive -Name $Path.Substring(0, 1) -PSProvider 'FileSystem'
+
+        # Is it a mapped drive?
+        if ($psdrive.DisplayRoot) 
+        {
+            $Path = $Path.Replace($psdrive.Name + [io.path]::VolumeSeparatorChar, $psdrive.DisplayRoot)
+        }
+    }
+
+    return $Path
+ }
+
+
+# Relaunch the script if not admin
+function Invoke-RequireAdmin
+{
+    Param(
+    [Parameter(Position=0, Mandatory=$true, ValueFromPipeline=$true)]
+    [System.Management.Automation.InvocationInfo]
+    $MyInvocation)
+
+    if (-not (Test-IsAdmin))
+    {
+        # Get the script path
+		
+        $scriptPath = $MyInvocation.MyCommand.Path
+	
+        $scriptPath = Get-UNCFromPath -Path $scriptPath
+	
+        # Need to quote the paths in case of spaces
+        $scriptPath = '"' + $scriptPath + '"'
+
+        # Build base arguments for powershell.exe
+        [string[]]$argList = @('-NoLogo -NoProfile', '-ExecutionPolicy Bypass', '-File', $scriptPath)
+
+        # Add 
+        $argList += $MyInvocation.BoundParameters.GetEnumerator() | Foreach {"-$($_.Key)", "$($_.Value)"}
+        $argList += $MyInvocation.UnboundArguments
+
+        try
+        {    
+            $process = Start-Process PowerShell.exe -PassThru -Verb Runas -WorkingDirectory $pwd -ArgumentList $argList
+            exit $process.ExitCode
+        }
+        catch {}
+
+        # Generic failure code
+        exit 1 
+    }
+}
 Function Get-PendingReboot
 {
 <#
@@ -442,6 +522,7 @@ function AddUsersToRemoteDesktopGroup
 function DeleteDatabase
 {
 	#import SQL Server module
+    $env:PSModulePath = $env:PSModulePath + ";C:\Program Files (x86)\Microsoft SQL Server\120\Tools\PowerShell\Modules"
 	Import-Module SQLPS -DisableNameChecking
  
 	#your SQL Server Instance Name
@@ -1224,20 +1305,22 @@ function Install-WindowsFeatures
 {
 	# list of Windows Features can be found here - https://blogs.technet.microsoft.com/canitpro/2013/04/23/windows-server-2012-roles-features/
 	New-Item -Path "C:\Install-WindowsFeatures" -ItemType Directory -Force -ErrorAction SilentlyContinue
-	
-	Install-WindowsFeature Net-Framework-Core
+	DISM /Online /Enable-Feature /FeatureName:NetFx3 /All  
+	#Install-WindowsFeature Net-Framework-Core
 	Install-WindowsFeature RDS-RD-Server
 	Install-WindowsFeature Web-Server
 	Install-WindowsFeature RSAT-AD-PowerShell
-	Install-WindowsFeature NET-Framework-45-Features
+	Install-WindowsFeature Net-Framework-45-Core
 	
 	$needReboot = Get-PendingReboot
 	if ($needReboot.RebootPending -eq $true)
 	{
-		$fileExec = $script:MyInvocation.MyCommand.Path
+		$fileExec = $MyInvocation.MyCommand.Path
 		$argumentList =""
-	
-		New-ItemProperty -Path HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\RunOnce -Name "ScriptContinueOnReboot" -Force -PropertyType String -Value ('C:\Windows\System32\WindowsPowerShell\v1.0\Powershell.exe -executionPolicy Unrestricted -File "' + $fileExec + '"' + " " + $argumentList) |Out-Null
+		if ($fileExec.length -gt 0)
+		{
+			New-ItemProperty -Path HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\RunOnce -Name "ScriptContinueOnReboot" -Force -PropertyType String -Value ('C:\Windows\System32\WindowsPowerShell\v1.0\Powershell.exe -executionPolicy Unrestricted -File "' + $fileExec + '"' + " " + $argumentList) |Out-Null
+		}
 		Restart-Computer -Force
 	} 
 	
@@ -1339,6 +1422,9 @@ function PostInstall
 
 
 # Main Code 
+
+# Relaunch if we are not running as admin
+Invoke-RequireAdmin $script:MyInvocation
 
 # Prerequisite check that this machine is part of a domain
  CheckDomainRole
