@@ -248,7 +248,7 @@ function Invoke-RequireAdmin
         # Get the script path
 		
         $scriptPath = $MyInvocation.ScriptName
-		$erez  = $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath(‘.\’)
+		$erez  = $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath('.\')
 		
 		$wshell = New-Object -ComObject Wscript.Shell
 		
