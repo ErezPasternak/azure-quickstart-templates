@@ -521,6 +521,7 @@ function AddUsersToRemoteDesktopGroup
 function DeleteDatabase
 {
 	#import SQL Server module
+    $env:PSModulePath = $env:PSModulePath + ";C:\Program Files (x86)\Microsoft SQL Server\120\Tools\PowerShell\Modules"
 	Import-Module SQLPS -DisableNameChecking
  
 	#your SQL Server Instance Name
@@ -1218,7 +1219,7 @@ function Install-WindowsFeatures
 {
 	# list of Windows Features can be found here - https://blogs.technet.microsoft.com/canitpro/2013/04/23/windows-server-2012-roles-features/
 	New-Item -Path "C:\Install-WindowsFeatures" -ItemType Directory -Force -ErrorAction SilentlyContinue
-	DISM /Online /Enable-Feature /FeatureName:NetFx3 /All
+	DISM /Online /Enable-Feature /FeatureName:NetFx3 /All  
 	#Install-WindowsFeature Net-Framework-Core
 	Install-WindowsFeature RDS-RD-Server
 	Install-WindowsFeature Web-Server
