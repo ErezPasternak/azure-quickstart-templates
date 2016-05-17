@@ -1225,7 +1225,7 @@ function Install-WindowsFeatures
 {
 	# list of Windows Features can be found here - https://blogs.technet.microsoft.com/canitpro/2013/04/23/windows-server-2012-roles-features/
 	New-Item -Path "C:\Install-WindowsFeatures" -ItemType Directory -Force -ErrorAction SilentlyContinue
-	DISM /Online /Enable-Feature /FeatureName:NetFx3 /All  
+	#DISM /Online /Enable-Feature /FeatureName:NetFx3 /All  
 	#Install-WindowsFeature Net-Framework-Core
 	Install-WindowsFeature RDS-RD-Server
 	Install-WindowsFeature Web-Server
