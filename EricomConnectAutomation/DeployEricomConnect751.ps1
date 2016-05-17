@@ -1225,12 +1225,12 @@ function Install-WindowsFeatures
 {
 	# list of Windows Features can be found here - https://blogs.technet.microsoft.com/canitpro/2013/04/23/windows-server-2012-roles-features/
 	New-Item -Path "C:\Install-WindowsFeatures" -ItemType Directory -Force -ErrorAction SilentlyContinue
-	#DISM /Online /Enable-Feature /FeatureName:NetFx3 /All  
+	DISM /Online /Enable-Feature /FeatureName:NetFx3 /All  
 	#Install-WindowsFeature Net-Framework-Core
 	Install-WindowsFeature RDS-RD-Server
 	Install-WindowsFeature Web-Server
 	Install-WindowsFeature RSAT-AD-PowerShell
-	Install-WindowsFeature NET-Framework-45-Features
+	Install-WindowsFeature NET-Framework-45
 	
 	$needReboot = Get-PendingReboot
 	if ($needReboot.RebootPending -eq $true)
