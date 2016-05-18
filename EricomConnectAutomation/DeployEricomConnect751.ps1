@@ -10,19 +10,17 @@ Write-Host "BitsTransfer Module is loaded"
 
 # Settings Section
 
-#download 
-$EC_download_url = "https://www.ericom.com/demos/EricomConnectPOC.exe"
-$EC_local_path = "C:\Windows\Temp\EricomConnectPOC.exe"
-$LocalPathSetup  = "EricomConnectPOC.exe"
-$LocalPathVersion = "FULL_Release_EC752_20160502_7.5.2.8832"
-$LocalPathBase = "\\ericom.local\data\FinalBuilder\Deliverables\Release\FULL_Release_EC752" 
-$LocalPath = $LocalPathBase + "\" + $LocalPathVersion + "\" + $LocalPathSetup
+# Ericom Connect installer location   
+$InstallerName = "EricomConnectPOC.exe"
+$EC_download_url_or_unc = "https://www.ericom.com/demos/"+ $InstallerName 
+$EC_local_path = "C:\Windows\Temp\" + $InstallerName
 
+# Active Directory 
 $domainName = "test.local"
-
-#grid
 $AdminUser = "admin@test.local"
 $AdminPassword = "admin"
+
+# Ericom Connect Grid Setting
 $GridName = $env:computername
 $HostOrIp = [System.Net.Dns]::GetHostByName((hostname)).HostName
 $SaUser = ""
@@ -33,7 +31,7 @@ $ConnectConfigurationToolPath = "\Ericom Software\Ericom Connect Configuration T
 $UseWinCredentials = "true"
 $LookUpHosts = [System.Net.Dns]::GetHostByName((hostname)).HostName
 
-#e-mail
+# E-mail Settings
 $To = "erez.pasternak@ericom.com"
 $From = "daas@ericom.com"
 $SMTPServer = "ericom-com.mail.protection.outlook.com"
@@ -42,7 +40,7 @@ $SMTPassword = "1qaz@Wsx#"
 $SMTPPort = 25
 $externalFqdn = [System.Net.Dns]::GetHostByName((hostname)).HostName
 
-# internal 
+# Internal Code - DO NOT CHANGE  
 $global:adminApi = $null
 $global:adminSessionId = $null
 function Start-EricomConnection
@@ -64,54 +62,26 @@ function EricomConnectConnector()
     }
 }
 
-
 function Download-EricomConnect()
 {
 	New-Item -Path "C:\Download-EricomConnect" -ItemType Directory -Force -ErrorAction SilentlyContinue
 	Write-Output "Download-EricomConnect  -- Start"
 	
-	#if we have an installer near the ps1 file we will use it and not download
-	$myInstaller = Join-Path $pwd "EricomConnectPOC.exe"
+	#if we have an installer in the localpath we will use it and not download
 	
-	if (Test-Path $myInstaller)
-	{
-		Copy-Item $myInstaller -Destination $EC_local_path
-	}
 	if (!(Test-Path $EC_local_path))
 	{
-		Write-Output "Downloading $EC_download_url"
-		# (New-Object System.Net.WebClient).DownloadFile($EC_download_url, "C:\Windows\Temp\EricomConnectPOC.exe")
-		Start-BitsTransfer -Source $EC_download_url -Destination $EC_local_path
+		Write-Output "Downloading $EC_download_url_or_unc"
+		Start-BitsTransfer -Source $EC_download_url_or_unc -Destination $EC_local_path
 	}
 	Write-Output "Download-EricomConnect  -- End"
 }
 
-function Copy-EricomConnect()
-{
-	New-Item -Path "C:\Copy-EricomConnect" -ItemType Directory -Force -ErrorAction SilentlyContinue
-	Write-Output "Copy-EricomConnect  -- Start"
-	
-	#if we have an installer near the ps1 file we will use it and not download
-	$myInstaller = Join-Path $pwd "EricomConnectPOC.exe"
-	
-	if (Test-Path $myInstaller)
-	{
-		Copy-Item $myInstaller -Destination $EC_local_path
-	}
-	if (!(Test-Path $EC_local_path))
-	{
-		Write-Output "Copying $LocalPath"
-        Start-BitsTransfer -Source $LocalPath -Destination $EC_local_path
-	}
-	Write-Output "Copy-EricomConnect  -- End"
-}
-
-
-function Install-SingleMachine([string]$sourceFile)
+function Install-SingleMachine()
 {
 	New-Item -Path "C:\Install-SingleMachine" -ItemType Directory -Force -ErrorAction SilentlyContinue
 	Write-Output "Ericom Connect POC installation has been started."
-	$exitCode = (Start-Process -Filepath $sourceFile -NoNewWindow -ArgumentList "/silent LAUNCH_CONFIG_TOOL=False" -Wait -Passthru).ExitCode
+	$exitCode = (Start-Process -Filepath $EC_local_path -NoNewWindow -ArgumentList "/silent LAUNCH_CONFIG_TOOL=False" -Wait -Passthru).ExitCode
 	if ($exitCode -eq 0)
 	{
 		Write-Output "Ericom Connect Grid Server has been succesfuly installed."
@@ -119,12 +89,13 @@ function Install-SingleMachine([string]$sourceFile)
 	else
 	{
 		Write-Output "Ericom Connect Grid Server could not be installed. Exit Code: "  $exitCode
+		exit
 	}
 	Write-Output "Ericom Connect POC installation has been endded."
 }
 
 
-function Config-CreateGrid($config = $Settings)
+function Config-CreateGrid()
 {
 	New-Item -Path "C:\Config-CreateGrid" -ItemType Directory -Force -ErrorAction SilentlyContinue
 	Write-Output "Ericom Connect Grid configuration has been started."
@@ -139,8 +110,8 @@ function Config-CreateGrid($config = $Settings)
 	$_databaseName = $DatabaseName
 	
 	$configPath = Join-Path $env:ProgramFiles -ChildPath $ConnectConfigurationToolPath.Trim()
-	# in case we have a database allready, we will delete it before creating it again
 	
+	# in case we have a database allready, we will delete it before creating it again
 	DeleteDatabase
 	
 	if ($UseWinCredentials -eq $true)
@@ -154,7 +125,6 @@ function Config-CreateGrid($config = $Settings)
 		$args = " NewGrid /AdminUser $_adminUser /AdminPassword $_adminPass /GridName $_gridName /SaDatabaseUser $_saUser /SaDatabasePassword $_saPass /DatabaseServer $_databaseServer /disconnect /noUseWinCredForDBAut"
 	}
 	
-
 	$baseFileName = [System.IO.Path]::GetFileName($configPath);
 	$folder = Split-Path $configPath;
 	cd $folder;
@@ -162,8 +132,7 @@ function Config-CreateGrid($config = $Settings)
 	Write-Output "$args"
 	Write-Output "base filename"
 	Write-Output "$baseFileName"
-  
-	
+  	
     $exitCode = (Start-Process -Filepath "$baseFileName" -ArgumentList "$args" -Wait -Passthru).ExitCode
 	if ($exitCode -eq 0)
 	{
@@ -180,7 +149,8 @@ function Config-CreateGrid($config = $Settings)
 	Write-Output "Ericom Connect Grid configuration has been ended."
     
 }
-# remove the security settings of IE 
+
+# Remove the security settings of IE 
 function Disable-IEESC
 {
 	$AdminKey = "HKLM:\SOFTWARE\Microsoft\Active Setup\Installed Components\{A509B1A7-37EF-4b3f-8CFC-4F3A74704073}"
@@ -190,6 +160,13 @@ function Disable-IEESC
 	Stop-Process -Name Explorer
 	Write-Host "IE Enhanced Security Configuration (ESC) has been disabled." -ForegroundColor Green
 }
+
+# Allow Multiple Sessions Per User
+function AllowMultipleSessionsPerUser
+{
+	Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server'-name "fSingleSessionPerUser" -Value 0
+}
+
 # Test if admin
 function Test-IsAdmin() 
 {
@@ -508,7 +485,6 @@ function ConfigureFirewall
 {
 	Import-Module NetSecurity
 	Set-NetFirewallProfile -Profile Domain -Enabled False
-	Disable-IEESC
 }
 #David - can we fix it for single machine install - just to add the Domain users to the local RemoteDesktopUsers ?
 
@@ -1295,6 +1271,20 @@ function CreateEricomConnectShortcuts
     Start-Sleep -s 5
     Start-Process -FilePath $PortalUrl
 }
+function Windows-Configuration
+{
+	#Configure firwall 
+	ConfigureFirewall
+	
+	#change IE Security
+	Disable-IEESC
+	
+	# Allow Multiple RDP Sessions Per User
+	AllowMultipleSessionsPerUser
+	
+	# Add Domain Users To local Remote Desktop Group
+	AddUsersToRemoteDesktopGroup
+}
 
 function PostInstall
 {
@@ -1321,9 +1311,7 @@ function PostInstall
 
     #Send Admin mail
 	SendAdminMail
-	
-	#change IE Security
-	Disable-IEESC
+
 }
 
 
@@ -1349,23 +1337,23 @@ CheckDomainRole
 # Install the needed Windows Features 
 Install-WindowsFeatures
 
+#Windows Configuration
+Windows-Configuration
+
 #send inital mail 
 SendStartMail
 
-# Download Ericom Offical Installer from the Ericom Web site  
+# Download Ericom Offical Installer from the Ericom Web site or network path 
 Download-EricomConnect
 
-# Copy Ericom Connect install from local network share
-# Copy-EricomConnect
-
 # Install EC in a single machine mode including SQL express   
-Install-SingleMachine -sourceFile C:\Windows\Temp\EricomConnectPOC.exe
+Install-SingleMachine
 
 #we can stop here with a system ready and connected installed and not cofigured 
 if ($PrepareSystem -eq $true)
 {
 	# Configure Ericom Connect Grid
-	Config-CreateGrid -config $Settings
+	Config-CreateGrid 
 	
 	# Run PostInstall Creating users,apps,desktops and publish them
 	PostInstall
