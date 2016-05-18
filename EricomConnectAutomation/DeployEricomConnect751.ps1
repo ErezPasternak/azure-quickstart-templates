@@ -1321,6 +1321,9 @@ function PostInstall
 
     #Send Admin mail
 	SendAdminMail
+	
+	#change IE Security
+	Disable-IEESC
 }
 
 
