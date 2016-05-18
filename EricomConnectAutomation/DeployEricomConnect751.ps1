@@ -1126,7 +1126,7 @@ function Setup-Bginfo ([string]$LocalPath)
 	$localWall = Join-Path $LocalPath "wall.jpg"
 	
 	Start-BitsTransfer -Source $GITBginfo -Destination "C:\BGInfo.zip"
-	Expand-ZIPFile –File "C:\BGInfo.zip" –Destination $LocalPath
+	Expand-ZIPFile -File "C:\BGInfo.zip" -Destination $LocalPath
 	
 	Start-BitsTransfer -Source $GITBgConfig -Destination $LocalBgConfig
 	Start-BitsTransfer -Source $GITBgWall -Destination $localWall
