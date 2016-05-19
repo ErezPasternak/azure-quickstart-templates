@@ -1425,10 +1425,10 @@ CheckPrerequisite
 # Install the needed Windows Features 
 Install-WindowsFeatures
 
-#Windows Configuration
+# Windows Configuration
 Windows-Configuration
 
-#send inital mail 
+# Send inital mail 
 SendStartMail
 
 # Download Ericom Offical Installer from the Ericom Web site or network path 
@@ -1437,7 +1437,7 @@ Download-EricomConnect
 # Install EC in a single machine mode including SQL express   
 Install-SingleMachine
 
-#we can stop here with a system ready and connected installed and not cofigured 
+# We can stop here with a system ready and connected installed and not cofigured 
 if ($PrepareSystem -eq $true)
 {
 	# Configure Ericom Connect Grid
