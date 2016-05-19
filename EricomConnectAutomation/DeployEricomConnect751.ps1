@@ -561,7 +561,7 @@ function CheckDNSConflict
 	$IP = (Get-NetIPAddress -AddressFamily IPv4)[0].IPAddress
 	$Name = [System.Net.Dns]::GetHostByName((hostname)).HostName
 	$IP_From_Name = [System.Net.Dns]::GetHostbyAddress((Get-NetIPAddress -AddressFamily IPv4)[0].IPAddress).HostName
-	if ($IP_From_Name -eq $Name)
+	if ($IP_From_Name -ne $Name)
 	{
     	# we have DNS problem
     	Write-Output "IP is          : $IP"
