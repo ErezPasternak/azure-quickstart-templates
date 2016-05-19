@@ -572,7 +572,19 @@ function CheckDNSConflict
     	exit
 	}	
 }
+function CheckDNSWithPing
+{
+	$test1 = (Test-Connection -ComputerName (hostname) -Count 1 -erroraction Stop).IPV4Address.IPAddressToString
+	$test2 = (Test-Connection -ComputerName ([System.Net.Dns]::GetHostByName((hostname)).HostName) -Count 1 -erroraction Stop).IPV4Address.IPAddressToString
 
+	if ($test1 -ne $test2)
+	{
+		$DNS_error = "DNS problem detacted,<br>Ping by short name ("+ (hostname) + ") resolved to "+ $test1 + "<br>Ping by DNS name ("+ ([System.Net.Dns]::GetHostByName((hostname)).HostName) + ") resolved to "+ $test2 +"<br> Please refresh your DNS setting and try again"
+    	Write-Output "$DNS_Error"
+    	SendErrorMail  -Error "$DNS_error"
+		exit
+	}
+}
 Function Import-EricomLib
 {
 	$XAPPath = "C:\Program Files\Ericom Software\Ericom Connect Configuration Tool\"
@@ -1235,6 +1247,9 @@ function CheckPrerequisite
 
 	# make sure that this machine name can be found in DNS
 	CheckDNSConflict
+	
+	# check DNS using ping
+	CheckDNSWithPing
 }
 
 function Install-Apps
