@@ -126,12 +126,12 @@ function Config-CreateGrid()
 	if ($UseWinCredentials -eq $true)
 	{
 		Write-Output "Configuration mode: with windows credentials"
-		$args = " NewGrid /AdminUser $_adminUser /AdminPassword $_adminPass /GridName $_gridName /HostOrIp $_hostOrIp /DatabaseServer $_databaseServer /DatabaseName $_databaseName /UseWinCredForDBAut /disconnect "
+		$args = " NewGrid /AdminUser $_adminUser /AdminPassword $_adminPass /GridName $_gridName /HostOrIp $_hostOrIp /DatabaseServer $_databaseServer /DatabaseName $_databaseName /UseWinCredForDBAut /LookUpHosts $_hostOrIp /disconnect "
 	}
 	else
 	{
 		Write-Output "Configuration mode: without windows credentials"
-		$args = " NewGrid /AdminUser $_adminUser /AdminPassword $_adminPass /GridName $_gridName /SaDatabaseUser $_saUser /SaDatabasePassword $_saPass /DatabaseServer $_databaseServer /disconnect /noUseWinCredForDBAut"
+		$args = " NewGrid /AdminUser $_adminUser /AdminPassword $_adminPass /GridName $_gridName /SaDatabaseUser $_saUser /SaDatabasePassword $_saPass /DatabaseServer $_databaseServer /LookUpHosts $_hostOrIp /disconnect /noUseWinCredForDBAut"
 	}
 	
 	$baseFileName = [System.IO.Path]::GetFileName($configPath);
