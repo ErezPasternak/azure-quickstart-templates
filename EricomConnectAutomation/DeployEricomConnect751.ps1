@@ -29,7 +29,7 @@ $DatabaseServer = $env:computername+"\ERICOMCONNECTDB"
 $DatabaseName = $env:computername
 $ConnectConfigurationToolPath = "\Ericom Software\Ericom Connect Configuration Tool\EricomConnectConfigurationTool.exe"
 $UseWinCredentials = "true"
-$LookUpHosts = $_hostOrIp
+$LookUpHosts = $HostOrIp
 
 # E-mail Settings
 $To = "erez.pasternak@ericom.com"
