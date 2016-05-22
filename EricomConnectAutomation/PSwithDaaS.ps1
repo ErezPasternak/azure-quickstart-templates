@@ -26,7 +26,7 @@ $HostOrIp = (Get-NetIPAddress -AddressFamily IPv4)[0].IPAddress # [System.Net.Dn
 $SaUser = ""
 $SaPassword = ""
 $DatabaseServer = $env:computername+"\ERICOMCONNECTDB"
-$DatabaseName = $env:computername+"2"
+$DatabaseName = $env:computername
 $ConnectConfigurationToolPath = "\Ericom Software\Ericom Connect Configuration Tool\EricomConnectConfigurationTool.exe"
 $UseWinCredentials = "true"
 $LookUpHosts = $HostOrIp
@@ -122,7 +122,7 @@ function Config-CreateGrid()
 	$configPath = Join-Path $env:ProgramFiles -ChildPath $ConnectConfigurationToolPath.Trim()
 	
 	# in case we have a database allready, we will delete it before creating it again
-	#DeleteDatabase
+	DeleteDatabase
 	
 	if ($UseWinCredentials -eq $true)
 	{
@@ -143,7 +143,7 @@ function Config-CreateGrid()
 	Write-Output "base filename"
 	Write-Output "$baseFileName"
   
-    $exitCode = 0 # (Start-Process -Filepath "$baseFileName" -ArgumentList "$args" -Wait -Passthru).ExitCode
+    $exitCode =  (Start-Process -Filepath "$baseFileName" -ArgumentList "$args" -Wait -Passthru).ExitCode
 	if ($exitCode -eq 0)
 	{
 		Write-Output "Ericom Connect Grid Server has been succesfuly configured."
@@ -1398,6 +1398,7 @@ function Install-WindowsFeatures
 	Install-WindowsFeature Web-Server -IncludeManagementTools
 	Install-WindowsFeature RSAT-AD-PowerShell
 	Install-WindowsFeature Net-Framework-45-Core
+	Install-WindowsFeature Desktop-Experience
 	
 	$needReboot = Get-PendingReboot
 	if ($needReboot.RebootPending -eq $true)
@@ -1528,33 +1529,33 @@ function PostInstall
 # Main Code 
 
 # Relaunch if we are not running as admin
-#Invoke-RequireAdmin $script:MyInvocation
+Invoke-RequireAdmin $script:MyInvocation
 
 # Prerequisite check 
-#CheckPrerequisite 
+CheckPrerequisite 
 
 # Install the needed Windows Features 
-# Install-WindowsFeatures
+Install-WindowsFeatures
 
 # Windows Configuration
-#Windows-Configuration
+Windows-Configuration
 
 # Send inital mail 
-#SendStartMail
+SendStartMail
 
 # Download Ericom Offical Installer from the Ericom Web site or network path 
-# Download-EricomConnect
+Download-EricomConnect
  
 # Install EC in a single machine mode including SQL express   
-#Install-SingleMachine
+Install-SingleMachine
 
 # We can stop here with a system ready and connected installed and not cofigured 
 if ($PrepareSystem -eq $true)
 {
 	# Configure Ericom Connect Grid
-#	Config-CreateGrid 
+	Config-CreateGrid 
 	
 	# Run PostInstall Creating users,apps,desktops and publish them
-#	 PostInstall
+	 PostInstall
 }
 EricomAutomaion
