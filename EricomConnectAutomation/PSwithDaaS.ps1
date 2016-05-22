@@ -26,10 +26,10 @@ $HostOrIp = (Get-NetIPAddress -AddressFamily IPv4)[0].IPAddress # [System.Net.Dn
 $SaUser = ""
 $SaPassword = ""
 $DatabaseServer = $env:computername+"\ERICOMCONNECTDB"
-$DatabaseName = $env:computername
+$DatabaseName = $env:computername+"2"
 $ConnectConfigurationToolPath = "\Ericom Software\Ericom Connect Configuration Tool\EricomConnectConfigurationTool.exe"
 $UseWinCredentials = "true"
-$LookUpHosts = $_hostOrIp
+$LookUpHosts = $HostOrIp
 
 # E-mail Settings
 $To = "erez.pasternak@ericom.com"
@@ -122,17 +122,17 @@ function Config-CreateGrid()
 	$configPath = Join-Path $env:ProgramFiles -ChildPath $ConnectConfigurationToolPath.Trim()
 	
 	# in case we have a database allready, we will delete it before creating it again
-	DeleteDatabase
+	#DeleteDatabase
 	
 	if ($UseWinCredentials -eq $true)
 	{
 		Write-Output "Configuration mode: with windows credentials"
-		$args = " NewGrid /AdminUser $_adminUser /AdminPassword $_adminPass /GridName $_gridName /HostOrIp $_hostOrIp /DatabaseServer $_databaseServer /DatabaseName $_databaseName /UseWinCredForDBAut /LookUpHosts $LookUpHosts /disconnect "
+		$args = " NewGrid /AdminUser $_adminUser /AdminPassword $_adminPass /GridName $_gridName /HostOrIp $_hostOrIp /DatabaseServer $_databaseServer /DatabaseName $_databaseName /UseWinCredForDBAut /LookUpHosts $_hostOrIp /disconnect "
 	}
 	else
 	{
 		Write-Output "Configuration mode: without windows credentials"
-		$args = " NewGrid /AdminUser $_adminUser /AdminPassword $_adminPass /GridName $_gridName /SaDatabaseUser $_saUser /SaDatabasePassword $_saPass /DatabaseServer $_databaseServer /LookUpHosts $LookUpHosts /disconnect /noUseWinCredForDBAut"
+		$args = " NewGrid /AdminUser $_adminUser /AdminPassword $_adminPass /GridName $_gridName /SaDatabaseUser $_saUser /SaDatabasePassword $_saPass /DatabaseServer $_databaseServer /LookUpHosts $_hostOrIp /disconnect /noUseWinCredForDBAut"
 	}
 	
 	$baseFileName = [System.IO.Path]::GetFileName($configPath);
@@ -143,7 +143,7 @@ function Config-CreateGrid()
 	Write-Output "base filename"
 	Write-Output "$baseFileName"
   
-    $exitCode = (Start-Process -Filepath "$baseFileName" -ArgumentList "$args" -Wait -Passthru).ExitCode
+    $exitCode = 0 # (Start-Process -Filepath "$baseFileName" -ArgumentList "$args" -Wait -Passthru).ExitCode
 	if ($exitCode -eq 0)
 	{
 		Write-Output "Ericom Connect Grid Server has been succesfuly configured."
@@ -509,11 +509,11 @@ function AddUsersToRemoteDesktopGroup
 function DeleteDatabase
 {
 	#import SQL Server module
-    $env:PSModulePath = $env:PSModulePath + ";C:\Program Files (x86)\Microsoft SQL Server\120\Tools\PowerShell\Modules"
+   # $env:PSModulePath = $env:PSModulePath + ";C:\Program Files (x86)\Microsoft SQL Server\120\Tools\PowerShell\Modules"
 	Import-Module SQLPS -DisableNameChecking
  
 	#your SQL Server Instance Name
-	$SQLInstanceName = "localhost\ERICOMCONNECTDB"
+	$SQLInstanceName = $DatabaseServer # "localhost\ERICOMCONNECTDB"
 	
 	$Server = New-Object -TypeName Microsoft.SqlServer.Management.Smo.Server -ArgumentList $SQLInstanceName
 
@@ -1137,10 +1137,10 @@ function Publish
     }
 }
 
-function Setup-Bginfo ([string]$LocalPath)
+function Setup-Bginfo ()
 {
 	New-Item -Path "C:\Setup-Bginfo" -ItemType Directory -Force -ErrorAction SilentlyContinue
-	
+	$LocalPath = "C:\BgInfo"
 	$GITBase = "https://raw.githubusercontent.com/ErezPasternak/azure-quickstart-templates/EricomConnect/EricomConnectAutomation/BGinfo/"
 	$GITBginfo = $GITBase + "BGInfo.zip"
 	$GITBgConfig = $GITBase + "bginfo_config.bgi"
@@ -1157,16 +1157,30 @@ function Setup-Bginfo ([string]$LocalPath)
 	New-ItemProperty -Path HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Run -Name BgInfo -Force -PropertyType String -Value "C:\BgInfo\bginfo.exe C:\BgInfo\bginfo_config.bgi /silent /accepteula /timer:0" | Out-Null
 	C:\BgInfo\bginfo.exe C:\BgInfo\bginfo_config.bgi /silent /accepteula /timer:0
 }
-function Setup-AutomationService ([string]$LocalPath)
+
+function AutomationDownload
+{
+    $HttpBase = "http://tswc.ericom.com:501/erez/751/"
+	$DaaSZip = $HttpBase + "DaaSService.zip"
+    $TragetFolder = "C:\Program Files\Ericom Software\Ericom Automation Service"
+	
+	Start-BitsTransfer -Source $DaaSZip -Destination "C:\DaaSService.zip" -ErrorVariable DownloadError
+    if (!(Test-Path $EC_local_path))
+	{
+		$mail_error = "Failed to Download " + $DaaSZip  + "<br><i>"+ $DownloadError +"</i><br>Please fix and try again." 
+		SendErrorMail  -Error "$mail_error"
+		
+	}
+    Remove-Item -Recurse -Force $TragetFolder -ErrorAction SilentlyContinue -ErrorVariable DeleteError
+
+    Write-Output "$DeleteError"
+	Expand-ZIPFile –File "C:\DaaSService.zip" –Destination "C:\Program Files\Ericom Software\Ericom Automation Service"
+}
+
+function AutomationSetup ()
 {
 	New-Item -Path "C:\AutomationService" -ItemType Directory -Force -ErrorAction SilentlyContinue
-	
-	$HttpBase = "http://tswc.ericom.com:501/erez/751/"
-	$DaaSZip = $HttpBase + "DaaSService.zip"
-	
-	#Start-BitsTransfer -Source $DaaSZip -Destination "C:\DaaSService.zip"
-	#Expand-ZIPFile –File "C:\DaaSService.zip" –Destination "C:\Program Files\Ericom Software\Ericom Automation Service"
-	
+
     $portNumber = 2244; # DaaS WebService port number
     $baseRDPGroup = "DaaS-RDP"           
     $workingDirectory = "C:\Program Files\Ericom Software\Ericom Automation Service\"
@@ -1234,15 +1248,23 @@ function Setup-AutomationService ([string]$LocalPath)
         Write-Verbose ("DaaSService: Service could not be bootstrap.. Exit Code: " + $exitCode)
     } 
 
-    #$DaaSUrl = "http://" + $externalFqdn + ":2244/EricomAutomation/DaaS/index.html#/register"
+}
+function AutomationDesktopShortcut
+{
     $DaaSUrl = "http://" + "localhost" + ":2244/EricomAutomation/DaaS/index.html#/register"
-    $ws = New-Object -comObject WScript.Shell
-    $Dt = $ws.SpecialFolders.item("Desktop")
+    $ws  = New-Object -comObject WScript.Shell
+    $Dt  = $ws.SpecialFolders.item("Desktop")
     $URL = $ws.CreateShortcut($Dt + "\DaaS Portal.url")
     $URL.TargetPath = $DaaSUrl
     $URL.Save()    
-
 }
+function EricomAutomaion
+{
+    AutomationDownload
+    AutomationSetup
+    AutomationDesktopShortcut
+}
+
 function SendAdminMail ()
 {
 	New-Item -Path "C:\SendAdminMail" -ItemType Directory -Force -ErrorAction SilentlyContinue
@@ -1376,7 +1398,6 @@ function Install-WindowsFeatures
 	Install-WindowsFeature Web-Server -IncludeManagementTools
 	Install-WindowsFeature RSAT-AD-PowerShell
 	Install-WindowsFeature Net-Framework-45-Core
-	Install-WindowsFeature Desktop-Experience
 	
 	$needReboot = Get-PendingReboot
 	if ($needReboot.RebootPending -eq $true)
@@ -1482,7 +1503,7 @@ function PostInstall
 	PublishAppsAndDesktops
 	
 	# Setup background bitmap and user date using BGinfo
-	Setup-Bginfo -LocalPath C:\BgInfo
+	Setup-Bginfo 
 	
     # Create Desktop shortcuts for Admin and Portal
     CreateEricomConnectShortcuts
@@ -1507,33 +1528,33 @@ function PostInstall
 # Main Code 
 
 # Relaunch if we are not running as admin
-Invoke-RequireAdmin $script:MyInvocation
+#Invoke-RequireAdmin $script:MyInvocation
 
 # Prerequisite check 
-CheckPrerequisite 
+#CheckPrerequisite 
 
 # Install the needed Windows Features 
- Install-WindowsFeatures
+# Install-WindowsFeatures
 
 # Windows Configuration
-Windows-Configuration
+#Windows-Configuration
 
 # Send inital mail 
-SendStartMail
+#SendStartMail
 
 # Download Ericom Offical Installer from the Ericom Web site or network path 
- Download-EricomConnect
+# Download-EricomConnect
  
 # Install EC in a single machine mode including SQL express   
-Install-SingleMachine
+#Install-SingleMachine
 
 # We can stop here with a system ready and connected installed and not cofigured 
 if ($PrepareSystem -eq $true)
 {
 	# Configure Ericom Connect Grid
-	Config-CreateGrid 
+#	Config-CreateGrid 
 	
 	# Run PostInstall Creating users,apps,desktops and publish them
-	 PostInstall
+#	 PostInstall
 }
-Setup-AutomationService
+EricomAutomaion
