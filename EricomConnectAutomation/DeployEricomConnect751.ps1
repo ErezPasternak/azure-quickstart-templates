@@ -43,6 +43,7 @@ $externalFqdn = [System.Net.Dns]::GetHostByName((hostname)).HostName
 # Internal Code - DO NOT CHANGE  
 $global:adminApi = $null
 $global:adminSessionId = $null
+$emailTemplate = "WebServer\DaaS\emails\ready.html"
 function Start-EricomConnection
 {
 	$Assem = Import-EricomLib
@@ -1136,10 +1137,10 @@ function Publish
     }
 }
 
-function Setup-Bginfo ([string]$LocalPath)
+function Setup-Bginfo ()
 {
 	New-Item -Path "C:\Setup-Bginfo" -ItemType Directory -Force -ErrorAction SilentlyContinue
-	
+	$LocalPath = "C:\BgInfo"
 	$GITBase = "https://raw.githubusercontent.com/ErezPasternak/azure-quickstart-templates/EricomConnect/EricomConnectAutomation/BGinfo/"
 	$GITBginfo = $GITBase + "BGInfo.zip"
 	$GITBgConfig = $GITBase + "bginfo_config.bgi"
@@ -1155,6 +1156,113 @@ function Setup-Bginfo ([string]$LocalPath)
 	
 	New-ItemProperty -Path HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Run -Name BgInfo -Force -PropertyType String -Value "C:\BgInfo\bginfo.exe C:\BgInfo\bginfo_config.bgi /silent /accepteula /timer:0" | Out-Null
 	C:\BgInfo\bginfo.exe C:\BgInfo\bginfo_config.bgi /silent /accepteula /timer:0
+}
+
+function AutomationDownload
+{
+    $HttpBase = "http://tswc.ericom.com:501/erez/751/"
+	$DaaSZip = $HttpBase + "DaaSService.zip"
+    $TragetFolder = "C:\Program Files\Ericom Software\Ericom Automation Service"
+	
+	Start-BitsTransfer -Source $DaaSZip -Destination "C:\DaaSService.zip" -ErrorVariable DownloadError
+    if (!(Test-Path $EC_local_path))
+	{
+		$mail_error = "Failed to Download " + $DaaSZip  + "<br><i>"+ $DownloadError +"</i><br>Please fix and try again." 
+		SendErrorMail  -Error "$mail_error"
+		
+	}
+    Remove-Item -Recurse -Force $TragetFolder -ErrorAction SilentlyContinue -ErrorVariable DeleteError
+
+    Write-Output "$DeleteError"
+	Expand-ZIPFile –File "C:\DaaSService.zip" –Destination "C:\Program Files\Ericom Software\Ericom Automation Service"
+}
+
+function AutomationSetup ()
+{
+	New-Item -Path "C:\AutomationService" -ItemType Directory -Force -ErrorAction SilentlyContinue
+
+    $portNumber = 2244; # DaaS WebService port number
+    $baseRDPGroup = "DaaS-RDP"           
+    $workingDirectory = "C:\Program Files\Ericom Software\Ericom Automation Service\"
+    $ServiceName = "AutomationWebService.exe"                  
+    $ServicePath = Join-Path $workingDirectory -ChildPath $ServiceName
+    $rdshpattern = $HostOrIp
+    $fqdn = "PortalSettings/FQDN $externalFqdn";
+    $port = "PortalSettings/Port $portNumber";
+    $adDomain = "ADSettings/Domain $domainName";
+    $adAdmin = "ADSettings/Administrator $AdminUser";
+    $adPassword = "ADSettings/Password $AdminPassword";
+    $adBaseGroup = "ADSettings/BaseADGroup $baseRDPGroup";
+    $rhp = "ADSettings/RemoteHostPattern $rdshpattern";
+    $ec_admin = "ConnectSettings/EC_AdminUser $AdminUser"; # EC_Admin User
+    $ec_pass = "ConnectSettings/EC_AdminPass $AdminUser"; # EC_Admin Pass
+    $RDCB_GridName = "ConnectSettings/EC_GridName $GridName"; # RDCB info - gridname
+    $run_boot_strap = "appSettings/LoadBootstrapData True"; # Run bootstrap code
+               
+    $MAilTemplate = "EmailSettings/EmailTemplatePath $emailTemplate";
+    $MAilServer   = "EmailSettings/SMTPServer $SMTPServer";
+    $MAilPort = "EmailSettings/SMTPPort $SMTPPort";
+    $MAilFrom = "EmailSettings/SMTPFrom $From";
+    $MAilUser = "EmailSettings/SMTPUsername $SMTPSUser";
+    $MAilPassword = "EmailSettings/SMTPPassword $SMTPassword";
+  #  $MAilBCC = "EmailSettings/ListOfBcc $BCCList";
+    
+    # register the service            
+    $argumentsService = "/install";
+                
+    $exitCodeCli = (Start-Process -Filepath $ServicePath -ArgumentList "$argumentsService" -Wait -Passthru).ExitCode;
+    if ($exitCodeCli -eq 0) {
+        Write-Verbose "DaaSService: Service has been succesfuly registerd."
+    } else {
+        Write-Verbose "$ServicePath $argumentsService"
+        Write-Verbose ("DaaSService: Service could not be registerd.. Exit Code: " + $exitCode)
+    }        
+    # configure the service
+    $argumentsService = "/changesettings $fqdn $port $adDomain $adAdmin $adPassword $ec_admin $ec_pass $rhp $RDCB_GridName $adBaseGroup $MAilTemplate $MAilServer $MAilPort $MAilFrom $MAilUser $MAilPassword";
+    Write-Verbose "$ServicePath $argumentsService"           
+    $exitCodeCli = (Start-Process -Filepath $ServicePath -ArgumentList "$argumentsService" -Wait -Passthru).ExitCode;
+    if ($exitCodeCli -eq 0) {
+           Write-Verbose "DaaSService: Service has been succesfuly updated."
+    } else {
+           
+           Write-Verbose ("DaaSService: Service could not be updated.. Exit Code: " + $exitCode)
+    }
+    # start the service            
+    $argumentsService = "/start";
+                
+    $exitCodeCli = (Start-Process -Filepath $ServicePath -ArgumentList "$argumentsService" -Wait -Passthru).ExitCode;
+    if ($exitCodeCli -eq 0) {
+        Write-Verbose "DaaSService: Service has been succesfuly started."
+    } else {
+        Write-Verbose "$ServicePath $argumentsService"
+        Write-Verbose ("DaaSService: Service could not be started.. Exit Code: " + $exitCode)
+    } 
+
+    # run bootstrap
+    $argumentsService = "/changesettings $run_boot_strap";
+    $exitCodeCli = (Start-Process -Filepath $ServicePath -ArgumentList "$argumentsService" -Wait -Passthru).ExitCode;
+    if ($exitCodeCli -eq 0) {
+        Write-Verbose "DaaSService: Service has been succesfuly bootstrap."
+    } else {
+        Write-Verbose "$ServicePath $argumentsService"
+        Write-Verbose ("DaaSService: Service could not be bootstrap.. Exit Code: " + $exitCode)
+    } 
+
+}
+function AutomationDesktopShortcut
+{
+    $DaaSUrl = "http://" + "localhost" + ":2244/EricomAutomation/DaaS/index.html#/register"
+    $ws  = New-Object -comObject WScript.Shell
+    $Dt  = $ws.SpecialFolders.item("Desktop")
+    $URL = $ws.CreateShortcut($Dt + "\DaaS Portal.url")
+    $URL.TargetPath = $DaaSUrl
+    $URL.Save()    
+}
+function EricomAutomaion
+{
+    AutomationDownload
+    AutomationSetup
+    AutomationDesktopShortcut
 }
 
 function SendAdminMail ()
@@ -1396,7 +1504,7 @@ function PostInstall
 	PublishAppsAndDesktops
 	
 	# Setup background bitmap and user date using BGinfo
-	Setup-Bginfo -LocalPath C:\BgInfo
+	Setup-Bginfo 
 	
     # Create Desktop shortcuts for Admin and Portal
     CreateEricomConnectShortcuts
