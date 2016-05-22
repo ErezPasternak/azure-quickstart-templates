@@ -556,6 +556,7 @@ function CheckDomainRole
 	}
 	return $response;
 }
+
 function CheckDNSConflict 
 {
 	$IP = (Get-NetIPAddress -AddressFamily IPv4)[0].IPAddress
@@ -629,6 +630,7 @@ function CreateUser
 	$securePassword = ConvertTo-SecureString -String $password -AsPlainText -Force
 	$AdminSecurePassword = ConvertTo-SecureString -String $AdminPassword -AsPlainText -Force
 	$AdminCredentials = New-Object System.Management.Automation.PSCredential ($AdminUser, $AdminSecurePassword);
+    $UserUPN = $userName + "@" + $domainName
 	
 	try
 	{
@@ -637,7 +639,7 @@ function CreateUser
         
         If ($current -eq $null)
         {
-		    New-ADUser -Server $domainName -PasswordNeverExpires $true -SamAccountName $userName -Name "$userName" -Credential $AdminCredentials -Enabled $true -Verbose -AccountPassword $securePassword
+		    New-ADUser -Server $domainName -PasswordNeverExpires $true -SamAccountName $userName -Name "$userName" -UserPrincipalName $UserUPN -Credential $AdminCredentials -Enabled $true -Verbose -AccountPassword $securePassword
         }
 	}
 	catch
@@ -1124,7 +1126,8 @@ function Publish
     AddHostGroupToResourceGroup -resourceGroup $GroupName -remoteHostGroup $HostGroupName
     if (![string]::IsNullOrWhiteSpace($User))
     {
-        AddUserToResourceGroup -resourceGroup $GroupName -adUser $User
+        $UserFull = $User + "@" + $domainName
+        AddUserToResourceGroup -resourceGroup $GroupName -adUser $UserFull
     }
     
     if (![string]::IsNullOrWhiteSpace($UserGroup))
@@ -1284,7 +1287,7 @@ function Install-WindowsFeatures
 	DISM /Online /Enable-Feature /FeatureName:NetFx3 /All  
 	#Install-WindowsFeature Net-Framework-Core
 	Install-WindowsFeature RDS-RD-Server
-	Install-WindowsFeature Web-Server
+	Install-WindowsFeature Web-Server -IncludeManagementTools
 	Install-WindowsFeature RSAT-AD-PowerShell
 	Install-WindowsFeature Net-Framework-45-Core
 	
@@ -1332,10 +1335,10 @@ function AddAppsAndDesktopsToConnect
 
 function PublishAppsAndDesktops
 {
-	Publish -GroupName "AppGroup1" -AppName "Notepad" -HostGroupName "Allservers" -User "user1@test.local" -UserGroup "QA"
+	Publish -GroupName "AppGroup1" -AppName "Notepad" -HostGroupName "Allservers" -User "user1" -UserGroup "QA"
     Publish -GroupName "AppGroup2" -AppName "Mozilla Firefox" -HostGroupName "Allservers" 
-    Publish -GroupName "AppGroup2" -AppName "Notepad" -HostGroupName "Allservers" -User "user1@test.local" 
-	Publish -GroupName "DesktopGroup" -AppName "MyDesktop" -HostGroupName "Allserver" -User "user2@test.local"
+    Publish -GroupName "AppGroup2" -AppName "Notepad" -HostGroupName "Allservers" -User "user1" 
+	Publish -GroupName "DesktopGroup" -AppName "MyDesktop" -HostGroupName "Allserver" -User "user2"
 }
 
 function CreateEricomConnectShortcuts
