@@ -38,12 +38,12 @@ $SMTPServer = "ericom-com.mail.protection.outlook.com"
 $SMTPSUser = "daas@ericom.com"
 $SMTPassword = "1qaz@Wsx#"
 $SMTPPort = 25
-$emailTemplate = "WebServer\DaaS\emails\ready.html"
 $externalFqdn = [System.Net.Dns]::GetHostByName((hostname)).HostName
 
 # Internal Code - DO NOT CHANGE  
 $global:adminApi = $null
 $global:adminSessionId = $null
+$emailTemplate = "WebServer\DaaS\emails\ready.html"
 function Start-EricomConnection
 {
 	$Assem = Import-EricomLib
@@ -127,12 +127,12 @@ function Config-CreateGrid()
 	if ($UseWinCredentials -eq $true)
 	{
 		Write-Output "Configuration mode: with windows credentials"
-		$args = " NewGrid /AdminUser $_adminUser /AdminPassword $_adminPass /GridName $_gridName /HostOrIp $_hostOrIp /DatabaseServer $_databaseServer /DatabaseName $_databaseName /UseWinCredForDBAut /LookUpHosts $_hostOrIp /disconnect "
+		$args = " NewGrid /AdminUser $_adminUser /AdminPassword $_adminPass /GridName $_gridName /HostOrIp $_hostOrIp /DatabaseServer $_databaseServer /DatabaseName $_databaseName /UseWinCredForDBAut /LookUpHosts $LookUpHosts /disconnect "
 	}
 	else
 	{
 		Write-Output "Configuration mode: without windows credentials"
-		$args = " NewGrid /AdminUser $_adminUser /AdminPassword $_adminPass /GridName $_gridName /SaDatabaseUser $_saUser /SaDatabasePassword $_saPass /DatabaseServer $_databaseServer /LookUpHosts $_hostOrIp /disconnect /noUseWinCredForDBAut"
+		$args = " NewGrid /AdminUser $_adminUser /AdminPassword $_adminPass /GridName $_gridName /SaDatabaseUser $_saUser /SaDatabasePassword $_saPass /DatabaseServer $_databaseServer /LookUpHosts $LookUpHosts /disconnect /noUseWinCredForDBAut"
 	}
 	
 	$baseFileName = [System.IO.Path]::GetFileName($configPath);
@@ -509,11 +509,11 @@ function AddUsersToRemoteDesktopGroup
 function DeleteDatabase
 {
 	#import SQL Server module
-   # $env:PSModulePath = $env:PSModulePath + ";C:\Program Files (x86)\Microsoft SQL Server\120\Tools\PowerShell\Modules"
+    $env:PSModulePath = $env:PSModulePath + ";C:\Program Files (x86)\Microsoft SQL Server\120\Tools\PowerShell\Modules"
 	Import-Module SQLPS -DisableNameChecking
  
 	#your SQL Server Instance Name
-	$SQLInstanceName = $DatabaseServer # "localhost\ERICOMCONNECTDB"
+	$SQLInstanceName = "localhost\ERICOMCONNECTDB"
 	
 	$Server = New-Object -TypeName Microsoft.SqlServer.Management.Smo.Server -ArgumentList $SQLInstanceName
 
