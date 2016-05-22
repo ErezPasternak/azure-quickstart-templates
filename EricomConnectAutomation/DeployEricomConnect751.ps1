@@ -29,7 +29,7 @@ $DatabaseServer = $env:computername+"\ERICOMCONNECTDB"
 $DatabaseName = $env:computername
 $ConnectConfigurationToolPath = "\Ericom Software\Ericom Connect Configuration Tool\EricomConnectConfigurationTool.exe"
 $UseWinCredentials = "true"
-$LookUpHosts = [System.Net.Dns]::GetHostByName((hostname)).HostName
+$LookUpHosts = $_hostOrIp
 
 # E-mail Settings
 $To = "erez.pasternak@ericom.com"
@@ -126,12 +126,12 @@ function Config-CreateGrid()
 	if ($UseWinCredentials -eq $true)
 	{
 		Write-Output "Configuration mode: with windows credentials"
-		$args = " NewGrid /AdminUser $_adminUser /AdminPassword $_adminPass /GridName $_gridName /HostOrIp $_hostOrIp /DatabaseServer $_databaseServer /DatabaseName $_databaseName /UseWinCredForDBAut /LookUpHosts $_hostOrIp /disconnect "
+		$args = " NewGrid /AdminUser $_adminUser /AdminPassword $_adminPass /GridName $_gridName /HostOrIp $_hostOrIp /DatabaseServer $_databaseServer /DatabaseName $_databaseName /UseWinCredForDBAut /LookUpHosts $LookUpHosts /disconnect "
 	}
 	else
 	{
 		Write-Output "Configuration mode: without windows credentials"
-		$args = " NewGrid /AdminUser $_adminUser /AdminPassword $_adminPass /GridName $_gridName /SaDatabaseUser $_saUser /SaDatabasePassword $_saPass /DatabaseServer $_databaseServer /LookUpHosts $_hostOrIp /disconnect /noUseWinCredForDBAut"
+		$args = " NewGrid /AdminUser $_adminUser /AdminPassword $_adminPass /GridName $_gridName /SaDatabaseUser $_saUser /SaDatabasePassword $_saPass /DatabaseServer $_databaseServer /LookUpHosts $LookUpHosts /disconnect /noUseWinCredForDBAut"
 	}
 	
 	$baseFileName = [System.IO.Path]::GetFileName($configPath);
