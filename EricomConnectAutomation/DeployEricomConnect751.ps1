@@ -21,12 +21,12 @@ $AdminUser = "admin@test.local"
 $AdminPassword = "admin"
 
 # Ericom Connect Grid Setting
-$GridName = $env:computername
+$GridName = $env:computername + (Get-Random -Minimum 0 -Maximum 999)
 $HostOrIp = (Get-NetIPAddress -AddressFamily IPv4)[0].IPAddress # [System.Net.Dns]::GetHostByName((hostname)).HostName
 $SaUser = ""
 $SaPassword = ""
 $DatabaseServer = $env:computername+"\ERICOMCONNECTDB"
-$DatabaseName = $env:computername+ (Get-Random -Minimum 0 -Maximum 999)
+$DatabaseName = $GridName
 $ConnectConfigurationToolPath = "\Ericom Software\Ericom Connect Configuration Tool\EricomConnectConfigurationTool.exe"
 $UseWinCredentials = "true"
 $LookUpHosts = $HostOrIp
