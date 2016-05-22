@@ -127,12 +127,12 @@ function Config-CreateGrid()
 	if ($UseWinCredentials -eq $true)
 	{
 		Write-Output "Configuration mode: with windows credentials"
-		$args = " NewGrid /AdminUser $_adminUser /AdminPassword $_adminPass /GridName $_gridName /HostOrIp $_hostOrIp /DatabaseServer $_databaseServer /DatabaseName $_databaseName /UseWinCredForDBAut /disconnect "
+		$args = " NewGrid /AdminUser $_adminUser /AdminPassword $_adminPass /GridName $_gridName /HostOrIp $_hostOrIp /DatabaseServer $_databaseServer /DatabaseName $_databaseName /UseWinCredForDBAut /LookUpHosts $_hostOrIp /disconnect "
 	}
 	else
 	{
 		Write-Output "Configuration mode: without windows credentials"
-		$args = " NewGrid /AdminUser $_adminUser /AdminPassword $_adminPass /GridName $_gridName /SaDatabaseUser $_saUser /SaDatabasePassword $_saPass /DatabaseServer $_databaseServer /disconnect /noUseWinCredForDBAut"
+		$args = " NewGrid /AdminUser $_adminUser /AdminPassword $_adminPass /GridName $_gridName /SaDatabaseUser $_saUser /SaDatabasePassword $_saPass /DatabaseServer $_databaseServer /LookUpHosts $_hostOrIp /disconnect /noUseWinCredForDBAut"
 	}
 	
 	$baseFileName = [System.IO.Path]::GetFileName($configPath);
@@ -631,6 +631,7 @@ function CreateUser
 	$securePassword = ConvertTo-SecureString -String $password -AsPlainText -Force
 	$AdminSecurePassword = ConvertTo-SecureString -String $AdminPassword -AsPlainText -Force
 	$AdminCredentials = New-Object System.Management.Automation.PSCredential ($AdminUser, $AdminSecurePassword);
+    $UserUPN = $userName + "@" + $domainName
 	
 	try
 	{
@@ -639,7 +640,7 @@ function CreateUser
         
         If ($current -eq $null)
         {
-		    New-ADUser -Server $domainName -PasswordNeverExpires $true -SamAccountName $userName -Name "$userName" -Credential $AdminCredentials -Enabled $true -Verbose -AccountPassword $securePassword
+		    New-ADUser -Server $domainName -PasswordNeverExpires $true -SamAccountName $userName -Name "$userName" -UserPrincipalName $UserUPN -Credential $AdminCredentials -Enabled $true -Verbose -AccountPassword $securePassword
         }
 	}
 	catch
@@ -1126,7 +1127,8 @@ function Publish
     AddHostGroupToResourceGroup -resourceGroup $GroupName -remoteHostGroup $HostGroupName
     if (![string]::IsNullOrWhiteSpace($User))
     {
-        AddUserToResourceGroup -resourceGroup $GroupName -adUser $User
+        $UserFull = $User + "@" + $domainName
+        AddUserToResourceGroup -resourceGroup $GroupName -adUser $UserFull
     }
     
     if (![string]::IsNullOrWhiteSpace($UserGroup))
@@ -1254,7 +1256,7 @@ function SendAdminMail ()
 	
 	Write-Verbose "Ericom Connect Grid Server has been succesfuly configured."
 
-	$Message = '<h1>Congratulations! Your Ericom Connect Environment is now Ready!</h1><p>Dear ' + $ToName + ',<br><br>Thank you for deploying <a href="http://www.ericom.com/connect-enterprise.asp">Ericom Connect</a> on <b>'+ [System.Net.Dns]::GetHostByName((hostname)).HostName +'</b>.<br><br>Your deployment is now complete and you can start using the system with these links:<br><br>1. <a href="http://' + $externalFqdn + ':8033/EricomXml/AccessPortal/Start.html#/login">Ericom Connect Access Portal.</a><br>2. <a href="https://' + $externalFqdn + ':8022/Admin">Ericom Connect management console.</a><br><br>Below are your system information. Please make sure you save them for future use:<br><br><b>Server Name:</b> '+ [System.Net.Dns]::GetHostByName((hostname)).HostName + '<br><b>Username:</b> ' + $AdminUser + ' <br><b>Password:</b> ' + $AdminPassword + '<br><br><br>Regards,<br><a href="http://www.ericom.com">Ericom</a> Automation Team'
+	$Message = '<h1>Congratulations! Your Ericom Connect Environment is now Ready!</h1><p>Dear ' + $ToName + ',<br><br>Thank you for deploying <a href="http://www.ericom.com/connect-enterprise.asp">Ericom Connect</a> on <b>'+ [System.Net.Dns]::GetHostByName((hostname)).HostName +'</b>.<br><br>Your deployment is now complete and you can start using the system with these links:<br><br>1. <a href="http://' + $externalFqdn + ':8033/EricomXml/AccessPortal/Start.html#/login">Ericom Connect Access Portal.</a><br>2. <a href="https://' + $externalFqdn + ':8022/Admin">Ericom Connect management console.</a><br><br>Below are your system information. Please make sure you save them for future use:<br><br><b>Server Name:</b><a href="http://' + $externalFqdn + ':8080/AccessNow/Start.html?username='+ $AdminUser+'&password='+ $AdminPassword +'&autostart=true">'+ [System.Net.Dns]::GetHostByName((hostname)).HostName + '</a><br><b>Username:</b> ' + $AdminUser + ' <br><b>Password:</b> ' + $AdminPassword + '<br><br><br>Regards,<br><a href="http://www.ericom.com">Ericom</a> Automation Team'
 	if ($To -ne "nobody")
 	{
 		try
@@ -1371,7 +1373,7 @@ function Install-WindowsFeatures
 	DISM /Online /Enable-Feature /FeatureName:NetFx3 /All  
 	#Install-WindowsFeature Net-Framework-Core
 	Install-WindowsFeature RDS-RD-Server
-	Install-WindowsFeature Web-Server
+	Install-WindowsFeature Web-Server -IncludeManagementTools
 	Install-WindowsFeature RSAT-AD-PowerShell
 	Install-WindowsFeature Net-Framework-45-Core
 	
@@ -1419,10 +1421,10 @@ function AddAppsAndDesktopsToConnect
 
 function PublishAppsAndDesktops
 {
-	Publish -GroupName "AppGroup1" -AppName "Notepad" -HostGroupName "Allservers" -User "user1@test.local" -UserGroup "QA"
+	Publish -GroupName "AppGroup1" -AppName "Notepad" -HostGroupName "Allservers" -User "user1" -UserGroup "QA"
     Publish -GroupName "AppGroup2" -AppName "Mozilla Firefox" -HostGroupName "Allservers" 
-    Publish -GroupName "AppGroup2" -AppName "Notepad" -HostGroupName "Allservers" -User "user1@test.local" 
-	Publish -GroupName "DesktopGroup" -AppName "MyDesktop" -HostGroupName "Allserver" -User "user2@test.local"
+    Publish -GroupName "AppGroup2" -AppName "Notepad" -HostGroupName "Allservers" -User "user1" 
+	Publish -GroupName "DesktopGroup" -AppName "MyDesktop" -HostGroupName "Allserver" -User "user2"
 }
 
 function CreateEricomConnectShortcuts
