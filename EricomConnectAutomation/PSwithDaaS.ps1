@@ -10,21 +10,19 @@ Write-Host "BitsTransfer Module is loaded"
 
 # Settings Section
 
-#download 
-$EC_download_url = "https://www.ericom.com/demos/EricomConnectPOC.exe"
-$EC_local_path = "C:\Windows\Temp\EricomConnectPOC.exe"
-$LocalPathSetup  = "EricomConnectPOC.exe"
-$LocalPathVersion = "FULL_Release_EC752_20160502_7.5.2.8832"
-$LocalPathBase = "\\ericom.local\data\FinalBuilder\Deliverables\Release\FULL_Release_EC752" 
-$LocalPath = $LocalPathBase + "\" + $LocalPathVersion + "\" + $LocalPathSetup
+# Ericom Connect installer location   
+$InstallerName = "EricomConnectPOC.exe"
+$EC_download_url_or_unc = "https://www.ericom.com/demos/"+ $InstallerName 
+$EC_local_path = "C:\Windows\Temp\" + $InstallerName
 
+# Active Directory 
 $domainName = "test.local"
-
-#grid
 $AdminUser = "admin@test.local"
 $AdminPassword = "admin"
+
+# Ericom Connect Grid Setting
 $GridName = $env:computername
-$HostOrIp = [System.Net.Dns]::GetHostByName((hostname)).HostName
+$HostOrIp = (Get-NetIPAddress -AddressFamily IPv4)[0].IPAddress # [System.Net.Dns]::GetHostByName((hostname)).HostName
 $SaUser = ""
 $SaPassword = ""
 $DatabaseServer = $env:computername+"\ERICOMCONNECTDB"
@@ -33,7 +31,7 @@ $ConnectConfigurationToolPath = "\Ericom Software\Ericom Connect Configuration T
 $UseWinCredentials = "true"
 $LookUpHosts = [System.Net.Dns]::GetHostByName((hostname)).HostName
 
-#e-mail
+# E-mail Settings
 $To = "erez.pasternak@ericom.com"
 $From = "daas@ericom.com"
 $SMTPServer = "ericom-com.mail.protection.outlook.com"
@@ -43,7 +41,7 @@ $SMTPPort = 25
 $emailTemplate = "WebServer\DaaS\emails\ready.html"
 $externalFqdn = [System.Net.Dns]::GetHostByName((hostname)).HostName
 
-# internal 
+# Internal Code - DO NOT CHANGE  
 $global:adminApi = $null
 $global:adminSessionId = $null
 function Start-EricomConnection
@@ -65,67 +63,49 @@ function EricomConnectConnector()
     }
 }
 
-
 function Download-EricomConnect()
 {
 	New-Item -Path "C:\Download-EricomConnect" -ItemType Directory -Force -ErrorAction SilentlyContinue
 	Write-Output "Download-EricomConnect  -- Start"
 	
-	#if we have an installer near the ps1 file we will use it and not download
-	$myInstaller = Join-Path $pwd "EricomConnectPOC.exe"
+	#if we have an installer in the localpath we will use it and not download
 	
-	if (Test-Path $myInstaller)
-	{
-		Copy-Item $myInstaller -Destination $EC_local_path
-	}
 	if (!(Test-Path $EC_local_path))
 	{
-		Write-Output "Downloading $EC_download_url"
-		# (New-Object System.Net.WebClient).DownloadFile($EC_download_url, "C:\Windows\Temp\EricomConnectPOC.exe")
-		Start-BitsTransfer -Source $EC_download_url -Destination $EC_local_path
+		Write-Output "Downloading $EC_download_url_or_unc"
+		Start-BitsTransfer -Source $EC_download_url_or_unc -Destination $EC_local_path -ErrorVariable DownloadError
+	}
+	
+	if (!(Test-Path $EC_local_path))
+	{
+		$mail_error = "Failed to Download " + $EC_download_url_or_unc  + "<br><i>"+ $DownloadError +"</i><br>Please fix and try again." 
+		SendErrorMail  -Error "$mail_error"
+		exit
 	}
 	Write-Output "Download-EricomConnect  -- End"
 }
 
-function Copy-EricomConnect()
-{
-	New-Item -Path "C:\Copy-EricomConnect" -ItemType Directory -Force -ErrorAction SilentlyContinue
-	Write-Output "Copy-EricomConnect  -- Start"
-	
-	#if we have an installer near the ps1 file we will use it and not download
-	$myInstaller = Join-Path $pwd "EricomConnectPOC.exe"
-	
-	if (Test-Path $myInstaller)
-	{
-		Copy-Item $myInstaller -Destination $EC_local_path
-	}
-	if (!(Test-Path $EC_local_path))
-	{
-		Write-Output "Copying $LocalPath"
-        Start-BitsTransfer -Source $LocalPath -Destination $EC_local_path
-	}
-	Write-Output "Copy-EricomConnect  -- End"
-}
-
-
-function Install-SingleMachine([string]$sourceFile)
+function Install-SingleMachine()
 {
 	New-Item -Path "C:\Install-SingleMachine" -ItemType Directory -Force -ErrorAction SilentlyContinue
 	Write-Output "Ericom Connect POC installation has been started."
-	$exitCode = (Start-Process -Filepath $sourceFile -NoNewWindow -ArgumentList "/silent LAUNCH_CONFIG_TOOL=False" -Wait -Passthru).ExitCode
+	$exitCode = (Start-Process -Filepath $EC_local_path -NoNewWindow -ArgumentList "/silent LAUNCH_CONFIG_TOOL=False" -Wait -Passthru).ExitCode
 	if ($exitCode -eq 0)
 	{
 		Write-Output "Ericom Connect Grid Server has been succesfuly installed."
 	}
 	else
 	{
-		Write-Output "Ericom Connect Grid Server could not be installed. Exit Code: "  $exitCode
+		$installError = "Ericom Connect Grid Server could not be installed. Exit Code: " +  $exitCode
+		$mail_error = "Failed to Install " + $EC_local_path  + "<br><i>"+ $installError +"</i><br>Please fix and try again." 
+		SendErrorMail  -Error "$mail_error"
+		exit
 	}
 	Write-Output "Ericom Connect POC installation has been endded."
 }
 
 
-function Config-CreateGrid($config = $Settings)
+function Config-CreateGrid()
 {
 	New-Item -Path "C:\Config-CreateGrid" -ItemType Directory -Force -ErrorAction SilentlyContinue
 	Write-Output "Ericom Connect Grid configuration has been started."
@@ -140,8 +120,8 @@ function Config-CreateGrid($config = $Settings)
 	$_databaseName = $DatabaseName
 	
 	$configPath = Join-Path $env:ProgramFiles -ChildPath $ConnectConfigurationToolPath.Trim()
-	# in case we have a database allready, we will delete it before creating it again
 	
+	# in case we have a database allready, we will delete it before creating it again
 	DeleteDatabase
 	
 	if ($UseWinCredentials -eq $true)
@@ -155,7 +135,6 @@ function Config-CreateGrid($config = $Settings)
 		$args = " NewGrid /AdminUser $_adminUser /AdminPassword $_adminPass /GridName $_gridName /SaDatabaseUser $_saUser /SaDatabasePassword $_saPass /DatabaseServer $_databaseServer /disconnect /noUseWinCredForDBAut"
 	}
 	
-
 	$baseFileName = [System.IO.Path]::GetFileName($configPath);
 	$folder = Split-Path $configPath;
 	cd $folder;
@@ -164,7 +143,6 @@ function Config-CreateGrid($config = $Settings)
 	Write-Output "base filename"
 	Write-Output "$baseFileName"
   
-	
     $exitCode = (Start-Process -Filepath "$baseFileName" -ArgumentList "$args" -Wait -Passthru).ExitCode
 	if ($exitCode -eq 0)
 	{
@@ -172,7 +150,9 @@ function Config-CreateGrid($config = $Settings)
 	}
 	else
 	{
-		Write-Output "Ericom Connect Grid Server could not be configured. Exit Code: "  $exitCode
+		$GridConfigError = "Ericom Connect Grid Server could not be configured. Exit Code: " +  $exitCode
+		$mail_error = "Failed to Configure Ericom Connect Grid <br><i>"+ $GridConfigError +"</i><br>Please fix and try again." 
+		SendErrorMail  -Error "$mail_error"
         exit
 	}
   
@@ -181,7 +161,8 @@ function Config-CreateGrid($config = $Settings)
 	Write-Output "Ericom Connect Grid configuration has been ended."
     
 }
-# remove the security settings of IE 
+
+# Remove the security settings of IE 
 function Disable-IEESC
 {
 	$AdminKey = "HKLM:\SOFTWARE\Microsoft\Active Setup\Installed Components\{A509B1A7-37EF-4b3f-8CFC-4F3A74704073}"
@@ -191,6 +172,13 @@ function Disable-IEESC
 	Stop-Process -Name Explorer
 	Write-Host "IE Enhanced Security Configuration (ESC) has been disabled." -ForegroundColor Green
 }
+
+# Allow Multiple Sessions Per User
+function AllowMultipleSessionsPerUser
+{
+	Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server'-name "fSingleSessionPerUser" -Value 0
+}
+
 # Test if admin
 function Test-IsAdmin() 
 {
@@ -509,7 +497,6 @@ function ConfigureFirewall
 {
 	Import-Module NetSecurity
 	Set-NetFirewallProfile -Profile Domain -Enabled False
-	Disable-IEESC
 }
 #David - can we fix it for single machine install - just to add the Domain users to the local RemoteDesktopUsers ?
 
@@ -557,16 +544,49 @@ function CheckDomainRole
 	}
 	[int32]$myRole = (Get-WmiObject -Class win32_ComputerSystem -ComputerName $ComputerName).DomainRole
 	Write-Host "$ComputerName is a $($role[$myRole]), role type $myrole"
+
 	$response = $true;
 	if ($myRole -eq 0 -or $myRole -eq 2)
 	{
 		Write-Warning "The machine should be in a domain!";
 		$response = $false;
+		
+		$mail_error = "Computer " + (hostname) + "Is not part of a Domain, Please join to a Domain and try again"
+		SendErrorMail  -Error "$mail_error"
         Exit 
 	}
 	return $response;
 }
 
+function CheckDNSConflict 
+{
+	$IP = (Get-NetIPAddress -AddressFamily IPv4)[0].IPAddress
+	$Name = [System.Net.Dns]::GetHostByName((hostname)).HostName
+	$IP_From_Name = [System.Net.Dns]::GetHostbyAddress((Get-NetIPAddress -AddressFamily IPv4)[0].IPAddress).HostName
+	if ($IP_From_Name -ne $Name)
+	{
+    	# we have DNS problem
+    	Write-Output "IP is          : $IP"
+    	Write-Output "Name is        : $Name"
+    	Write-Output "IP from Nams is: $IP_From_Name"
+		$mail_error = "DNS problem detacted,<br>Computer IP is: "+ $IP + "<br>Computer DNS name is: "+ $Name + "<br> Computer name by IP is: "+ $IP_From_Name +"<br> Please refresh your DNS setting and try again"
+		SendErrorMail  -Error "$mail_error"
+    	exit
+	}	
+}
+function CheckDNSWithPing
+{
+	$test1 = (Test-Connection -ComputerName (hostname) -Count 1 -erroraction Stop).IPV4Address.IPAddressToString
+	$test2 = (Test-Connection -ComputerName ([System.Net.Dns]::GetHostByName((hostname)).HostName) -Count 1 -erroraction Stop).IPV4Address.IPAddressToString
+
+	if ($test1 -ne $test2)
+	{
+		$DNS_error = "DNS problem detacted,<br>Ping by short name ("+ (hostname) + ") resolved to "+ $test1 + "<br>Ping by DNS name ("+ ([System.Net.Dns]::GetHostByName((hostname)).HostName) + ") resolved to "+ $test2 +"<br> Please refresh your DNS setting and try again"
+    	Write-Output "$DNS_Error"
+    	SendErrorMail  -Error "$DNS_error"
+		exit
+	}
+}
 Function Import-EricomLib
 {
 	$XAPPath = "C:\Program Files\Ericom Software\Ericom Connect Configuration Tool\"
@@ -1127,7 +1147,7 @@ function Setup-Bginfo ([string]$LocalPath)
 	$localWall = Join-Path $LocalPath "wall.jpg"
 	
 	Start-BitsTransfer -Source $GITBginfo -Destination "C:\BGInfo.zip"
-	Expand-ZIPFile –File "C:\BGInfo.zip" –Destination $LocalPath
+	Expand-ZIPFile -File "C:\BGInfo.zip" -Destination $LocalPath
 	
 	Start-BitsTransfer -Source $GITBgConfig -Destination $LocalBgConfig
 	Start-BitsTransfer -Source $GITBgWall -Destination $localWall
@@ -1225,7 +1245,7 @@ function SendAdminMail ()
 {
 	New-Item -Path "C:\SendAdminMail" -ItemType Directory -Force -ErrorAction SilentlyContinue
 	
-	$Subject = "Ericom Connect Deployment is now Ready"
+	$Subject = "Ericom Connect Deployment on " + (hostname) + " is now Ready"
 	
 	$securePassword = ConvertTo-SecureString -String $SMTPassword -AsPlainText -Force
 	$credential = New-Object System.Management.Automation.PSCredential ("daas@ericom.com", $securePassword)
@@ -1233,8 +1253,68 @@ function SendAdminMail ()
 	$ToName = $To.Split("@")[0].Replace(".", " ");
 	
 	Write-Verbose "Ericom Connect Grid Server has been succesfuly configured."
-	$Keyword = "CB: Ericom Connect Grid Server has been succesfuly configured."
-	$Message = '<h1>Congratulations! Your Ericom Connect Environment is now Ready!</h1><p>Dear ' + $ToName + ',<br><br>Thank you for deploying <a href="http://www.ericom.com/connect-enterprise.asp">Ericom Connect</a>.<br><br>Your deployment is now complete and you can start using the system.<br><br>To launch Ericom Portal Client please click <a href="http://' + $externalFqdn + ':8033/EricomXml/AccessPortal/Start.html#/login">here.</a><br><br>To log-in to Ericom Connect management console please click <a href="https://' + $externalFqdn + ':8022/Admin">here.</a><br><br>Below are your Admin credentials. Please make sure you save them for future use:<br><br>Username: ' + $AdminUser + ' <br>Password: ' + $AdminPassword + '<br><br><br>Regards,<br><a href="http://www.ericom.com">Ericom</a> Automation Team'
+
+	$Message = '<h1>Congratulations! Your Ericom Connect Environment is now Ready!</h1><p>Dear ' + $ToName + ',<br><br>Thank you for deploying <a href="http://www.ericom.com/connect-enterprise.asp">Ericom Connect</a> on <b>'+ [System.Net.Dns]::GetHostByName((hostname)).HostName +'</b>.<br><br>Your deployment is now complete and you can start using the system with these links:<br><br>1. <a href="http://' + $externalFqdn + ':8033/EricomXml/AccessPortal/Start.html#/login">Ericom Connect Access Portal.</a><br>2. <a href="https://' + $externalFqdn + ':8022/Admin">Ericom Connect management console.</a><br><br>Below are your system information. Please make sure you save them for future use:<br><br><b>Server Name:</b> '+ [System.Net.Dns]::GetHostByName((hostname)).HostName + '<br><b>Username:</b> ' + $AdminUser + ' <br><b>Password:</b> ' + $AdminPassword + '<br><br><br>Regards,<br><a href="http://www.ericom.com">Ericom</a> Automation Team'
+	if ($To -ne "nobody")
+	{
+		try
+		{
+			Send-MailMessage -Body "$Message" -BodyAsHtml -Subject "$Subject" -SmtpServer $SmtpServer -Port $SMTPPort -Credential $credential -From $credential.UserName -To $To -bcc "erez.pasternak@ericom.com", "DaaS@ericom.com" -ErrorAction SilentlyContinue
+		}
+		catch
+		{
+			$_.Exception.Message | Out-File "C:\sendmailmessageend.txt"
+		}
+	}
+
+}
+
+function SendErrorMail ()
+{
+	param (
+		[string]$Error
+	)
+	
+	$Subject = "Ericom Connect Deployment have failed on " + (hostname)	
+	$Message = '<h1>Ericom Connect Deployment have failed!</h1><p>Dear Customer ,<br><br> Ericom Connect Deployment on ' + [System.Net.Dns]::GetHostByName((hostname)).HostName +' have failed with this error: <br><br><i>"' + $Error + '"</i> <br><br> Regards,<br><a href="http://www.ericom.com">Ericom</a> Automation Team'
+
+	New-Item -Path "C:\SendProblemMail" -ItemType Directory -Force -ErrorAction SilentlyContinue
+	
+	$securePassword = ConvertTo-SecureString -String $SMTPassword -AsPlainText -Force
+	$credential = New-Object System.Management.Automation.PSCredential ("daas@ericom.com", $securePassword)
+	$date = (Get-Date).ToString();
+	$ToName = $To.Split("@")[0].Replace(".", " ");
+	
+	Write-Verbose "Ericom Connect Deployment have started."
+		
+	if ($To -ne "nobody")
+	{
+		try
+		{
+			Send-MailMessage -Body "$Message" -BodyAsHtml -Subject "$Subject" -SmtpServer $SmtpServer -Port $SMTPPort -Credential $credential -From $credential.UserName -To $To -bcc "erez.pasternak@ericom.com", "DaaS@ericom.com" -ErrorAction SilentlyContinue
+		}
+		catch
+		{
+			$_.Exception.Message | Out-File "C:\SendProblemMail.txt"
+		}
+	}	
+}
+
+function SendStartMail ()
+{
+	New-Item -Path "C:\SendStartMail" -ItemType Directory -Force -ErrorAction SilentlyContinue
+	
+	$Subject = "Ericom Connect Deployment on " + (hostname) +" have started"
+	
+	$securePassword = ConvertTo-SecureString -String $SMTPassword -AsPlainText -Force
+	$credential = New-Object System.Management.Automation.PSCredential ("daas@ericom.com", $securePassword)
+	$date = (Get-Date).ToString();
+	$ToName = $To.Split("@")[0].Replace(".", " ");
+	
+	Write-Verbose "Ericom Connect Deployment have started."
+
+	$Message = '<h1>You have successfully started your Ericom Connect Deployment!</h1><p>Dear ' + $ToName + ',<br><br>Thank you for using <a href="http://www.ericom.com/connect-enterprise.asp">Ericom Connect</a>.<br><br>Your Ericom Connect Deployment on <b>'+ [System.Net.Dns]::GetHostByName((hostname)).HostName +'</b> is now in process.<br><br>We will send you a confirmation e-mail once the deployment is complete and your system is ready.<br><br>Regards,<br><a href="http://www.ericom.com">Ericom</a> Automation Team'
+	
 	if ($To -ne "nobody")
 	{
 		try
@@ -1247,33 +1327,16 @@ function SendAdminMail ()
 		}
 	}
 }
-
-function SendStartMail ()
+function CheckPrerequisite
 {
-	New-Item -Path "C:\SendStartMail" -ItemType Directory -Force -ErrorAction SilentlyContinue
+	# make sure that this machine is part of a domain
+	CheckDomainRole
+
+	# make sure that this machine name can be found in DNS
+	CheckDNSConflict
 	
-	$Subject = "Ericom Connect Deployment have started"
-	
-	$securePassword = ConvertTo-SecureString -String $SMTPassword -AsPlainText -Force
-	$credential = New-Object System.Management.Automation.PSCredential ("daas@ericom.com", $securePassword)
-	$date = (Get-Date).ToString();
-	$ToName = $To.Split("@")[0].Replace(".", " ");
-	
-	Write-Verbose "Ericom Connect Deployment have started."
-	$Keyword = "CB: Ericom Connect Deployment have started."
-	$Message = '<h1>You have successfully started your Ericom Connect Deployment!</h1><p>Dear ' + $ToName + ',<br><br>Thank you for using <a href="http://www.ericom.com/connect-enterprise.asp">Ericom Connect</a>.<br><br>Your Ericom Connect Deployment is now in process.<br><br>We will send you a confirmation e-mail once the deployment is complete and your system is ready.<br><br>Regards,<br><a href="http://www.ericom.com">Ericom</a> Automation Team'
-	
-	if ($To -ne "nobody")
-	{
-		try
-		{
-			Send-MailMessage -Body "$Message" -BodyAsHtml -Subject "$Subject" -SmtpServer $SmtpServer -Port $SMTPPort -Credential $credential -From $credential.UserName -To $To -bcc "erez.pasternak@ericom.com", "DaaS@ericom.com" -ErrorAction SilentlyContinue
-		}
-		catch
-		{
-			$_.Exception.Message | Out-File "C:\sendmailmessageend.txt"
-		}
-	}
+	# check DNS using ping
+	CheckDNSWithPing
 }
 
 function Install-Apps
@@ -1361,6 +1424,7 @@ function PublishAppsAndDesktops
     Publish -GroupName "AppGroup2" -AppName "Notepad" -HostGroupName "Allservers" -User "user1@test.local" 
 	Publish -GroupName "DesktopGroup" -AppName "MyDesktop" -HostGroupName "Allserver" -User "user2@test.local"
 }
+
 function CreateEricomConnectShortcuts
 {
     # open browser for both Admin and Portal
@@ -1380,6 +1444,21 @@ function CreateEricomConnectShortcuts
     Start-Process -FilePath $AdminUrl
     Start-Sleep -s 5
     Start-Process -FilePath $PortalUrl
+}
+
+function Windows-Configuration
+{
+	#Configure firwall 
+	ConfigureFirewall
+	
+	#change IE Security
+	Disable-IEESC
+	
+	# Allow Multiple RDP Sessions Per User
+	AllowMultipleSessionsPerUser
+	
+	# Add Domain Users To local Remote Desktop Group
+	AddUsersToRemoteDesktopGroup
 }
 
 function PostInstall
@@ -1407,6 +1486,7 @@ function PostInstall
 
     #Send Admin mail
 	SendAdminMail
+
 }
 
 
@@ -1426,29 +1506,29 @@ function PostInstall
 # Relaunch if we are not running as admin
 Invoke-RequireAdmin $script:MyInvocation
 
-# Prerequisite check that this machine is part of a domain
- CheckDomainRole
+# Prerequisite check 
+CheckPrerequisite 
 
 # Install the needed Windows Features 
  Install-WindowsFeatures
 
-#send inital mail 
+# Windows Configuration
+Windows-Configuration
+
+# Send inital mail 
 SendStartMail
 
-# Download Ericom Offical Installer from the Ericom Web site  
+# Download Ericom Offical Installer from the Ericom Web site or network path 
  Download-EricomConnect
  
-# Copy Ericom Connect install from local network share
-# Copy-EricomConnect
-
 # Install EC in a single machine mode including SQL express   
- Install-SingleMachine -sourceFile C:\Windows\Temp\EricomConnectPOC.exe
+Install-SingleMachine
 
-#we can stop here with a system ready and connected installed and not cofigured 
+# We can stop here with a system ready and connected installed and not cofigured 
 if ($PrepareSystem -eq $true)
 {
 	# Configure Ericom Connect Grid
-	Config-CreateGrid -config $Settings
+	Config-CreateGrid 
 	
 	# Run PostInstall Creating users,apps,desktops and publish them
 	 PostInstall
