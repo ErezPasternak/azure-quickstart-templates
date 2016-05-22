@@ -1290,6 +1290,7 @@ function Install-WindowsFeatures
 	Install-WindowsFeature Web-Server -IncludeManagementTools
 	Install-WindowsFeature RSAT-AD-PowerShell
 	Install-WindowsFeature Net-Framework-45-Core
+	Install-WindowsFeature Desktop-Experience
 	
 	$needReboot = Get-PendingReboot
 	if ($needReboot.RebootPending -eq $true)
