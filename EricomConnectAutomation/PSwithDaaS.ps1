@@ -46,7 +46,7 @@ $emailTemplate = "WebServer\DaaS\emails\ready.html"
 $From = "daas@ericom.com"
 $SMTPServer = "ericom-com.mail.protection.outlook.com"
 $SMTPSUser = "daas@ericom.com"
-$SMTPassword = "1qaz@Wsx#"
+$SMTPassword = "1qaz@Wsx#a"
 $SMTPPort = 25
 
 
