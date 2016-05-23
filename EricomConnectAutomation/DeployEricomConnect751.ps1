@@ -1649,7 +1649,7 @@ $inputXml = @"
 
 
 # Main Code 
-#New-ConnectServer
+# New-ConnectServer
 # Relaunch if we are not running as admin
 
 Invoke-RequireAdmin $script:MyInvocation
