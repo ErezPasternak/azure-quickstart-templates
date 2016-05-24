@@ -46,7 +46,7 @@ $emailTemplate = "WebServer\DaaS\emails\ready.html"
 $From = "daas@ericom.com"
 $SMTPServer = "ericom-com.mail.protection.outlook.com"
 $SMTPSUser = "daas@ericom.com"
-$SMTPassword = "1qaz@Wsx#a"
+$SMTPasswordUser = "admin"
 $SMTPPort = 25
 
 
@@ -1277,7 +1277,11 @@ function SendAdminMail ()
 	
 	$Subject = "Ericom Connect Deployment on " + (hostname) + " is now Ready"
 	
-	$securePassword = ConvertTo-SecureString -String $SMTPassword -AsPlainText -Force
+    $AdminSecurePassword = ConvertTo-SecureString -String $AdminPassword -AsPlainText -Force
+	$AdminCredentials = New-Object System.Management.Automation.PSCredential ($AdminUser, $AdminSecurePassword);
+    $MailPassword = ((Get-ADUser $SMTPasswordUser -Server $domainName -Credential $AdminCredentials -Properties HomePage | Select HomePage).HomePage | Out-String).Trim()
+	
+    $securePassword = ConvertTo-SecureString -String $MailPassword -AsPlainText -Force
 	$credential = New-Object System.Management.Automation.PSCredential ("daas@ericom.com", $securePassword)
 	$date = (Get-Date).ToString();
 	$ToName = $To.Split("@")[0].Replace(".", " ");
@@ -1309,8 +1313,12 @@ function SendErrorMail ()
 	$Message = '<h1>Ericom Connect Deployment have failed!</h1><p>Dear Customer ,<br><br> Ericom Connect Deployment on ' + [System.Net.Dns]::GetHostByName((hostname)).HostName +' have failed with this error: <br><br><i>"' + $Error + '"</i> <br><br> Regards,<br><a href="http://www.ericom.com">Ericom</a> Automation Team'
 
 	New-Item -Path "C:\SendProblemMail" -ItemType Directory -Force -ErrorAction SilentlyContinue
-	
-	$securePassword = ConvertTo-SecureString -String $SMTPassword -AsPlainText -Force
+    
+    $AdminSecurePassword = ConvertTo-SecureString -String $AdminPassword -AsPlainText -Force
+	$AdminCredentials = New-Object System.Management.Automation.PSCredential ($AdminUser, $AdminSecurePassword);
+    $MailPassword = ((Get-ADUser $SMTPasswordUser -Server $domainName -Credential $AdminCredentials -Properties HomePage | Select HomePage).HomePage | Out-String).Trim()	
+
+	$securePassword = ConvertTo-SecureString -String $MailPassword -AsPlainText -Force
 	$credential = New-Object System.Management.Automation.PSCredential ("daas@ericom.com", $securePassword)
 	$date = (Get-Date).ToString();
 	$ToName = $To.Split("@")[0].Replace(".", " ");
@@ -1336,7 +1344,12 @@ function SendStartMail ()
 	
 	$Subject = "Ericom Connect Deployment on " + (hostname) +" have started"
 	
-	$securePassword = ConvertTo-SecureString -String $SMTPassword -AsPlainText -Force
+	
+    $AdminSecurePassword = ConvertTo-SecureString -String $AdminPassword -AsPlainText -Force
+	$AdminCredentials = New-Object System.Management.Automation.PSCredential ($AdminUser, $AdminSecurePassword);
+    $MailPassword = ((Get-ADUser $SMTPasswordUser -Server $domainName -Credential $AdminCredentials -Properties HomePage | Select HomePage).HomePage | Out-String).Trim()	
+
+	$securePassword = ConvertTo-SecureString -String $MailPassword -AsPlainText -Force
 	$credential = New-Object System.Management.Automation.PSCredential ("daas@ericom.com", $securePassword)
 	$date = (Get-Date).ToString();
 	$ToName = $To.Split("@")[0].Replace(".", " ");
@@ -1648,8 +1661,9 @@ $inputXml = @"
 
 
 
-# Main Code 
-# New-ConnectServer
+# Main Code
+SendAdminMail 
+#New-ConnectServer
 # Relaunch if we are not running as admin
 
 Invoke-RequireAdmin $script:MyInvocation
