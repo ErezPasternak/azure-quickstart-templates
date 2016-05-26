@@ -1662,7 +1662,6 @@ $inputXml = @"
 
 
 # Main Code
-SendAdminMail 
 #New-ConnectServer
 # Relaunch if we are not running as admin
 
