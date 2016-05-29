@@ -1,4 +1,14 @@
-﻿# Update Mail account password in Active Directory
+﻿<#
+.Synopsis
+Update Mail account password in Active Directory
+
+.NOTES   
+Name: SaveMailPasswordinAD
+Author: Erez Pasternak
+Version: 1.0
+DateCreated: 2016-05-29
+
+#>
 
 $Admin ="admin@test.local"
 $AdminPassword = "admin"
