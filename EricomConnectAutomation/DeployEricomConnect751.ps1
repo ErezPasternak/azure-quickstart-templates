@@ -1,4 +1,15 @@
-﻿param (
+﻿<#
+.Synopsis
+Deploy a full Ericom Connect enviroment 
+
+.NOTES   
+Name: EricomConnectAutomation
+Author: Erez Pasternak
+Version: 1.0
+DateCreated: 2016-05-29
+
+#>
+param (
 	[switch]$PrepareSystem = $true
 )
 
