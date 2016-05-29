@@ -1128,9 +1128,18 @@ function Publish
         [string]$UserGroup
 	)
 
-    Create-ResourceGroup -groupName $GroupName
-    AddAppToResourceGroup -resourceGroup $GroupName -applicationName $AppName
-    AddHostGroupToResourceGroup -resourceGroup $GroupName -remoteHostGroup $HostGroupName
+	Create-ResourceGroup -groupName $GroupName
+    
+	if (![string]::IsNullOrWhiteSpace($AppName))
+    {
+        AddAppToResourceGroup -resourceGroup $GroupName -applicationName $AppName
+    }
+   
+    if (![string]::IsNullOrWhiteSpace($HostGroupName))
+    {
+        AddHostGroupToResourceGroup -resourceGroup $GroupName -remoteHostGroup $HostGroupName
+    }
+
     if (![string]::IsNullOrWhiteSpace($User))
     {
         $UserFull = $User + "@" + $domainName
@@ -1467,6 +1476,10 @@ function PublishAppsAndDesktops
     Publish -GroupName "AppGroup2" -AppName "Mozilla Firefox" -HostGroupName "Allservers" 
     Publish -GroupName "AppGroup2" -AppName "Notepad" -HostGroupName "Allservers" -User "user1" 
 	Publish -GroupName "DesktopGroup" -AppName "MyDesktop" -HostGroupName "Allserver" -User "user2"
+	
+	Publish -GroupName "AppGroup1"  -User "admin" 
+    Publish -GroupName "AppGroup2"  -User "admin"
+    Publish -GroupName "DesktopGroup"  -User "admin"
 }
 
 function CreateEricomConnectShortcuts
