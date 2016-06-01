@@ -20,4 +20,4 @@
 
 * [Ericom Connect Online Guide](https://www.ericom.com/communities/guide/home/connect-7-3-0)
 
-[![Visualize](http://armviz.io/visualizebutton.png "Visualize")](http://armviz.io/#/?load=https://raw.githubusercontent.com/ErezPasternak/azure-quickstart-templates/EricomConnect/EricomConnectDaaS/azuredeploy.json)
+[![Visualize](http://armviz.io/visualizebutton.png "Visualize")](http://armviz.io/#/?load=https://raw.githubusercontent.com/ErezPasternak/azure-quickstart-templates/EricomConnect/EricomConnectDaaS752/azuredeploy.json)
