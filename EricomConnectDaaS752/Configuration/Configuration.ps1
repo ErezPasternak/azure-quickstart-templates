@@ -498,7 +498,7 @@ configuration DesktopHost
             Ensure = "Present" 
             Path  = "C:\EricomConnectRemoteAgentClient_x64.msi"
             Name = "Ericom Connect Remote Agent Client"
-            ProductId = "08CD0EA8-6E2D-43B5-BE12-9F0AAF6034EA"
+            ProductId = "CFEC51AA-449F-4BCD-AB5C-65E337C45475"
             Arguments = ""
             LogPath = "C:\log-ecrac.txt"
             DependsOn = "[Script]DownloadRemoteAgentMSI"
@@ -651,7 +651,7 @@ configuration DesktopHost
             }
             SetScript ={
                
-                $source = ("https://raw.githubusercontent.com/ErezPasternak/azure-quickstart-templates/EricomConnect/EricomConnectDaaS75/BGinfo/BGInfo.zip")
+                $source = ("https://raw.githubusercontent.com/ErezPasternak/azure-quickstart-templates/EricomConnect/EricomConnectDaaS752/BGinfo/BGInfo.zip")
                 $dest = "C:\BGInfo.zip"
                 Invoke-WebRequest $source -OutFile $dest
             }
@@ -671,10 +671,10 @@ configuration DesktopHost
         {
             TestScript = {
                 Test-Path "C:\BgInfo\bginfo_config.bgi"
-            }
+            }2
             SetScript ={
                
-                $source = ("https://raw.githubusercontent.com/ErezPasternak/azure-quickstart-templates/EricomConnect/EricomConnectDaaS75/BGinfo/bginfo_config.bgi")
+                $source = ("https://raw.githubusercontent.com/ErezPasternak/azure-quickstart-templates/EricomConnect/EricomConnectDaaS752/BGinfo/bginfo_config.bgi")
                 $dest = "C:\BgInfo\bginfo_config.bgi"
                 Invoke-WebRequest $source -OutFile $dest
             }
@@ -688,7 +688,7 @@ configuration DesktopHost
             }
             SetScript ={
                
-                $source = ("https://raw.githubusercontent.com/ErezPasternak/azure-quickstart-templates/EricomConnect/EricomConnectDaaS75/BGinfo/wall.jpg")
+                $source = ("https://raw.githubusercontent.com/ErezPasternak/azure-quickstart-templates/EricomConnect/EricomConnectDaaS752/BGinfo/wall.jpg")
                 $dest = "C:\BgInfo\wall.jpg"
                 Invoke-WebRequest $source -OutFile $dest
             }
@@ -812,7 +812,7 @@ configuration ApplicationHost
             Ensure = "Present" 
             Path  = "C:\EricomConnectRemoteAgentClient_x64.msi"
             Name = "Ericom Connect Remote Agent Client"
-            ProductId = "08CD0EA8-6E2D-43B5-BE12-9F0AAF6034EA"
+            ProductId = "CFEC51AA-449F-4BCD-AB5C-65E337C45475"
             Arguments = ""
             LogPath = "C:\log-ecrac.txt"
             DependsOn = "[Script]DownloadRemoteAgentMSI"
@@ -1215,7 +1215,7 @@ configuration EricomConnectServerSetup
                 Test-Path "C:\SSO.zip"
             }
             SetScript ={
-                $source = "https://raw.githubusercontent.com/ErezPasternak/azure-quickstart-templates/EricomConnect/EricomConnectDaaS75/SSO.zip"
+                $source = "https://raw.githubusercontent.com/ErezPasternak/azure-quickstart-templates/EricomConnect/EricomConnectDaaS752/SSO.zip"
                 $dest = "C:\SSO.zip"
                 Invoke-WebRequest $source -OutFile $dest
             }
