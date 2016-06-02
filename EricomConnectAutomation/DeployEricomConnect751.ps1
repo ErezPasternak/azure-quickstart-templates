@@ -7,7 +7,7 @@ Name: EricomConnectAutomation
 Author: Erez Pasternak
 Version: 1.0
 DateCreated: 2016-05-29
-
+DateUpdated: 2016-06-02
 #>
 param (
 	[switch]$PrepareSystem = $true
@@ -217,7 +217,62 @@ function Test-IsAdmin()
     }
 }
 
+Function Show-MessageBox{
 
+	Param(
+	[Parameter(Mandatory=$True)][Alias('M')][String]$Msg,
+	[Parameter(Mandatory=$False)][Alias('T')][String]$Title = "",
+	[Parameter(Mandatory=$False)][Alias('OC')][Switch]$OkCancel,
+	[Parameter(Mandatory=$False)][Alias('OCI')][Switch]$AbortRetryIgnore,
+	[Parameter(Mandatory=$False)][Alias('YNC')][Switch]$YesNoCancel,
+	[Parameter(Mandatory=$False)][Alias('YN')][Switch]$YesNo,
+	[Parameter(Mandatory=$False)][Alias('RC')][Switch]$RetryCancel,
+	[Parameter(Mandatory=$False)][Alias('C')][Switch]$Critical,
+	[Parameter(Mandatory=$False)][Alias('Q')][Switch]$Question,
+	[Parameter(Mandatory=$False)][Alias('W')][Switch]$Warning,
+	[Parameter(Mandatory=$False)][Alias('I')][Switch]$Informational,
+    [Parameter(Mandatory=$False)][Alias('TM')][Switch]$TopMost)
+
+	#Set Message Box Style
+	IF($OkCancel){$Type = 1}
+	Elseif($AbortRetryIgnore){$Type = 2}
+	Elseif($YesNoCancel){$Type = 3}
+	Elseif($YesNo){$Type = 4}
+	Elseif($RetryCancel){$Type = 5}
+	Else{$Type = 0}
+	
+	#Set Message box Icon
+	If($Critical){$Icon = 16}
+	ElseIf($Question){$Icon = 32}
+	Elseif($Warning){$Icon = 48}
+	Elseif($Informational){$Icon = 64}
+	Else { $Icon = 0 }
+	
+	#Loads the WinForm Assembly, Out-Null hides the message while loading.
+	[System.Reflection.Assembly]::LoadWithPartialName("System.Windows.Forms") | Out-Null
+	
+	If ($TopMost)
+	{
+		#Creates a Form to use as a parent
+		$FrmMain = New-Object 'System.Windows.Forms.Form'
+		$FrmMain.TopMost = $true
+		
+		#Display the message with input
+		$Answer = [System.Windows.Forms.MessageBox]::Show($FrmMain, $MSG, $TITLE, $Type, $Icon)
+		
+		#Dispose of parent form
+		$FrmMain.Close()
+		$FrmMain.Dispose()
+	}
+	Else
+	{
+		#Display the message with input
+		$Answer = [System.Windows.Forms.MessageBox]::Show($MSG , $TITLE, $Type, $Icon)			
+	}
+	
+	#Return Answer
+	Return $Answer
+}
 # Get UNC path from mapped drive
 function Get-UNCFromPath
 {
@@ -1442,13 +1497,24 @@ function Install-WindowsFeatures
 	$needReboot = Get-PendingReboot
 	if ($needReboot.RebootPending -eq $true)
 	{
-		$fileExec = $MyInvocation.MyCommand.Path
-		$argumentList =""
-		if ($fileExec.length -gt 0)
-		{
-			New-ItemProperty -Path HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\RunOnce -Name "ScriptContinueOnReboot" -Force -PropertyType String -Value ('C:\Windows\System32\WindowsPowerShell\v1.0\Powershell.exe -executionPolicy Unrestricted -File "' + $fileExec + '"' + " " + $argumentList) |Out-Null
-		}
-		Restart-Computer -Force
+        $UserSelection = Show-MessageBox -Msg "In Order to continue a restart is requierd, Press OK to Restart or Canel to abort" -OC -T "Ericom Connect Deploy" -Q 
+  
+         
+        if ($UserSelection -eq "OK" )  
+        { 
+            $fileExec = $MyInvocation.MyCommand.Path
+		    $argumentList =""
+		    if ($fileExec.length -gt 0)
+		    {
+			    New-ItemProperty -Path HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\RunOnce -Name "ScriptContinueOnReboot" -Force -PropertyType String -Value ('C:\Windows\System32\WindowsPowerShell\v1.0\Powershell.exe -executionPolicy Unrestricted -File "' + $fileExec + '"' + " " + $argumentList) |Out-Null
+		    }
+		    Restart-Computer -Force
+        }  
+        else  
+        {  
+            exit
+        }  
+		
 	} 
 	
 }
