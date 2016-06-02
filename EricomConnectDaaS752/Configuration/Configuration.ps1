@@ -671,7 +671,7 @@ configuration DesktopHost
         {
             TestScript = {
                 Test-Path "C:\BgInfo\bginfo_config.bgi"
-            }2
+            }
             SetScript ={
                
                 $source = ("https://raw.githubusercontent.com/ErezPasternak/azure-quickstart-templates/EricomConnect/EricomConnectDaaS752/BGinfo/bginfo_config.bgi")
