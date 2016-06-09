@@ -1,5 +1,11 @@
 #!/bin/bash
 
+if [ $# -eq 0 ]
+  then
+    echo "Usage: " $0 "[Domain] [DomainAdmin] [DomainAdminPasswd] [RAWS-IP] [TenantInfo] [RemoteAgentAddress] [StartupApp]"
+    exit
+fi
+
 time sudo apt-get -y update
 
 # domain to join
@@ -48,7 +54,6 @@ fi
 
 time sudo service xrdp restart
 
-fi
 time sudo perl -pi.bak -E"s/^.*Xsession$/$XRDP_APP/"   /etc/xrdp/startwm.sh 
 
 # install likewise for AD support
