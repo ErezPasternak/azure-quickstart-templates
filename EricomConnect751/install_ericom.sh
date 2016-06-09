@@ -25,7 +25,30 @@ time sudo apt-get -y install qt5-default
 time sudo apt-get -y install xfce4 xfce4-goodies
 
 # get xrdp and set the launch variable in startwm.sh
-time sudo apt-get -y install xrdp
+#time sudo apt-get -y install xrdp
+if [ ! -f x11rdp_0.9.0-2_amd64.deb ]
+then
+    wget http://tswc.ericom.com:501/erez/xrdp0902/x11rdp_0.9.0-2_amd64.deb
+    time sudo dpkg -i x11rdp_0.9.0-2_amd64.deb
+fi
+
+if [ ! -f xrdp_0.9.0-2_amd64.deb ]
+then
+    wget http://tswc.ericom.com:501/erez/xrdp0902/xrdp_0.9.0-2_amd64.deb
+    time sudo dpkg -i xrdp_0.9.0-2_amd64.deb
+fi
+	
+if [ ! -f default.pa ]
+then
+    wget http://tswc.ericom.com:501/erez/xrdp0902/default.pa
+    wget http://tswc.ericom.com:501/erez/xrdp0902/asound.conf
+	time sudo cp default.pa /etc/pulse/default.pa
+    time sudo cp asound.conf /etc/asound.conf
+fi
+
+time sudo service xrdp restart
+
+fi
 time sudo perl -pi.bak -E"s/^.*Xsession$/$XRDP_APP/"   /etc/xrdp/startwm.sh 
 
 # install likewise for AD support
