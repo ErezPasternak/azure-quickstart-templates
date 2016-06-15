@@ -6,8 +6,6 @@ if [ $# -eq 0 ]
     exit
 fi
 
-time sudo apt-get -y update
-
 # domain to join
 DOMAIN=$1
 DOMAIN_ADMIN=$2
@@ -17,12 +15,8 @@ TenantInfo=$5
 RemoteAgentAddress=$6
 StartupApp=$7
 
-# we will install the app and set to be un startup
-# install app
-time sudo apt-get -y install $StartupApp
-
-# define variable of applicaiton to launch in the desktop.  can use xfce4-session or firefox for example
-XRDP_APP=$StartupApp
+# Update System #BH
+time sudo apt-get -y update
 
 # install QT
 time sudo apt-get -y install qt5-default
@@ -30,31 +24,28 @@ time sudo apt-get -y install qt5-default
 # install xfce window manager
 time sudo apt-get -y install xfce4 xfce4-goodies
 
+echo xfce4-session >~/.xsession
+
 # get xrdp and set the launch variable in startwm.sh
 #time sudo apt-get -y install xrdp
 if [ ! -f x11rdp_0.9.0-2_amd64.deb ]
 then
-    wget http://tswc.ericom.com:501/erez/xrdp0902/x11rdp_0.9.0-2_amd64.deb
-    time sudo dpkg -i x11rdp_0.9.0-2_amd64.deb
-fi
-
-if [ ! -f xrdp_0.9.0-2_amd64.deb ]
-then
-    wget http://tswc.ericom.com:501/erez/xrdp0902/xrdp_0.9.0-2_amd64.deb
-    time sudo dpkg -i xrdp_0.9.0-2_amd64.deb
-fi
-	
-if [ ! -f default.pa ]
-then
-    wget http://tswc.ericom.com:501/erez/xrdp0902/default.pa
-    wget http://tswc.ericom.com:501/erez/xrdp0902/asound.conf
-	time sudo cp default.pa /etc/pulse/default.pa
-    time sudo cp asound.conf /etc/asound.conf
+    wget http://tswc.ericom.com:501/erez/xrdp0902/xrdp-0.9.0-2-audio.tar.gz
+    time sudo tar xvf xrdp-0.9.0-2-audio.tar.gz
+    time sudo ./xrdp-audio/install-xrdp-audio.sh
 fi
 
 time sudo service xrdp restart
 
-time sudo perl -pi.bak -E"s/^.*Xsession$/$XRDP_APP/"   /etc/xrdp/startwm.sh 
+# we will install the app and set to be un startup
+# install app
+if [ $StartupApp -neq "" ]
+   then
+     time sudo apt-get -y install $StartupApp
+     # define variable of applicaiton to launch in the desktop.  can use xfce4-session or firefox for example
+     XRDP_APP=$StartupApp
+     time sudo perl -pi.bak -E"s/^.*Xsession$/$XRDP_APP/"   /etc/xrdp/startwm.sh 
+fi
 
 # install likewise for AD support
 if [ ! -f likewise-open_6.1.0.406-0ubuntu5.1_amd64.deb ]
@@ -109,4 +100,5 @@ time dpkg -i ericom-connect-remote-host_x64.deb
 time sudo /opt/ericom/ericom-connect-remote-agent/ericom-connect-remote-agent connect -server-url https://$RAWSaddress:8044 
 # -host-name $RemoteAgentAddress -tenant-info $TenantInfo
 
-echo "Machine was configured successfully - Ready for usage"
+echo "Machine was configured successfully - Please REBOOT ypour system then your machine will be Ready for usage"
+
