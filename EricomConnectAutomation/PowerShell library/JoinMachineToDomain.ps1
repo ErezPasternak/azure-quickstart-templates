@@ -1,3 +1,9 @@
+param(
+    $domain,
+    $username,
+    $password
+)
+
 $domain = "myDomain"
 $password = "myPassword!" | ConvertTo-SecureString -asPlainText -Force
 $username = "$domain\myUserAccount" 
