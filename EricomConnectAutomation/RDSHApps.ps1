@@ -81,7 +81,7 @@ function Install-RDSHAppsAgent()
 {
 	New-Item -Path "C:\Install-RDSHAppsAgent" -ItemType Directory -Force -ErrorAction SilentlyContinue
 	Write-Output "Ericom Connect RDSH Desktops Agent installation has been started."
-	$exitCode = (Start-Process -Filepath $EC_local_path -NoNewWindow -ArgumentList "/silent " -Wait -Passthru).ExitCode
+	$exitCode = (Start-Process -Filepath $EC_local_path -NoNewWindow -ArgumentList "/silent LAUNCH_CONFIG_TOOL=False " -Wait -Passthru).ExitCode
 	if ($exitCode -eq 0)
 	{
 		Write-Output "Ericom Connect RDSH Desktops Agent has been succesfuly installed."
