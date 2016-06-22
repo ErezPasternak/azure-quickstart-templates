@@ -83,7 +83,7 @@ function Install-ESG()
 {
 	New-Item -Path "C:\Install-ESG" -ItemType Directory -Force -ErrorAction SilentlyContinue
 	Write-Output "Ericom Connect ESG installation has been started."
-	$exitCode = (Start-Process -Filepath $EC_local_path -NoNewWindow -ArgumentList "/silent ADDLOCAL="SG,Grid" -Wait -Passthru).ExitCode
+	$exitCode = (Start-Process -Filepath $EC_local_path -NoNewWindow -ArgumentList "/silent ADDLOCAL=SG,Grid" -Wait -Passthru).ExitCode
 	if ($exitCode -eq 0)
 	{
 		Write-Output "Ericom Connect ESG has been succesfuly installed."
