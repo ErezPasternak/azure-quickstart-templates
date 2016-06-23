@@ -124,7 +124,7 @@ function Config-JoinGrid()
 	}
 	else
 	{
-		$GridConfigError = "Ericom Connect Remote Agent could not be connected to grid. Exit Code: " +  $exitCode
+		$GridConfigError = "Ericom Connect ESG could not be connected to grid. Exit Code: " +  $exitCode
 		$mail_error = "Failed to Connect to  Ericom Connect Grid <br><i>"+ $GridConfigError +"</i><br>Please fix and try again." 
 		SendErrorMail  -Error "$mail_error"
         exit
