@@ -32,20 +32,20 @@ $AdminUser = "admin@test.local"
 $AdminPassword = "admin"
 
 # Ericom Connect Grid Setting
-$GridName = "RDCB785"
-$LookUpHosts = "126.0.1.136"
+$GridName = ""
+$LookUpHosts = ""
 $MyIp = (Get-NetIPAddress -AddressFamily IPv4)[0].IPAddress 
 $tenantInfo = "root"
 
 
 # E-mail Settings
-$To = "erez.pasternak@ericom.com"
+$To = ""
 $externalFqdn = [System.Net.Dns]::GetHostByName((hostname)).HostName
 
 
 # Internal Code - DO NOT CHANGE  
 
-$ConnectConfigurationToolPath = "\Ericom Software\Ericom Connect Remote Agent Client\RemoteAgentConfigTool_4_5.exe"
+$ConnectConfigurationToolPath = "\Ericom Software\Ericom Connect Configuration Tool\EricomConnectConfigurationTool.exe"
 
 
 $emailTemplate = "WebServer\DaaS\emails\ready.html"
@@ -106,7 +106,7 @@ function Config-JoinGrid()
 	Write-Output "Ericom Connect JoinGrid has been started."
 
 	$configPath = Join-Path $env:ProgramFiles -ChildPath $ConnectConfigurationToolPath.Trim()
-	$args = " connect /gridName $GridName /myIP $MyIp /lookupServiceHosts $LookUpHosts /tenantInfo $tenantInfo "
+	$args = " connect /gridName $GridName /myIP $MyIp /lookupServiceHosts $LookUpHosts  "
 	
 	$baseFileName = [System.IO.Path]::GetFileName($configPath);
 	$folder = Split-Path $configPath;
@@ -120,7 +120,7 @@ function Config-JoinGrid()
     $exitCode =  (Start-Process -Filepath "$baseFileName" -ArgumentList "$args" -Wait -Passthru).ExitCode
 	if ($exitCode -eq 0)
 	{
-		Write-Output "Ericom Connect Remote Agent has been succesfuly Joined the grid."
+		Write-Output "Ericom Connect ESG has been succesfuly Joined the grid."
 	}
 	else
 	{
@@ -130,7 +130,7 @@ function Config-JoinGrid()
         exit
 	}
   
-	Write-Output "Ericom Connect Grid configuration has been ended."
+	Write-Output "Ericom Connect ESG configuration has been ended."
     
 }
 
