@@ -106,8 +106,8 @@ function Config-JoinGrid()
 	Write-Output "Ericom Connect JoinGrid has been started."
 
 	$configPath = Join-Path $env:ProgramFiles -ChildPath $ConnectConfigurationToolPath.Trim()
-	$args = " connect /gridName $GridName /myIP $MyIp /lookupServiceHosts $LookUpHosts  "
-	
+	$args = " ConnectToExistingGrid /AdminUser $AdminUser /AdminPassword $AdminPassword /disconnect /GridName $GridName /LookUpHosts $LookUpHosts  "            
+
 	$baseFileName = [System.IO.Path]::GetFileName($configPath);
 	$folder = Split-Path $configPath;
 	cd $folder;
