@@ -401,7 +401,10 @@ $timestamp = $((get-date).tostring("MMddyyyyHHmmss"))
 $filename =  "ECLogs_" + $Computername + "_" + $timestamp + ".zip"
 
 $ECtmpfolder = "$env:SystemRoot\TEMP\ECLogs_"+ $Computername + "_" + $timestamp
-
+$GridLogFldr = "C:\Program Files\Ericom Software\Ericom Connect Data Grid\NET v4.0\Logs"
+$ESGLogFldr = "C:\Program Files\Ericom Software\Ericom Connect Secure Gateway\Logs"
+$ASLogFldr = "C:\Program Files\Ericom Software\Ericom Access Server\logs"
+$ECAPPDataLogFldr = "C:\ProgramData\EricomConnect\*.txt"
 # getting the logs from all folders 
 Copy-Item -Path $GridLogFldr -Destination "$ECtmpfolder\Grid" -Recurse
 Copy-Item -Path $ESGLogFldr -Destination "$ECtmpfolder\ESG" -Recurse
@@ -409,6 +412,19 @@ Copy-Item -Path $ASLogFldr -Destination "$ECtmpfolder\AS" -Recurse
 
 New-Item -Path "$ECtmpfolder\AppData" -ItemType  Directory
 Copy-Item -Path $ECAPPDataLogFldr -Destination "$ECtmpfolder\AppData" -Recurse
+
+New-Item -Path "$ECtmpfolder\CLILogs" -ItemType  Directory
+
+ $logsPath = "$ECtmpfolder\CLILogs\"   
+    $configPath = Join-Path $env:ProgramFiles -ChildPath $ConnectCLIPath.Trim()
+    $user = "admin@test.local"
+    $pass = "admin"
+	
+    & $configPath systeminfo localhost > $logsPath\systemInfo.txt
+    & $configPath GridInfo  > $logsPath\GridInfo.txt
+    & $configPath ESGconfig /adminuser $user /adminpassword $pass common  > $logsPath\ESGInfo.txt
+    & $configPath EUWSconfig /adminuser $user /adminpassword $pass common  > $logsPath\EUWSInfo.txt
+
 
 
 # Generate ZIP file with content from temp log folder.
