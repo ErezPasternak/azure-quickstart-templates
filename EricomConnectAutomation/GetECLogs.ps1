@@ -405,6 +405,8 @@ $GridLogFldr = "C:\Program Files\Ericom Software\Ericom Connect Data Grid\NET v4
 $ESGLogFldr = "C:\Program Files\Ericom Software\Ericom Connect Secure Gateway\Logs"
 $ASLogFldr = "C:\Program Files\Ericom Software\Ericom Access Server\logs"
 $ECAPPDataLogFldr = "C:\ProgramData\EricomConnect\*.txt"
+$ConnectCLIPath = "\Ericom Software\Ericom Connect Configuration Tool\ConnectCLI.exe"
+
 # getting the logs from all folders 
 Copy-Item -Path $GridLogFldr -Destination "$ECtmpfolder\Grid" -Recurse
 Copy-Item -Path $ESGLogFldr -Destination "$ECtmpfolder\ESG" -Recurse
