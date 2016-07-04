@@ -282,14 +282,14 @@ function TestGrid {
 	$TestGrid = Execute-Command -commandPath $configPath -commandArguments "$arguments"
 	
 	# for remtote machine
-	#$AdminSecurePassword = ConvertTo-SecureString -String $NetworkPassword -AsPlainText -Force
-	#$AdminCredentials = New-Object System.Management.Automation.PSCredential ($NetworkAdmin, $AdminSecurePassword);
-    #$TestGrid = Invoke-Command -ComputerName $Connectserver -Credential $AdminCredentials -ScriptBlock ${function:Execute-Command} -ArgumentList $configPath, $arguments 
+	$AdminSecurePassword = ConvertTo-SecureString -String $NetworkPassword -AsPlainText -Force
+	$AdminCredentials = New-Object System.Management.Automation.PSCredential ($NetworkAdmin, $AdminSecurePassword);
+    $TestGrid = Invoke-Command -ComputerName $Connectserver -Credential $AdminCredentials -ScriptBlock ${function:Execute-Command} -ArgumentList $configPath, $arguments 
 	
 	$exitCodeCli = $TestGrid.ExitCode;
 	$TestValue = $TestGrid.Output;
 
-    Get-EricomConnectLogs -Computername "localhost" -credentials $AdminCredentials
+    Get-EricomConnectLogs -Computername $Connectserver -credentials $AdminCredentials
 	
 	if ($exitCodeCli -eq 0)
 	{
@@ -847,8 +847,9 @@ $streamChunks | Invoke-Command -Session $session $remoteScript `
 $tmpfolder = "$env:SystemRoot\TEMP\"
 # create timestamp variable 
 $timestamp = $((get-date).tostring("MMddyyyyHHmmss"))
+$hostname = [System.Net.Dns]::GetHostByName((hostname)).HostName;
 # construct the filename including the path
-$filename =  "ECLogs_" + $Computername + "_" + $timestamp + ".zip"
+$filename =  "ECLogs_" + $hostname + "_" + $timestamp + ".zip"
 
 $ECtmpfolder = "$env:SystemRoot\TEMP\ECLogs_"+ $Computername + "_" + $timestamp
 $GridLogFldr = "C:\Program Files\Ericom Software\Ericom Connect Data Grid\NET v4.0\Logs"
