@@ -19,11 +19,9 @@ $EUWSaddress = "http://localhost:8033/ericomxml/ping"
 $Connectserver = "localhost"
 $NetworkAdmin = "admin@test.local"
 $NetworkPassword = "admin"
-$AdminUser = "admin@test.local"
-$AdminPassword = "admin"
 
-$AdminSecurePassword = ConvertTo-SecureString -String $AdminPassword -AsPlainText -Force
-$AdminCredentials = New-Object System.Management.Automation.PSCredential ($AdminUser, $AdminSecurePassword);
+$AdminSecurePassword = ConvertTo-SecureString -String $NetworkPassword -AsPlainText -Force
+$AdminCredentials = New-Object System.Management.Automation.PSCredential ($NetworkAdmin, $AdminSecurePassword);
 
 # E-mail Settings
 $To = "erez.pasternak@ericom.com"
@@ -106,7 +104,7 @@ function EricomConnectConnector()
 {
     if ($global:adminSessionId -eq $null)
     {
-        return ($adminApi.CreateAdminsession($AdminUser, $AdminPassword, "rooturl", "en-us")).AdminSessionId
+        return ($adminApi.CreateAdminsession($NetworkAdmin, $NetworkPassword, "rooturl", "en-us")).AdminSessionId
     } else {
         return $global:adminSessionId;
     }
@@ -428,7 +426,7 @@ function SendSuccessMail ()
 	New-Item -Path "C:\SendSuccessMail" -ItemType Directory -Force -ErrorAction SilentlyContinue
 	
 	$AdminSecurePassword = ConvertTo-SecureString -String $AdminPassword -AsPlainText -Force
-	$AdminCredentials = New-Object System.Management.Automation.PSCredential ($AdminUser, $AdminSecurePassword);
+	$AdminCredentials = New-Object System.Management.Automation.PSCredential ($NetworkAdmin, $AdminSecurePassword);
 	
 	$securePassword = ConvertTo-SecureString -String $SMTPassword -AsPlainText -Force
 	$credential = New-Object System.Management.Automation.PSCredential ("daas@ericom.com", $securePassword)
