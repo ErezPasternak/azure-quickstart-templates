@@ -16,11 +16,18 @@
  
 Param(
  [Parameter(Mandatory=$True,Position=0)]
- [string[]]$Computername ="ec64.test.local"
-  )
+ [string[]]$Computername ="ec76.test.local",
+ [System.Management.Automation.PSCredential] $credentials
+)
  
  
-Function Get-EricomConnectLogs ($Computername) {
+Function Get-EricomConnectLogs{
+
+Param(
+ [Parameter(Mandatory=$True,Position=0)][string[]]$Computername,
+ [System.Management.Automation.PSCredential] $credentials
+)
+
 #--------------------------------------------------------------------------------------
 # Global Variables
 #--------------------------------------------------------------------------------------
@@ -38,9 +45,9 @@ $localtmpfolder = "$env:USERPROFILE\Documents\EricomConnectLogs"
 #Check if the RemoteCMlogs folder already exists othrwise create it
 If (!(Test-path $localtmpfolder)) {New-Item -ItemType directory -Path $localtmpfolder}
  
-$cred = Get-Credential
+$cred = $credentials
  
-Function ZIP-EClogs  ($Computername, $ThisComputer,$cred,$localtmpfolder) {
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            Function ZIP-EClogs  ($Computername, $ThisComputer, $cred, $localtmpfolder) {
  
 #--------------------------------------------------------------------------------------
 # ZIP File Function. Credits for this function go to Kenneth D. Sweet
@@ -443,29 +450,29 @@ Remove-PSSession $RSession
 }
 # End of ZIP-EClogs function
  
-# -----------------------------------------------------------------------------------------------------------------------#
-# Commands from Get-EricomConnectLogs Main function
-# -----------------------------------------------------------------------------------------------------------------------#
-# Process all computers provided
-ForEach ($iComputername in $Computername)
-{
-    Function Get-Remotelogs {
-    # Settings this option prevents the creation of the user profile on the remote system 
-    $SesOpt = New-PSSessionOption -NoMachineProfile 
-    # Start a new Remote Session
-    $ses = New-PSSession -ComputerName $iComputername -ErrorAction SilentlyContinue -SessionOption $SesOpt
-    # Execute the ZIP-EClogs function on the remote machine. 
-    $ab = Invoke-Command -Session $ses -ScriptBlock ${function:ZIP-EClogs} -ArgumentList $iComputername, $ThisComputer,$cred,$localtmpfolder
-    # Clsoe the session
-    Remove-PSSession $ses
-    }
+    # -----------------------------------------------------------------------------------------------------------------------#
+    # Commands from Get-EricomConnectLogs Main function
+    # -----------------------------------------------------------------------------------------------------------------------#
+    # Process all computers provided
+    ForEach ($iComputername in $Computername)
+    {
+        Function Get-Remotelogs {
+            # Settings this option prevents the creation of the user profile on the remote system 
+            $SesOpt = New-PSSessionOption -NoMachineProfile 
+            # Start a new Remote Session
+            $ses = New-PSSession -ComputerName $iComputername -ErrorAction SilentlyContinue -Credential $cred
+            # Execute the ZIP-EClogs function on the remote machine. 
+            $ab = Invoke-Command -Session $ses -ScriptBlock ${function:ZIP-EClogs} -ArgumentList $iComputername, $ThisComputer, $cred, $localtmpfolder
+            # Clsoe the session
+            Remove-PSSession $ses
+        }
  
-Get-Remotelogs $iComputername
-}
+        Get-Remotelogs $iComputername
+    }
  
 }
 # End of Get-EricomConnectLogs function
  
 # -----------------------------------------------------------------------------------------------------------------------#
  
-Get-EricomConnectLogs $Computername
+Get-EricomConnectLogs -Computername $Computername -credentials $credentials
