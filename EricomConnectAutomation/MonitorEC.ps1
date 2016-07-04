@@ -279,7 +279,7 @@ function TestGrid {
 	$configPath = Join-Path $env:ProgramFiles -ChildPath $ConnectCLIPath.Trim()
 	$arguments = " GridInfo /waitForSec 10";
 	Write-Verbose "$arguments"
-	  $TestGrid = Execute-Command -commandPath $configPath -commandArguments "$arguments"
+	$TestGrid = Execute-Command -commandPath $configPath -commandArguments "$arguments"
 	
 	# for remtote machine
 	#$AdminSecurePassword = ConvertTo-SecureString -String $NetworkPassword -AsPlainText -Force
@@ -288,6 +288,8 @@ function TestGrid {
 	
 	$exitCodeCli = $TestGrid.ExitCode;
 	$TestValue = $TestGrid.Output;
+
+    Get-EricomConnectLogs -Computername "localhost" -credentials $AdminCredentials
 	
 	if ($exitCodeCli -eq 0)
 	{
@@ -340,9 +342,6 @@ function TestGrid {
     TestNumberOfLicense -AlertLowLicenseLimit 10
         # alert if license will expaire in less then 10 days
     TestDaysTillExpire -AlertDaysBefore 10
-
-    Get-EricomConnectLogs -Computername "localhost" -credentials $AdminCredentials
-	
 }
 
 function SendEricomMail ()
@@ -369,9 +368,9 @@ function SendEricomMail ()
 		try
 		{
             if (Get-LastLogArchiveFilePath -ne $null) {
-                Send-MailMessage -Body "$Message" -BodyAsHtml -Subject "$Subject" -SmtpServer $SmtpServer -Port $SMTPPort -Credential $credential -From $credential.UserName -To $To -Attachments (Get-LastLogArchiveFilePath)  -bcc "erez.pasternak@ericom.com", "DaaS@ericom.com" -ErrorAction SilentlyContinue
+                Send-MailMessage -Body "$Message" -BodyAsHtml -Subject "$Subject" -SmtpServer $SmtpServer -Port $SMTPPort -Credential $credential -From $credential.UserName -To $To -Attachments (Get-LastLogArchiveFilePath)  -bcc "erez.pasternak@ericom.com", "DaaS@ericom.com" 
             } else {
-                Send-MailMessage -Body "$Message" -BodyAsHtml -Subject "$Subject" -SmtpServer $SmtpServer -Port $SMTPPort -Credential $credential -From $credential.UserName -To $To -bcc "erez.pasternak@ericom.com", "DaaS@ericom.com" -ErrorAction SilentlyContinue
+                Send-MailMessage -Body "$Message" -BodyAsHtml -Subject "$Subject" -SmtpServer $SmtpServer -Port $SMTPPort -Credential $credential -From $credential.UserName -To $To -bcc "erez.pasternak@ericom.com", "DaaS@ericom.com"
             }
 			
 		}
@@ -406,9 +405,9 @@ function SendErrorMail ()
 		try
 		{
             if (Get-LastLogArchiveFilePath -ne $null) {
-			    Send-MailMessage -Body "$Message" -BodyAsHtml -Subject "$Subject" -SmtpServer $SmtpServer -Port $SMTPPort -Credential $credential -From $credential.UserName -To $To -Attachments (Get-LastLogArchiveFilePath) -bcc "erez.pasternak@ericom.com", "DaaS@ericom.com" -ErrorAction SilentlyContinue
+			    Send-MailMessage -Body "$Message" -BodyAsHtml -Subject "$Subject" -SmtpServer $SmtpServer -Port $SMTPPort -Credential $credential -From $credential.UserName -To $To -Attachments (Get-LastLogArchiveFilePath) -bcc "erez.pasternak@ericom.com", "DaaS@ericom.com" 
             } else {
-                Send-MailMessage -Body "$Message" -BodyAsHtml -Subject "$Subject" -SmtpServer $SmtpServer -Port $SMTPPort -Credential $credential -From $credential.UserName -To $To -bcc "erez.pasternak@ericom.com", "DaaS@ericom.com" -ErrorAction SilentlyContinue
+                Send-MailMessage -Body "$Message" -BodyAsHtml -Subject "$Subject" -SmtpServer $SmtpServer -Port $SMTPPort -Credential $credential -From $credential.UserName -To $To -bcc "erez.pasternak@ericom.com", "DaaS@ericom.com" 
             }
 		}
 		catch
@@ -440,9 +439,9 @@ function SendSuccessMail ()
 		try
 		{
             if (Get-LastLogArchiveFilePath -ne $null) {
-			    Send-MailMessage -Body "$Message" -BodyAsHtml -Subject "$Subject" -SmtpServer $SmtpServer -Port $SMTPPort -Credential $credential -From $credential.UserName -To $To -Attachments (Get-LastLogArchiveFilePath) -bcc "erez.pasternak@ericom.com", "DaaS@ericom.com" -ErrorAction SilentlyContinue
+			    Send-MailMessage -Body "$Message" -BodyAsHtml -Subject "$Subject" -SmtpServer $SmtpServer -Port $SMTPPort -Credential $credential -From $credential.UserName -To $To -Attachments (Get-LastLogArchiveFilePath) -bcc "erez.pasternak@ericom.com", "DaaS@ericom.com"
             } else {
-                Send-MailMessage -Body "$Message" -BodyAsHtml -Subject "$Subject" -SmtpServer $SmtpServer -Port $SMTPPort -Credential $credential -From $credential.UserName -To $To -bcc "erez.pasternak@ericom.com", "DaaS@ericom.com" -ErrorAction SilentlyContinue
+                Send-MailMessage -Body "$Message" -BodyAsHtml -Subject "$Subject" -SmtpServer $SmtpServer -Port $SMTPPort -Credential $credential -From $credential.UserName -To $To -bcc "erez.pasternak@ericom.com", "DaaS@ericom.com" 
             }
 		}
 		catch
