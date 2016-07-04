@@ -381,7 +381,7 @@ function SendEricomMail ()
 	}
 }
 
-function SendErrorMail ()
+function SendErrorMail()
 {
 	param (
 		[Parameter(Mandatory = $true)]
