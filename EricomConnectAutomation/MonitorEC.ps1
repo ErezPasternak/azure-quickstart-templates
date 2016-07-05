@@ -7,7 +7,7 @@ Name: MonitorEC
 Author: Erez Pasternak
 Version: 1.0
 DateCreated: 2016-06-23
-DateUpdated: 
+DateUpdated: 2016-07-05
 #>
 param (
 	[switch]$PrepareSystem = $true
@@ -16,7 +16,7 @@ param (
 # Connect Variables
 $ESGaddress = "https://ec76.test.local/ping"
 $EUWSaddress = "http://ec76.test.local:8033/ericomxml/ping"
-$Connectserver = "ec76.test.local"
+$Connectserver = "localhost"
 $NetworkAdmin = "admin@test.local"
 $NetworkPassword = "admin"
 
@@ -127,7 +127,7 @@ function ConnectToGrid()
 
 Function Import-EricomLib
 {
-	$XAPPath = "C:\Program Files\Ericom Software\Ericom Connect Configuration Tool\"
+	$XAPPath = "\Program Files\Ericom Software\Ericom Connect Configuration Tool\"
 	
 	function Get-ScriptDirectory
 	{
@@ -277,7 +277,7 @@ function TestGrid {
 	$configPath = Join-Path $env:ProgramFiles -ChildPath $ConnectCLIPath.Trim()
 	$arguments = " GridInfo /waitForSec 10";
 	Write-Verbose "$arguments"
-	$TestGrid = Execute-Command -commandPath $configPath -commandArguments "$arguments"
+	#$TestGrid = Execute-Command -commandPath $configPath -commandArguments "$arguments"
 	
 	# for remtote machine
 	$AdminSecurePassword = ConvertTo-SecureString -String $NetworkPassword -AsPlainText -Force
@@ -488,7 +488,7 @@ If (!(Test-path $localtmpfolder)) {New-Item -ItemType directory -Path $localtmpf
  
 $cred = $credentials
  
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            Function ZIP-EClogs  ($Computername, $ThisComputer, $cred, $localtmpfolder) {
+Function ZIP-EClogs  ($Computername, $ThisComputer, $cred, $localtmpfolder) {
  
 #--------------------------------------------------------------------------------------
 # ZIP File Function. Credits for this function go to Kenneth D. Sweet
@@ -836,7 +836,6 @@ $streamChunks | Invoke-Command -Session $session $remoteScript `
 }
 ### End of Send-File function
  
- 
 # -----------------------------------------------------------------------------------------------------------------------#
 # Below are the commands we execute remotely
 # -----------------------------------------------------------------------------------------------------------------------#
@@ -849,11 +848,12 @@ $hostname = [System.Net.Dns]::GetHostByName((hostname)).HostName;
 # construct the filename including the path
 $filename =  "ECLogs_" + $hostname + "_" + $timestamp + ".zip"
 
-$ECtmpfolder = "$env:SystemRoot\TEMP\ECLogs_"+ $Computername + "_" + $timestamp
+$ECtmpfolder = "$env:SystemRoot\TEMP\ECLogs_"+ $hostname + "_" + $timestamp
 $GridLogFldr = "C:\Program Files\Ericom Software\Ericom Connect Data Grid\NET v4.0\Logs"
 $ESGLogFldr = "C:\Program Files\Ericom Software\Ericom Connect Secure Gateway\Logs"
 $ASLogFldr = "C:\Program Files\Ericom Software\Ericom Access Server\logs"
 $ECAPPDataLogFldr = "C:\ProgramData\EricomConnect\*.txt"
+$ECAPPDataLogFldrXml = "C:\ProgramData\EricomConnect\*.xml"
 $ConnectCLIPath = "\Ericom Software\Ericom Connect Configuration Tool\ConnectCLI.exe"
 
 # getting the logs from all folders 
@@ -863,6 +863,8 @@ Copy-Item -Path $ASLogFldr -Destination "$ECtmpfolder\AS" -Recurse
 
 New-Item -Path "$ECtmpfolder\AppData" -ItemType  Directory
 Copy-Item -Path $ECAPPDataLogFldr -Destination "$ECtmpfolder\AppData" -Recurse
+Copy-Item -Path $ECAPPDataLogFldrXml -Destination "$ECtmpfolder\AppData" -Recurse
+
 
 New-Item -Path "$ECtmpfolder\CLILogs" -ItemType  Directory
 
@@ -879,15 +881,15 @@ New-Item -Path "$ECtmpfolder\CLILogs" -ItemType  Directory
 
 
 # Generate ZIP file with content from temp log folder.
-If (Test-path $ECtmpfolder) {zip-file -ZipFile "$ECtmpfolder$filename" -Add $ECtmpfolder -Folders} Else {Write-Warning "Could not find folder" $ECtmpfolder}
+If (Test-path $ECtmpfolder) {zip-file -ZipFile "$tmpfolder$filename" -Add $ECtmpfolder -Folders} Else {Write-Warning "Could not find folder" $ECtmpfolder}
  
 
 # On the remote machine, start a new remote session back to the script execution host
-$RSession = New-PSSession $ThisComputer -Credential $cred
+#$RSession = New-PSSession $ThisComputer -Credential $cred
 # Transfer the logs archive through the open session
-Send-File "$ECtmpfolder$filename" "$localtmpfolder\$filename" $RSession
+#Send-File "$tmpfolder$filename" "$localtmpfolder\$filename" $RSession
 # close the session from the remote host to the script execution host
-Remove-PSSession $RSession
+#Remove-PSSession $RSession
  
 }
 # End of ZIP-EClogs function
@@ -905,6 +907,12 @@ Remove-PSSession $RSession
             $ses = New-PSSession -ComputerName $iComputername -ErrorAction SilentlyContinue -Credential $cred
             # Execute the ZIP-EClogs function on the remote machine. 
             $ab = Invoke-Command -Session $ses -ScriptBlock ${function:ZIP-EClogs} -ArgumentList $iComputername, $ThisComputer, $cred, $localtmpfolder
+            # Get the path of archived log from remote mathine.
+            $temp = "C:\Windows\TEMP";
+            $archivePath = Invoke-Command -ScriptBlock { param($path) $latest = (Get-ChildItem -Path $path | Where-Object { $_.Name -match "[ECLogs_]\d" } | Sort-Object LastAccessTime -Descending | Select-Object -First 1); Join-Path $path -Child $latest.name } -ArgumentList $temp -Session $ses
+            $localfile = $localtmpfolder + "\" + (Split-Path $archivePath -Leaf);
+            [io.file]::WriteAllBytes("$localfile",(Invoke-Command -ComputerName $iComputername -Credential $cred -ScriptBlock {get-content $Args[0] -encoding byte -Read 0} -ArgumentList "$archivePath"))
+
             # Clsoe the session
             Remove-PSSession $ses
         }
