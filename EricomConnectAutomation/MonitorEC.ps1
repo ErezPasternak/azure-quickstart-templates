@@ -14,9 +14,9 @@ param (
 )
 
 # Connect Variables
-$ESGaddress = "https://localhost/ping"
-$EUWSaddress = "http://localhost:8033/ericomxml/ping"
-$Connectserver = "localhost"
+$ESGaddress = "https://ec76.test.local/ping"
+$EUWSaddress = "http://ec76.test.local:8033/ericomxml/ping"
+$Connectserver = "ec76.test.local"
 $NetworkAdmin = "admin@test.local"
 $NetworkPassword = "admin"
 
