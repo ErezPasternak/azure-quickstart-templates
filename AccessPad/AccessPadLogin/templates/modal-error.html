@@ -1,0 +1,21 @@
+﻿<ion-modal-view class="modal-error">
+    <ion-header-bar>
+        <h1 class="title">{{'system_message' | translate}}</h1>
+    </ion-header-bar>
+    <ion-content>
+        <ion-item>
+            <div style="text-align:center"><span style="display:inline-block; text-align:left">{{ errorMessage }}</span></div>
+        </ion-item>
+
+        <ion-item>
+
+            <div class="col">
+
+                <button class="button button-full button-cancel col-75 button-group" ng-click="closeModal('error');">
+                    {{'ok' | translate}}
+                </button>
+            </div>
+        </ion-item>
+
+</ion-content>
+</ion-modal-view>

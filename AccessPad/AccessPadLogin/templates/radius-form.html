@@ -1,0 +1,36 @@
+<ion-view>
+    <ion-header-bar>
+        <div class="radius-header">
+            <i class="radius-header-back" data-menu-target="previous"></i>
+            <span class="radius-header-title">{{ passMsg }}</span>
+            <i class="radius-header-close fa fa-times" ng-click="$root.radiusForm().hide()"></i>
+        </div>
+    </ion-header-bar>
+    <ion-content>
+        <form ng-submit="radiusDo()" class="sky-form boxed radius-form">
+            <fieldset>
+                <section ng-repeat="item in radiusFields">
+                    <label class="input"  ng-hide="item.Field.ReadOnly == 'true'">
+                        <i class="icon-append fa fa-user"></i>
+                        <input placeholder="{{ item.Label }}" autocomplete="off" class="form-control" type="{{ item.Field.Security}}" value="{{ item.Field.DefaultValue}}" ng-model="radiusData[$index]" focus="true">
+                        <span class="tooltip tooltip-top-right">{{ item.Label }}</span>
+                    </label>
+                </section>
+                <section>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <button class="btn btn-success button-login btn-primary" type="reset" ng-click="$root.radiusForm().hide();">
+                                {{'cancel' | translate}}
+                            </button>
+                        </div>
+                        <div class="col-md-6 text-right">
+                            <button class="btn btn-success button-login btn-primary" type="submit" ng-click="$root.radiusForm().hide();">
+                                {{'submit' | translate}}
+                            </button>
+                        </div>
+                    </div>
+                </section>
+            </fieldset>
+        </form>
+    </ion-content>
+</ion-view>

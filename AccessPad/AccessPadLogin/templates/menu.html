@@ -1,0 +1,160 @@
+<ion-side-menus enable-menu-with-back-views="false" resizable-menu>
+    <button ng-show="$root.appMenuState.active" class="button button-icon button-clear ion-navicon-static fa" ng-class="$root.appMenuState.mode !== 'minimized' ? 'fa-bars' : 'fa-bars'" menu-toggle></button>
+    <ion-side-menu-content ng-click="$root.activeAppMenu.keep = false;" drag-content="false" edge-drag-threshold="false" ng-class="{'minimized':$root.appMenuState.mode == 'minimized', 'full':$root.appMenuState.mode == 'full', 'off':$root.appMenuState.mode == 'off'}">
+        <ion-nav-bar class="bar-stable" style="display:none;">
+            <ion-nav-back-button></ion-nav-back-button>
+            <ion-nav-buttons side="left"></ion-nav-buttons>
+        </ion-nav-bar>
+        <ion-nav-view name="menuContent"></ion-nav-view>
+    </ion-side-menu-content>
+    <ion-side-menu side="left" width="$root.appMenuState.userSetWidth">
+        <ion-header-bar class="bar-stable bar-search" style="padding:0;">
+            <span class="top-menu-app-name inline"></span>
+            <span style="width:175px;">
+                <input id="search-field" ng-focus-input="model.search_flag" ng-blur="search.DisplayName = ''" type="text"
+                       placeholder="{{'search' | translate}}" ng-model="search.DisplayName" class="search-field"
+                       ng-init="search.DisplayName = ''">
+            </span>
+            <span class="top-menu-button" ng-click="$root.contextMenu.show($event)">
+                <i class="icon fa fa-ellipsis-v inline"></i>
+            </span>
+        </ion-header-bar>
+      <div class="nav-menu-holder">
+          <ion-content ng-controller="SideMenuCtrl" ng-click="$root.activeAppMenu.keep = false;" class="has-no-header mScroll" sticky-header=".item-accordion" scroll="false">
+              <div active-app-menu ng-show="($root.getViewStyle() == 'grid' || $root.getViewStyle() == 'icons') && $root.activeAppMenu.active" active-app-menu-data="$root.activeAppMenu" class="active-app-hover-menu-holder"></div>
+              <ion-list>
+                  <!-- active applications -->
+                  <div class="item-category-holder" ng-show="$root.activeApplications.length" ng-class="{'menu-style-list':($root.getViewStyle() == 'list'), 'menu-style-grid':($root.getViewStyle() == 'grid'), 'menu-style-icons':($root.getViewStyle() == 'icons')}">
+                      <ion-item class="item-stable item-category-header"
+                                ng-click="toggleCategory(2)"
+                                ng-class="{active: isCategoryShown(2)}"
+                                ng-show="$root.isMenuAppOpen()">
+                          <i class="fa pull-right" ng-class="isCategoryShown(2) ? 'fa-menu-arrow-open' : 'fa-menu-arrow'"></i>
+                          <span>{{categories[2].name | translate}} {{' (' + $root.activeApplications.length + ')' }}</span>
+                      </ion-item>
+                      <ion-item class="ng-hide item-stable item-category-header-invisible"></ion-item>
+                      <div class="item-accordion" ng-show="isCategoryShown(2)">
+                          <div class="item-folder-group item-folder-group-apps item-active-apps">
+                              <ion-item
+                                        class="item-icon-left item-icon-right item-app"
+                                        ng-repeat="item in $root.activeApplications | filter:search | orderBy:'item.DisplayName' track by $index"
+                                        ng-mouseenter="(!$root.isMobile() && ($root.getViewStyle() == 'grid' || $root.getViewStyle() == 'icons')) ? showActiveAppMenu({item:item, event:$event, type:'active'}) : false"
+                                        ng-mouseleave="(!$root.isMobile()) ? hideActiveAppMenu() : false"
+                                        on-long-press="showActiveAppMenu({item:item, event:$event, type:'active'})"
+                                        oncontextmenu="return false;"
+                                        >
+                                  <i class="fa app" menu-close ng-click="$root.launchApp(item.Name,item.DisplayName, item)"><img ng-src="{{ 'data:image/png;base64,' + item.Icon.__cdata }}" width="25"/></i>
+                                  <span ng-show="$root.isMenuAppOpen()" menu-close ng-click="$root.launchApp(item.Name,item.DisplayName, item)">{{ item.DisplayName }}</span>
+                                  <i ng-show="$root.isMenuAppOpen()" class="fa-icon-group-right">
+                                      <i ng-attr-title="{{($root.isFavorite(item)) ? ('remove_from_favorites' | translate) : ('add_to_favorites' | translate)}}" class="fa fa-icon-right" ng-class="{'icon-app-fav-on':$root.isFavorite(item), 'icon-app-fav-off':!$root.isFavorite(item)}" ng-show="$root.getViewStyle() == 'list'" ng-click="$root.toggleFavorite(item)"></i>
+                                      <i ng-attr-title="{{'close_connection' | translate}}" class="fa fa-close fa-icon-right icon-close-app" ng-show="$root.getViewStyle() == 'list'" menu-close ng-click="$root.killApp(item.Name,item.DisplayName, item)"></i>
+                                  </i>
+                              </ion-item>
+                          </div>
+                      </div>
+                  </div>
+                  <!-- end active applications -->
+                  <!-- favorite apps -->
+                  <div class="item-category-holder" ng-show="hasFavorites() && $root.isMenuAppOpen()" ng-class="{'menu-style-list':($root.getViewStyle() == 'list'), 'menu-style-grid':($root.getViewStyle() == 'grid')}">
+                      <ion-item class="item-stable item-category-header"
+                                ng-click="toggleCategory(0)"
+                                ng-class="{active: isCategoryShown(0)}">
+                          <i class="fa pull-right" ng-class="isCategoryShown(0) ? 'fa-menu-arrow-open' : 'fa-menu-arrow'"></i>
+                          <span>{{categories[0].name | translate}} {{($root.hasFavorites()) ? '(' + $root.favoritesCount() + ')' : '' }}</span>
+                      </ion-item>
+                      <ion-item class="ng-hide item-stable item-category-header-invisible"></ion-item>
+                      <div class="item-accordion" ng-show="isCategoryShown(0)">
+                          <div class="item-folder-group item-folder-group-apps">
+                              <ion-item
+                                      class="item item-icon-left item-app"
+                                      ng-repeat="item in $root.favorites | orderBy:'DisplayName' track by $index"
+                                      ng-mouseenter="(!$root.isMobile() && ($root.getViewStyle() == 'grid' || $root.getViewStyle() == 'icons')) ? showActiveAppMenu({item:item, event:$event, type:'favorites'}) : false"
+                                      ng-mouseleave="(!$root.isMobile()) ? hideActiveAppMenu() : false"
+                                      on-long-press="showActiveAppMenu({item:item, event:$event, type:'favorites'})"
+                                      oncontextmenu="return false;"
+                                      >
+                                  <i class="fa app" menu-close ng-click="$root.launchApp(item.Name,item.DisplayName, item)"> <img ng-src="{{ 'data:image/png;base64,' + item.Icon.__cdata }}" width="25" /> </i>
+                                  <span menu-close ng-click="$root.launchApp(item.Name,item.DisplayName, item)">{{ item.DisplayName }}</span>
+                                  <i class="fa-icon-group-right">
+                                      <i ng-attr-title="{{'remove_from_favorites' | translate}}" class="fa fa-icon-right" ng-class="{'icon-app-fav-on':$root.isFavorite(item), 'icon-app-fav-off':!$root.isFavorite(item)}" ng-show="$root.getViewStyle() == 'list'" ng-click="$root.toggleFavorite(item)"></i>
+                                      <i ng-attr-title="{{'close_connection' | translate}}" class="fa fa-close fa-icon-right icon-close-app" ng-show="$root.getViewStyle() == 'list' && $root.isActiveApp(item)" menu-close ng-click="$root.killApp(item.Name,item.DisplayName, item)"></i>
+                                  </i>
+                              </ion-item>
+                          </div>
+                      </div>
+                  </div>
+                  <!-- end favorite apps -->
+                  <!-- my apps -->
+                  <div class="item-category-holder" ng-show="$root.isMenuAppOpen()" ng-class="{'menu-style-list':($root.getViewStyle() == 'list'), 'menu-style-grid':($root.getViewStyle() == 'grid')}">
+                      <ion-item class="item-stable item-category-header"
+                                ng-click="toggleCategory(1)"
+                                ng-class="{active: isCategoryShown(1)}">
+                          <i ng-if="!search.DisplayName.length && level == 1" class="fa fa-chevron-left nav-menu-back" ng-click="backLevel($event);"></i>
+                          <i class="fa pull-right" ng-class="isCategoryShown(1) ? 'fa-menu-arrow-open' : 'fa-menu-arrow'"></i>
+                          <span>{{ level >= 1 ? selectedFolderDisplayName : (categories[1].name | translate) }}</span>
+                      </ion-item>
+                      <ion-item class="ng-hide item-stable item-category-header-invisible"></ion-item>
+                      <div class="item-accordion" ng-show="(isCategoryShown(1) || search.DisplayName.length)">
+                          <div
+                              class="item-folder-group"
+                              ng-repeat="folder in foldersList | showFilteredFolders:search"
+                              ng-init="folder_index = $index;"
+                              ng-class="{'item-folder-group-apps':((level == 1 && selectedFolderId === folder_index) || search.DisplayName.length)}"
+                              ng-show="(level == 0 || folder_index == selectedFolderId)">
+                              <ion-item
+                                      class="item item-icon-left item-icon-right item-folder"
+                                      ng-click="getLevelApps(folder_index); scrollTop()"
+                                      ng-if="(level == 0)">
+                                  <i class="fa fa-folder folder"></i>
+                                  <span ng-attr-title="{{folder.DisplayName.length > ($root.getViewStyle() == 'list' ? 15 : 25) ? folder.DisplayName : ''}}">{{ folder.DisplayName  }}</span>
+                                  <i class="fa-icon-group-right">
+                                      <i class="fa fa-chevron-right fa-icon-right"></i>
+                                  </i>
+                              </ion-item>
+                              <ion-item
+                                      ng-if="(level == 1 && selectedFolderId === folder_index) || search.DisplayName.length"
+                                      class="item item-icon-left item-app"
+                                      ng-repeat="connection in (connections = (folder.Connection | filter:search | orderBy:'connection.DisplayName'))"
+                                      ng-mouseenter="(!$root.isMobile() && ($root.getViewStyle() == 'grid' || $root.getViewStyle() == 'icons')) ? showActiveAppMenu({item:connection, event:$event, type:'all'}) : false"
+                                      ng-mouseleave="(!$root.isMobile()) ? hideActiveAppMenu() : false"
+                                      on-long-press="showActiveAppMenu({item:item, event:$event, type:'favorites'})"
+                                      oncontextmenu="return false;"
+                                      >
+                                  <i class="fa app" menu-close ng-click="$root.launchApp(connection.Name,connection.DisplayName, connection)"> <img ng-src="{{ 'data:image/png;base64,' + connection.Icon.__cdata }}" width="25" /> </i>
+                                  <span menu-close ng-click="$root.launchApp(connection.Name,connection.DisplayName, connection)">{{ connection.DisplayName }}</span>
+                                  <i class="fa-icon-group-right">
+                                      <i ng-attr-title="{{($root.isFavorite(connection)) ? ('remove_from_favorites' | translate) : ('add_to_favorites' | translate)}}" class="fa fa-icon-right" ng-class="{'icon-app-fav-on':$root.isFavorite(connection), 'icon-app-fav-off':!$root.isFavorite(connection)}" ng-show="$root.getViewStyle() == 'list'" ng-click="$root.toggleFavorite(connection)"></i>
+                                      <i ng-attr-title="{{'close_connection' | translate}}" class="fa fa-close fa-icon-right icon-close-app" ng-show="$root.getViewStyle() == 'list' && $root.isActiveApp(connection)" menu-close ng-click="$root.killApp(connection.Name,connection.DisplayName, connection)"></i>
+                                  </i>
+                              </ion-item>
+                          </div>
+                          <div class="item-folder-group" style="width:100%" ng-if="connectionsList.length">
+                              <ion-item
+                                      class="item item-icon-left item-app"
+                                      ng-repeat="connection in (connections = (connectionsList | filter:search | orderBy:'connection.DisplayName'))"
+                                      ng-mouseenter="(!$root.isMobile() && ($root.getViewStyle() == 'grid' || $root.getViewStyle() == 'icons')) ? showActiveAppMenu({item:connection, event:$event, type:'all'}) : false"
+                                      ng-mouseleave="(!$root.isMobile()) ? hideActiveAppMenu() : false"
+                                      on-long-press="showActiveAppMenu({item:item, event:$event, type:'favorites'})"
+                                      oncontextmenu="return false;"
+                              >
+                                  <i class="fa app" menu-close ng-click="$root.launchApp(connection.Name,connection.DisplayName, connection)"> <img ng-src="{{ 'data:image/png;base64,' + connection.Icon.__cdata }}" width="25" /> </i>
+                                  <span menu-close ng-click="$root.launchApp(connection.Name,connection.DisplayName, connection)">{{ connection.DisplayName }}</span>
+                                  <i class="fa-icon-group-right">
+                                      <i ng-attr-title="{{($root.isFavorite(connection)) ? ('remove_from_favorites' | translate) : ('add_to_favorites' | translate)}}" class="fa fa-icon-right" ng-class="{'icon-app-fav-on':$root.isFavorite(connection), 'icon-app-fav-off':!$root.isFavorite(connection)}" ng-show="$root.getViewStyle() == 'list'" ng-click="$root.toggleFavorite(connection)"></i>
+                                      <i ng-attr-title="{{'close_connection' | translate}}" class="fa fa-close fa-icon-right icon-close-app" ng-show="$root.getViewStyle() == 'list' && $root.isActiveApp(connection)" menu-close ng-click="$root.killApp(connection.Name,connection.DisplayName, connection)"></i>
+                                  </i>
+                              </ion-item>
+                          </div>
+
+                      </div>
+                      <ion-item class="item" ng-hide="connectionsList.length > 0 || (foldersList | filter:search).length > 0 || childConnectionsList.length > 0" style="background:none;color:#000;margin-top:10px;border: none;border-bottom: 1px solid #eaeaea;margin-left: auto;margin-right: auto;">
+                          {{ 'no_published_apps' | translate }}
+                      </ion-item>
+                  </div>
+                  <!-- end my apps -->
+              </ion-list>
+              <!-- end accordion view -->
+          </ion-content>
+      </div>
+    </ion-side-menu>
+</ion-side-menus>

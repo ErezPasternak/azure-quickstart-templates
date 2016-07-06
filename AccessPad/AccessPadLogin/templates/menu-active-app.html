@@ -1,0 +1,9 @@
+<div class="active-app-hover-menu" ng-mouseenter="activeAppMenu.keep = true" ng-mouseleave="activeAppMenu.keep = false; activeAppMenu.active = false">
+    <ion-list class="active-app-hover-menu-icon">
+        <ion-item ng-click="launchApp(activeAppMenu.item.Name, activeAppMenu.item.DisplayName, activeAppMenu.item); closeActiveMenu()"><i class="fa fa-check"></i> {{'open_connection' | translate}}</ion-item>
+        <ion-item ng-show="isFavApp(activeAppMenu.item)" ng-click="closeActiveMenu();unFavApp(activeAppMenu.item)"><i class="fa fa-star-on-gd"></i> {{'remove_from_favorites' | translate}}</ion-item>
+        <ion-item ng-hide="isFavApp(activeAppMenu.item)" ng-click="closeActiveMenu();favApp(activeAppMenu.item)"><i class="fa fa-star-off-gd color-white"></i> {{'add_to_favorites' | translate}}</ion-item>
+        <ion-item ng-show="isActiveApp(activeAppMenu.item)" ng-click="closeActiveMenu();killApp(activeAppMenu.item.Name, activeAppMenu.item.DisplayName, activeAppMenu.item)"><i class="fa fa-close"></i> {{'close_connection' | translate}}</ion-item>
+        <ion-item class="active-app-hover-menu-title" ng-attr-title="{{activeAppMenu.item.DisplayName}}">{{activeAppMenu.item.DisplayName}}</ion-item>
+    </ion-list>
+</div>

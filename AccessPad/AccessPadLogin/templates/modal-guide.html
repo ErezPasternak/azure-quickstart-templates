@@ -1,0 +1,22 @@
+﻿<ion-modal-view class="modal-error modal-guide">
+    <ion-content style="height:300px;width:500px;">
+        <div class="guide-content">
+            <div style="text-align:center"><span style="display:inline-block; text-align:left">{{'guide_text' | translate }}</span></div>
+
+            <form>
+                <div class="row">
+                    <div class="col">
+                        <button type="submit" class="button button-full button-cancel col-75 button-group" ng-click="neverShowGuide(neverShow);modalGuide.hide()">
+                            {{'ok' | translate}}
+                        </button>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col" style="text-align:center">
+                        <input name="neverShow" type="checkbox" ng-model="neverShow" style="width:20px;height:20px;" /><div style="line-height:20px;display:inline-block;position:relative;top:-5px;left:10px;"> {{'never_show' | translate}}</div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </ion-content>
+</ion-modal-view>

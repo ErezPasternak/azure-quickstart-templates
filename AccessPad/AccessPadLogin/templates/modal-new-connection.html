@@ -1,0 +1,41 @@
+<ion-modal-view>
+	<ion-header-bar>
+	  <h1 class="title">{{'add_new_connection' | translate}}</h1>
+	</ion-header-bar>
+	<ion-content>
+		<form ng-submit="addConnection()" class="">
+		  <div class="list list-inset">
+			  <label class="item item-input item-stacked-label">
+			    <span class="input-label">Connection Name</span>
+			    <input type="text" placeholder="" ng-model="connectionData.name">
+			  </label>
+
+			  <label class="item item-input item-stacked-label">
+			    <span class="input-label">Server</span>
+			    <input type="text" placeholder="" ng-model="connectionData.server">
+			  </label>
+
+			  <label class="item item-input item-stacked-label">
+			    <span class="input-label">Username</span>
+			    <input type="text" placeholder="" ng-model="connectionData.username">
+			  </label>
+
+			  <label class="item item-input item-stacked-label">
+			    <span class="input-label">Password</span>
+			    <input type="password" placeholder="" ng-model="connectionData.password">
+			  </label>
+
+			</div>
+
+			<div class="row">
+			  	<button type="submit" class="button button-full button-positive col">
+			      Add Connection
+			    </button>
+
+			  	<button type="button" class="button button-full col" ng-click="closeModal('new-connection')">
+			      Cancel
+			    </button>
+		    </div>
+		</form>
+	</ion-content>
+</ion-modal-view>

@@ -1,0 +1,68 @@
+<ion-content class="login-screen" scroll="false">
+    <div style="display: table; width:100%; height: 100%;">
+        <div style="display: table-row">
+            <div style="display: table-cell; vertical-align: middle;">
+                <div style="position:relative;" class="login-form">
+                    <form ng-submit="doLogin()" class="sky-form boxed login-form" autocomplete="off">
+                        <header>
+                            <div class="row margin-left-0 margin-right-0 margin-bottom-0 padding-0">
+                                <div class="col col-75" style="position:relative; height:68px;">
+                                    <img src="img/ericom-logo.png" />
+                                </div>
+                                <div class="col col-25" style="position:relative;height:68px;vertical-align: middle;line-height: 68px;">
+                                    <button type="button" class="nav-settings btn-default" ng-click="openSettings()"><i class="icon fa fa-ellipsis-v"></i></button>
+                                </div>
+                            </div>
+                        </header>
+                        <fieldset>
+                             <section>
+                                <label class="input">
+                                    <i class="icon-append fa fa fa-server"></i>
+                                    <input placeholder="{{'Server' | translate}}" autocomplete="off" class="form-control" type="text" ng-model="$root.loginData.server" focus="true" ng-change="$root.loginData.password = null">
+                                    <span class="tooltip tooltip-top-right">{{'Server' | translate}}</span>
+                                </label>
+                            </section>
+                            <section>
+                                <label class="input">
+                                    <i class="icon-append fa fa-user"></i>
+                                    <input placeholder="{{'username' | translate}}" autocomplete="off" class="form-control" type="text" ng-model="$root.loginData.username" focus="true" ng-change="$root.loginData.password = null">
+                                    <span class="tooltip tooltip-top-right">{{'username' | translate}}</span>
+                                </label>
+                            </section>
+
+                            <section>
+                                <label class="input">
+                                    <i class="icon-append fa fa-lock"></i>
+                                    <input placeholder="{{'password' | translate}}" autocomplete="off" class="form-control" type="password" ng-model="$root.loginData.password">
+                                    <b class="tooltip tooltip-top-right">{{'password' | translate}}</b>
+                                </label>
+                            </section>
+                            <section>
+                                <label class="checkbox">
+                                    <input type="checkbox" value="true" ng-checked="$root.loginData.remember" ng-model="$root.loginData.remember">
+                                    <i></i> {{ 'remember_me' | translate }}
+                                </label>
+                            </section>
+                            <section ng-show="errorMessage.length > 0">
+                                <div style="text-align:center; color:#ff6a00;"><span style="display:inline-block; text-align:left">{{ errorMessage }}</span></div>
+                            </section>
+                        </fieldset>
+                        <footer>
+                            <button class="btn btn-success button-login btn-primary" type="submit" ng-disabled="!$root.loginData.username || !$root.loginData.password">{{'login' | translate}}</button>
+                        </footer>
+                    </form>
+                    <section class="reset-password-login">
+                        <reset-password-form></reset-password-form>
+                    </section>
+                    <section class="radius-login">
+                        <radius-form></radius-form>
+                    </section>
+                    <section class="login-settings">
+                        <login-settings></login-settings>
+                    </section>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="test_keyboard_locale" style="color:#f1f2f7">{{$root.keyboardCode}}</div>
+</ion-content>

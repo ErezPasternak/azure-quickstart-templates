@@ -1,0 +1,56 @@
+<div ng-class="{ie: isIE}" class="login-settings-content" ng-controller="settingsPopover">
+    <div class="radius-header">
+        <div class="table" style="width:100%;">
+            <div class="display-table-cell" style="width:50px;">
+                <i class="login-settings-header-back fa fa-chevron-left" ng-click="settingsMenuBack()"></i>
+            </div>
+            <div class="display-table-cell">
+                <span class="login-settings-header-title">{{settingsMenuData.title | translate}}</span>
+            </div>
+            <div class="display-table-cell" style="width:50px;">
+                <i class="login-settings-header-close fa fa-times" ng-click="closeSettings(); settingsMenuBack()"></i>
+            </div>
+        </div>
+    </div>
+    <form class="sky-form boxed" ng-show="settingsMenuData.currentPage == 'language'">
+        <fieldset>
+            <section ng-controller="ChangeLanguageCtrl">
+                <label class="label"><span class="translation">{{'language' | translate}}</span></label>
+                <label class="select">
+                    <select ng-model="$root.currentLanguage" ng-options="language as language.name for language in $root.languages" ng-change="setLanguage()"></select>
+                </label>
+            </section>
+            <section>
+                <label class="label"><span class="translation">{{'keyboard_locale' | translate}}</span></label>
+                <label class="select">
+                    <select ng-controller="ChangeLocaleCtrl" ng-model="currentLocale" ng-options="locale as locale.name for locale in keyboardLocale" ng-change="setLocale()"></select>
+                </label>
+            </section>
+        </fieldset>
+    </form>
+    <ion-scroll direction="y" style="height:247px" ng-show="settingsMenuData.currentPage == 'about'">
+        <fieldset class="padding-15">
+            <div style="padding:18px; text-align: center">
+                <h3 class="login-settings-h3-title" ng-bind-html="'app_name_text' | translate">
+                </h3>
+                <div style="text-align:right; padding:5px 5px 0 0;" ng-bind-html="'version_text' | translate">
+                </div>
+                <div ng-bind-html="'copy_text' | translate">
+                </div>
+                <div style="margin-top:60px;" ng-bind-html="'details_text' | translate">
+                </div>
+                <div>&nbsp;</div>
+                <div>
+                    <a href="http://www.ericom.com/help.asp" target="_blank" style="text-decoration:none;margin-left:auto;margin-right:auto;"><i class="fa fa-info-circle"></i> {{ 'online_guide' | translate }}</a>
+                </div>
+<!--                <div>
+                    <a href="http://www.ericom.com/contact.asp" target="_blank" style="text-decoration:none;margin-left:auto;margin-right:auto;"><i class="fa fa-magic"></i> {{ 'where_to_start' | translate }}</a>
+                </div>-->
+            </div>
+        </fieldset>
+    </ion-scroll>
+    <div class="login-settings-menu" ng-show="!settingsMenuData.currentPage.length">
+        <button ng-click="settingsMenuLanguage()">{{'language' | translate}}</button>
+        <button ng-click="settingsMenuAbout()">{{'about' | translate}}</button>
+    </div>
+</div>

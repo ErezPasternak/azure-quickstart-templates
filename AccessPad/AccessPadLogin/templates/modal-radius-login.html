@@ -1,0 +1,45 @@
+﻿<ion-modal-view>
+    <ion-header-bar>
+        <h1 class="title">{{'radius_auth' | translate}}</h1>
+    </ion-header-bar>
+    <ion-content>
+        <form ng-submit="radiusDo()" class="login-form">
+
+            <div class="col-60" style="text-align:center;color:#ff6a00">
+                {{ passMsg }}
+            </div>
+
+            <div class="list">
+                <label class="item item-input" ng-repeat="item in radiusFields" ng-hide="item.Field.ReadOnly == 'true'">
+                    <input type="{{ item.Field.Security}}" placeholder="{{ item.Label }}" value="{{ item.Field.DefaultValue}}" ng-model="radiusData[$index]" focus="true">
+                </label>
+            </div>
+
+            <div class="row">
+                <div class="col-offset-10 col">
+                    <button class="button button-full button-save button-positive col-75 button-group" type="submit" ng-click="modalRadius.hide();">
+                        {{'submit' | translate}}
+                    </button>
+                </div>
+
+                <div class="col">
+                    <!--<button type="button" class="button button-full button-cancel col-75 button-group" ng-click="modalRadius.hide();cleanErr()">
+                        {{'cancel' | translate}}
+                    </button>-->
+                </div>
+            </div>
+
+            <!--<div class="row">
+                <button type="submit" class="button button-full button-positive col">
+                  {{'submit' | translate}}
+                </button>
+
+                <button type="button" class="button button-full col" ng-click="modalPassword.hide()">
+                  {{'cancel' | translate}}
+                </button>
+            </div>-->
+
+            
+        </form>
+    </ion-content>
+</ion-modal-view>

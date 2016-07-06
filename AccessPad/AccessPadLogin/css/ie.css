@@ -1,0 +1,7 @@
+/* IE CSS for poopovers and minor UI fixes */
+.ie {
+    position: relative !important;
+    margin-left:auto !important;
+    margin-right:auto !important;
+    left:50px !important;
+}

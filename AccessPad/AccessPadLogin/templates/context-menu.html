@@ -1,0 +1,65 @@
+<ion-popover-view class="context-menu-popover-view" ng-class="{ie: isIE}" ng-style="{right:($root.iframeWidth - $root.appMenuState.userSetWidth) + 'px'}">
+    <ion-content class="context-menu" scroll="false">
+        <div style="border-bottom:1px solid #ddd; vertical-align:middle"><i class="fa fa-chevron-left context-menu-back" ng-class="{'invisible':!contextMenuData.back}" ng-click="contextMenuBack()"></i><span class="context-menu-header">{{contextMenuData.title}}</span><i ng-click="contextMenu.hide($event)" class="fa fa-close context-menu-close"></i></div>
+        <div class="context-menu-content" ng-show="contextMenuData.currentPage == 'about'">
+            <div style="padding:10px;">
+                <h3 class="login-settings-h3-title" ng-bind-html="'app_name_text' | translate">
+
+                </h3>
+                <div style="text-align:right; padding:5px 5px 0 0;" ng-bind-html="'version_text' | translate">
+
+                </div>
+                <div ng-bind-html="'copy_text' | translate">
+                </div>
+                <div style="margin-top:60px;" ng-bind-html="'details_text' | translate">
+                </div>
+                <div>&nbsp;</div>
+                <div>
+                    <a href="http://www.ericom.com/help.asp" target="_blank" style="text-decoration:none;font-weight:bold;margin-left:auto;margin-right:auto;"><i class="fa fa-info-circle"></i> {{ 'online_guide' | translate }}</a>
+                </div>
+                <div>
+                    <a href="http://www.ericom.com/contact.asp" target="_blank" style="text-decoration:none;font-weight:bold;margin-left:auto;margin-right:auto;"><i class="fa fa-magic"></i> {{ 'where_to_start' | translate }}</a>
+                </div>
+            </div>
+        </div>
+        <form class="sky-form boxed" ng-show="contextMenuData.currentPage == 'settings'">
+            <fieldset>
+                <section ng-controller="ChangeLanguageCtrl">
+                    <label class="label"><span class="translation">{{'language' | translate}}</span></label>
+                    <label class="select">
+                        <select ng-model="$root.currentLanguage" ng-options="language as language.name for language in $root.languages" ng-change="setLanguage()"></select>
+                    </label>
+                </section>
+                <section>
+                    <label class="label"><span class="translation">{{'keyboard_locale' | translate}}</span></label>
+                    <label class="select">
+                        <select ng-controller="ChangeLocaleCtrl" ng-model="currentLocale" ng-options="locale as locale.name for locale in keyboardLocale" ng-change="setLocale()"></select>
+                    </label>
+                </section>
+            </fieldset>
+        </form>
+
+        <div class="list" style="top:5px;" ng-show="contextMenuData.currentPage == ''">
+            <a>{{viewType}}</a>
+            <a class="item item-icon-left" ng-click="$root.toggleViewStyle(); $root.contextMenu.hide($event)">
+                <i class="fa" ng-class="{'fa-th':($root.getViewStyle() !== 'grid'), 'fa-th-list':($root.getViewStyle() !== 'list')}"></i>
+                {{($root.getViewStyle() !== 'grid') ? 'app_view_grid' : 'app_view_list' | translate}}
+            </a>
+
+            <a class="item item-icon-left" ng-click="contextMenuSettings()">
+                <i class="fa fa-globe"></i>
+                {{'language' | translate}}
+            </a>
+            <a class="item item-icon-left item-icon-right" ng-click="contextMenuAbout()">
+                <i class="fa fa-info-circle"></i>
+                {{'about' | translate}}
+            </a>
+        </div>
+        <div class="list">
+            <div class="item item-icon-left item-icon-right">
+                <span style="display:inline-block;vertical-align: middle;width:50%;height: 36px;"><a href="http://www.ericom.com" target="_blank"><i class="fa fa-ericom-logo"></i></a></span>
+                <span style="display:inline-block;width:50%;text-align:right;vertical-align: middle;height: 36px;" ng-click="logout(); $root.contextMenu.hide($event)"><i class="fa fa-power-off pointer" style=" font-size:24px;line-height:36px;"></i></span>
+            </div>
+        </div>
+    </ion-content>
+</ion-popover-view>

@@ -1,0 +1,28 @@
+<ion-modal-view class="modal-error">
+    <ion-header-bar class="modal-title">
+        <h1 class="title">{{'about' | translate}}</h1>
+    </ion-header-bar>
+    <ion-content>
+        <div class="row" style="text-align:center">
+            {{'version_text' | translate}}
+        </div>
+        <div class="row" style="text-align:center">
+            {{'copy_text' | translate}}
+        </div>
+        <div class="row" style="text-align:center">
+            {{'details_text' | translate}}
+        </div>
+        <div class="row" style="text-align:center">
+            <a href="http://www.ericom.com/contact.asp" target="_blank" style="text-decoration:none;font-weight:bold;margin-left:auto;margin-right:auto;">www.ericom.com</a>
+        </div>
+        
+        <div class="row">
+            <div class="col">
+                <button class="button button-full button-cancel col-75 button-group" ng-click="closeModal('about')">
+                    {{'ok' | translate}}
+                </button>
+            </div>
+        </div>
+
+</ion-content>
+</ion-modal-view>

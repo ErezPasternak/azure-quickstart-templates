@@ -1,0 +1,26 @@
+<ion-modal-view>
+	<ion-header-bar>
+	  <h1 class="title">{{'app_launch_error' | translate}}</h1>
+	</ion-header-bar>
+    <ion-content scrollbar-y="true">
+        <ul class="list">
+
+            <div class="item item-divider">
+                {{'display_language' | translate}}
+            </div>
+
+
+        </ul>
+
+        <div class="row">
+            <button class="button button-full button-positive col" ng-click="closeModal('settings')">
+                {{'save_settings' | translate}}
+            </button>
+
+            <button class="button button-full col" ng-click="closeModal('settings')">
+                {{'cancel' | translate}}
+            </button>
+        </div>
+
+    </ion-content>
+</ion-modal-view>

@@ -1,0 +1,31 @@
+<ion-modal-view>
+	<ion-header-bar>
+	  <h1 class="title">{{'connect_to' | translate}} {{ activeConnection }}</h1>
+	</ion-header-bar>
+	<ion-content>
+		<form ng-submit="useConnection()" class="">
+		  <div class="list list-inset">
+			  <label class="item item-input item-stacked-label">
+			    <span class="input-label">{{'username' | translate}}</span>
+			    <input type="text" placeholder="" ng-model="connectionData.username">
+			  </label>
+
+			  <label class="item item-input item-stacked-label">
+			    <span class="input-label">{{'password' | translate}}</span>
+			    <input type="password" placeholder="" ng-model="connectionData.password">
+			  </label>
+
+			</div>
+
+			<div class="row">
+			  	<button type="submit" class="button button-full button-positive col" ng-click="useConnection();">
+			      {{'login' | translate}}
+			    </button>
+
+			  	<button type="button" class="button button-full col" ng-click="closeModal('connection-login')">
+			      {{'cancel' | translate}}
+			    </button>
+		    </div>
+		</form>
+	</ion-content>
+</ion-modal-view>

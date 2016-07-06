@@ -1,0 +1,28 @@
+<ion-modal-view class="modal-language">
+    <ion-header-bar class="modal-title">
+        <i class="icon gear-white col-10"></i>
+        <h1 class="title col-90">{{'select_locale' | translate}}</h1>
+    </ion-header-bar>
+	<ion-content>
+
+        <form ng-controller="ChangeLocaleCtrl" ng-submit="getLanguage(data.language)">
+            <ul class="list language">
+                <ion-radio ng-model="data.locale" ng-repeat="item in keyboardLocale" ng-value="item.code" ng-change="getLocale(item.code)">{{ item.name }}</ion-radio>
+            </ul>
+
+            <!--<div class="row">
+                <div class="col">
+                    <button class="button button-full button-save button-positive col-75 button-group" ng-click="closeModal('settings')" type="submit">
+                        {{'save' | translate}}
+                    </button>
+                </div>
+
+                <div class="col">
+                    <button class="button button-full button-cancel col-75 button-group" ng-click="closeModal('settings')">
+                        {{'cancel' | translate}}
+                    </button>
+                </div>
+            </div>-->
+        </form>
+	</ion-content>
+</ion-modal-view>
