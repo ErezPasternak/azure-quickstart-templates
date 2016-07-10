@@ -134,7 +134,7 @@ function Install-AccessPad()
 	Write-Output "Ericom Connect AccessPad installation has been started."
   
     $msiArgs = "/i`"$EC_local_path`" /qn ESSO=1 SHORTCUT_PARAMS=`"$LookUpHosts`:8011`" "
-	Start-Process -Filepath msiexec -ArgumentList $msiArgs  -Wait -Passthru
+	$exitCode = (Start-Process -Filepath msiexec -ArgumentList $msiArgs  -Wait -Passthru).ExitCode
 	if ($exitCode -eq 0)
 	{
 		Write-Output "Ericom Connect AccessPad has been succesfuly installed."
