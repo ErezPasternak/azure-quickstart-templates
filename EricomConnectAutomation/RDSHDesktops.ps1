@@ -128,13 +128,13 @@ function Install-AccessPad()
     
     $InstallerName = "EricomAccessPadClient64.msi"
     $EC_local_path = "C:\Windows\Temp\" + $InstallerName
+    $accessPadShortCut = "-accesspad /server=" + $LookUpHosts + ":8011"
 
 	New-Item -Path "C:\Install-AccessPad" -ItemType Directory -Force -ErrorAction SilentlyContinue
 	Write-Output "Ericom Connect AccessPad installation has been started."
-    $sb=[ScriptBlock]::Create("Start-Process -FilePath 'msiexec.exe' -ArgumentList ' /i $EC_local_path /qn ESSO=1 ' -Wait -Passthru")
-   # 'cmd /c "msiexec.exe /i C:\Windows\Temp\EricomAccessPadClient64.msi" /qn ESSO=1'
-  #  $exitCode = Invoke-Command -ScriptBlock $sb -
-	$exitCode = (Start-Process -Filepath $EC_local_path -ArgumentList ' /qn ESSO=1 ' -Wait -Passthru).ExitCode
+  
+    $msiArgs = "/i`"$EC_local_path`" /qn ESSO=1 SHORTCUT_PARAMS=`"$LookUpHosts`:8011`" "
+	Start-Process -Filepath msiexec -ArgumentList $msiArgs  -Wait -Passthru
 	if ($exitCode -eq 0)
 	{
 		Write-Output "Ericom Connect AccessPad has been succesfuly installed."
