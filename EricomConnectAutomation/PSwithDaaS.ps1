@@ -57,7 +57,7 @@ $emailTemplate = "WebServer\DaaS\emails\ready.html"
 $From = "daas@ericom.com"
 $SMTPServer = "ericom-com.mail.protection.outlook.com"
 $SMTPSUser = "daas@ericom.com"
-$SMTPassword = "1qaz@Wsx#a"
+$SMTPassword = "IOEQTK4hTMH0GvIpD4Eh"
 $SMTPPort = 25
 
 
@@ -1241,11 +1241,12 @@ function Setup-Bginfo ()
 
 function AutomationDownload
 {
-    $HttpBase = "http://tswc.ericom.com:501/erez/751/"
+   # $HttpBase = "http://tswc.ericom.com:501/erez/752/"
+   $HttpBase = "http://81.218.35.106:501/erez/752/"
 	$DaaSZip = $HttpBase + "DaaSService.zip"
-    $TragetFolder = "C:\Program Files\Ericom Software\Ericom Automation Service"
+    $TragetFolder = "C:\Program Files\Ericom Software\Ericom DaaS Service"
 	
-	Start-BitsTransfer -Source $DaaSZip -Destination "C:\DaaSService.zip" -ErrorVariable DownloadError
+	#Start-BitsTransfer -Source $DaaSZip -Destination "C:\DaaSService.zip" -ErrorVariable DownloadError
     if (!(Test-Path $EC_local_path))
 	{
 		$mail_error = "Failed to Download " + $DaaSZip  + "<br><i>"+ $DownloadError +"</i><br>Please fix and try again." 
@@ -1255,7 +1256,26 @@ function AutomationDownload
     Remove-Item -Recurse -Force $TragetFolder -ErrorAction SilentlyContinue -ErrorVariable DeleteError
 
     Write-Output "$DeleteError"
-	Expand-ZIPFile –File "C:\DaaSService.zip" –Destination "C:\Program Files\Ericom Software\Ericom Automation Service"
+	Expand-ZIPFile –File "C:\DaaSService.zip" –Destination "C:\Program Files\Ericom Software\Ericom DaaS Service"
+}
+function AirDownload
+{
+   # $HttpBase = "http://tswc.ericom.com:501/erez/752/"
+    $HttpBase = "http://81.218.35.106:501/erez/752/"
+	$AirZip = $HttpBase + "SSO.zip"
+    $TragetFolder = "C:\Program Files\Ericom Software\Ericom Connect Client Web Service\WebServer\AirSSO"
+	
+	Start-BitsTransfer -Source $AirZip -Destination "C:\SSO.zip" -ErrorVariable DownloadError
+    if (!(Test-Path $EC_local_path))
+	{
+		$mail_error = "Failed to Download " + $AirZip  + "<br><i>"+ $DownloadError +"</i><br>Please fix and try again." 
+		SendErrorMail  -Error "$mail_error"
+		
+	}
+    Remove-Item -Recurse -Force $TragetFolder -ErrorAction SilentlyContinue -ErrorVariable DeleteError
+
+    Write-Output "$DeleteError"
+	Expand-ZIPFile –File "C:\SSO.zip" –Destination "C:\Program Files\Ericom Software\Ericom Connect Client Web Service\WebServer\AirSSO"
 }
 
 function AutomationSetup ()
@@ -1264,7 +1284,7 @@ function AutomationSetup ()
 
     $portNumber = 2244; # DaaS WebService port number
     $baseRDPGroup = "DaaS-RDP"           
-    $workingDirectory = "C:\Program Files\Ericom Software\Ericom Automation Service\"
+    $workingDirectory = "C:\Program Files\Ericom Software\Ericom DaaS Service\"
     $ServiceName = "AutomationWebService.exe"                  
     $ServicePath = Join-Path $workingDirectory -ChildPath $ServiceName
     $rdshpattern = $HostOrIp
@@ -1342,6 +1362,7 @@ function AutomationDesktopShortcut
 function EricomAutomaion
 {
     AutomationDownload
+    AirDownload
     AutomationSetup
     AutomationDesktopShortcut
 }
@@ -1766,7 +1787,7 @@ Install-SingleMachine
 if ($PrepareSystem -eq $true)
 {
 	# Configure Ericom Connect Grid
-	Config-CreateGrid 
+	 Config-CreateGrid 
 	
 	# Run PostInstall Creating users,apps,desktops and publish them
 	 PostInstall

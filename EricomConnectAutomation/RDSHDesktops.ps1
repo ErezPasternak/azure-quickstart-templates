@@ -35,6 +35,7 @@ $GridName = "RDCB785"
 $LookUpHosts = "126.0.1.136"
 $MyIp = (Get-NetIPAddress -AddressFamily IPv4)[0].IPAddress 
 $tenantInfo = "root"
+$ESGAddress = "103.233.109.143"
 
 
 # E-mail Settings
@@ -128,12 +129,12 @@ function Install-AccessPad()
     
     $InstallerName = "EricomAccessPadClient64.msi"
     $EC_local_path = "C:\Windows\Temp\" + $InstallerName
-    $accessPadShortCut = "-accesspad /server=" + $LookUpHosts + ":8011"
+    $accessPadShortCut = "-accesspad /server=" + $ESGAddress 
 
 	New-Item -Path "C:\Install-AccessPad" -ItemType Directory -Force -ErrorAction SilentlyContinue
 	Write-Output "Ericom Connect AccessPad installation has been started."
   
-    $msiArgs = "/i`"$EC_local_path`" /qn ESSO=1 SHORTCUT_PARAMS=`"$LookUpHosts`:8011`" "
+    $msiArgs = "/i`"$EC_local_path`" /qn ESSO=1 SHORTCUT_PARAMS=`"$ESGAddress`" "
 	$exitCode = (Start-Process -Filepath msiexec -ArgumentList $msiArgs  -Wait -Passthru).ExitCode
 	if ($exitCode -eq 0)
 	{
@@ -147,7 +148,7 @@ function Install-AccessPad()
 		exit
 	}
 	Write-Output "Ericom Connect AccessPad installation has been endded."
-    $data = "`"C:\Program Files\Ericom Software\Ericom AccessPad Client\Blaze.exe`" -accesspad /server=`"$LookUpHosts`:8011`""
+    $data = "`"C:\Program Files\Ericom Software\Ericom AccessPad Client\Blaze.exe`" -accesspad /server=`"$ESGAddress`""
 	New-ItemProperty -Path HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Run -Name AccessPad -Force -PropertyType String -Value $data | Out-Null
 }
 

@@ -751,11 +751,57 @@ function Windows-Configuration
 	# Add Domain Users To local Remote Desktop Group
 	AddUsersToRemoteDesktopGroup
 }
+function ConfigureESG
+{
 
+    $workingDirectory = "$env:ProgramFiles\Ericom Software\Ericom Connect Configuration Tool"
+    $connectCli = "ConnectCli.exe"                  
+
+    $cliPath = Join-Path $workingDirectory -ChildPath $connectCli
+                
+    # publish admin page via ESG
+    $argumentsCli = "EsgConfig /adminUser $AdminUser /adminPassword $AdminPassword common ExternalWebServer`$UrlServicePointsFilter=`"<UrlServicePointsFilter> <UrlFilter> <UrlPathRegExp>^/Admin</UrlPathRegExp> <UrlServicePoints>https://`"$LookUpHosts`":8022/</UrlServicePoints></UrlFilter><UrlFilter> <UrlPathRegExp>^/EricomAutomation</UrlPathRegExp> <UrlServicePoints>http://`"$LookUpHosts`":2244/</UrlServicePoints></UrlFilter> <UrlFilter> <UrlPathRegExp>^/rdweb</UrlPathRegExp> <UrlServicePoints>https://`"$LookUpHosts`"/</UrlServicePoints></UrlFilter> </UrlServicePointsFilter>`"";
+              
+    $exitCodeCli = (Start-Process -Filepath $cliPath -ArgumentList "$argumentsCli" -Wait -Passthru).ExitCode;
+    if ($exitCodeCli -eq 0) {
+        Write-Verbose "ESG: Admin page has been succesfuly published."
+    } else {
+        Write-Verbose "$cliPath $argumentsCli"
+        Write-Verbose ("ESG: Admin page could not be published.. Exit Code: " + $exitCode)
+    }                 
+           
+}
+function ConfigureEUWS
+{
+
+    $workingDirectory = "$env:ProgramFiles\Ericom Software\Ericom Connect Configuration Tool"
+    $connectCli = "ConnectCli.exe"  
+    $newAirURL = "AirSSO/AccessSSO.htm"                
+
+    $cliPath = Join-Path $workingDirectory -ChildPath $connectCli
+                
+    # publish admin page via ESG
+    $argumentsCli = "EuwsConfig /adminUser $AdminUser /adminPassword $AdminPassword common DefaultUrl=$newAirURL ";
+              
+    $exitCodeCli = (Start-Process -Filepath $cliPath -ArgumentList "$argumentsCli" -Wait -Passthru).ExitCode;
+    if ($exitCodeCli -eq 0) {
+        Write-Verbose "EuwsConfig: Air page has been succesfuly published."
+    } else {
+        Write-Verbose "$cliPath $argumentsCli"
+        Write-Verbose ("EuwsConfig: Air page could not be published.. Exit Code: " + $exitCode)
+    }                 
+           
+}
 function PostInstall
 {
     # Install varius applications on the machine
 	Install-Apps
+
+    # configure ESG
+    ConfigureESG
+
+	# configure defualt page
+	ConfigureEUWS
 }
 
 
