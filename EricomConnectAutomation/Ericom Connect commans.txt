@@ -28,3 +28,38 @@ Terminal Server
 Installer - EricomConnect.exe /silent /ISFeatureInstall=GRID,RemoteAgent_x64 LAUNCH_CONFIG_TOOL=False
 Configuration tool - start "x" /w EricomConnectConfigurationTool ConnectToExistingGrid /AdminUser ccadmin@cloudconnect.local /AdminPassword pss1 /disconnect /GridName DevTestGrid /LookUpHosts 126.0.3.107
  
+
+ # Ericom connect Config tool paramters
+
+Command for General, Description:
+logfile,                    "log file name"
+popup,                      "Show messages in popup window at completion"
+language,                   "language"
+diagnosticMode,             "enable stack traces in exceptions"
+
+Command for NewGrid, Description:
+AdminUser,                  "EricomConnect administrative user"
+AdminPassword,              "EricomConnect administrative user password"
+GridName,                   "Name of the DataGrid"
+HostOrIp,                   "My Host or IP"
+LookupHosts                 "Comma separated list of Lookup Service Hosts”
+GridServiceUseSystemAccount, "use service credentials for the grid to run under"
+GridServiceUser,            "service credentials (user) for the grid to run under"
+GridServicePassword,       "service credentials (password) for the grid to run under"
+AdminPort,                  "Admin Port "
+DatabaseServer,             "Database server (host or host\\server)"
+DatabaseName,               "Database name - default is the grid name"
+UseWinCredForDBAut,        "Use Windows credentials to access the db. if not requires a SA user & password"
+SaDatabaseUser,             "SA Database user-name"
+SaDatabasePassword,        "SA Database password"
+UseWindowsAuthentication, "Use windows authentication for the grid to access the db.  requires a gird service user & password"
+DatabaseUser,               "Database user-name"
+DatabasePassword,           "Database password"
+
+Command for ConnectToExistingGrid, Description:
+GridName,                  "Name of the Grid"
+HostOrIp,                  "Host or IP", 
+LookupHosts,                "Comma separated list of Lookup Service Hosts"
+GridServicePassword,       "service credentials (password) for the grid to run under"
+AdminUser,                 "EricomConnect administrative user"
+AdminPassword,             "EricomConnect administrative user password"
