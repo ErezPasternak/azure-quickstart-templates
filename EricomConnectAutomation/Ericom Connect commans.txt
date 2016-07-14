@@ -1,0 +1,30 @@
+nstall a specific feature only using ISFeatuerInstall (Xap and SG - Secure Gateway):
+EricomConnectPOC.exe /silent /ISFeatureInstall=XAP,SG LAUNCH_CONFIG_TOOL=False /debuglog"C:\a.log"
+ 
+• ISFeatureInstall—This property provides a comma-delimited list of feature names that are to be installed with the current installation operation. It is intended for a silent first-time installation.
+All features are dependent on XAP
+• LAUNCH_CONFIG_TOOL is a global parameter for launching the configuration tool
+• debuglog"<path to log>" parameter for creating an installation log
+ 
+For Grid servers
+Installer - EricomConnect.exe /silent /ISFeatureInstall=GRID,PU LAUNCH_CONFIG_TOOL=False
+Configuration tool - start "x" /w EricomConnectConfigurationTool NewGrid /AdminUser ccadmin@cloudconnect.local /AdminPassword pss1 /GridName DevTestGrid3 /SaDatabaseUser sa /SaDatabasePassword pss2 /DatabaseServer michael-pc /disconnect /noUseWinCredForDBAut
+For other grid server or server components
+Configuration tool - start "x" /w EricomConnectConfigurationTool ConnectToExistingGrid /AdminUser ccadmin@cloudconnect.local /AdminPassword pss1 /disconnect /GridName DevTestGrid /LookUpHosts 126.0.3.107
+
+ESG machine
+Installer - EricomConnect.exe /silent /ISFeatureInstall=GRID,SG LAUNCH_CONFIG_TOOL=False
+Configuration tool - start "x" /w EricomConnectConfigurationTool ConnectToExistingGrid /AdminUser ccadmin@cloudconnect.local /AdminPassword pss1 /disconnect /GridName DevTestGrid /LookUpHosts 126.0.3.107
+
+Admin console
+Installer - EricomConnect.exe /silent /ISFeatureInstall=GRID,Admin LAUNCH_CONFIG_TOOL=False
+Configuration tool - start "x" /w EricomConnectConfigurationTool ConnectToExistingGrid /AdminUser ccadmin@cloudconnect.local /AdminPassword pss1 /disconnect /GridName DevTestGrid /LookUpHosts 126.0.3.107
+
+End user service machine
+Installer - EricomConnect.exe /silent /ISFeatureInstall=GRID,EUWS LAUNCH_CONFIG_TOOL=False
+Configuration tool - start "x" /w EricomConnectConfigurationTool ConnectToExistingGrid /AdminUser ccadmin@cloudconnect.local /AdminPassword pss1 /disconnect /GridName DevTestGrid /LookUpHosts 126.0.3.107
+ 
+Terminal Server
+Installer - EricomConnect.exe /silent /ISFeatureInstall=GRID,RemoteAgent_x64 LAUNCH_CONFIG_TOOL=False
+Configuration tool - start "x" /w EricomConnectConfigurationTool ConnectToExistingGrid /AdminUser ccadmin@cloudconnect.local /AdminPassword pss1 /disconnect /GridName DevTestGrid /LookUpHosts 126.0.3.107
+ 
