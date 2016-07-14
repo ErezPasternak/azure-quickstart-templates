@@ -358,7 +358,7 @@ function SendEricomMail ()
 	#Write-EventLogEricom -Message ("Ericom Connect Sent an Mail`nInfo: " + $Text + "`nTest: " + $TestName)
 	
 	$securePassword = ConvertTo-SecureString -String $SMTPassword -AsPlainText -Force
-	$credential = New-Object System.Management.Automation.PSCredential ("daas@ericom.com", $securePassword)
+	$credential = New-Object System.Management.Automation.PSCredential ($SMTPSUser, $securePassword)
 	$date = (Get-Date).ToString();
 	$ToName = $To.Split("@")[0].Replace(".", " ");
 	if ($To -ne "nobody")
@@ -395,7 +395,7 @@ function SendErrorMail()
 	#Write-EventLogEricomError -Message ("Ericom Connect Sent an Error Mail`nError: " + $ErrorText + "`nFailure at test: " + $TestName)
 	
 	$securePassword = ConvertTo-SecureString -String $SMTPassword -AsPlainText -Force
-	$credential = New-Object System.Management.Automation.PSCredential ("daas@ericom.com", $securePassword)
+	$credential = New-Object System.Management.Automation.PSCredential ($SMTPSUser, $securePassword)
 	$date = (Get-Date).ToString();
 	$ToName = $To.Split("@")[0].Replace(".", " ");
 	if ($To -ne "nobody")
@@ -429,7 +429,7 @@ function SendSuccessMail ()
 	$AdminCredentials = New-Object System.Management.Automation.PSCredential ($NetworkAdmin, $AdminSecurePassword);
 	
 	$securePassword = ConvertTo-SecureString -String $SMTPassword -AsPlainText -Force
-	$credential = New-Object System.Management.Automation.PSCredential ("daas@ericom.com", $securePassword)
+	$credential = New-Object System.Management.Automation.PSCredential ($SMTPSUser, $securePassword)
 	$date = (Get-Date).ToString();
 	$ToName = $To.Split("@")[0].Replace(".", " ");
 	if ($To -ne "nobody")
