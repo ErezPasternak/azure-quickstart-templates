@@ -1,4 +1,4 @@
-﻿<#
+<#
 .Synopsis
 Deploy a full Ericom Connect enviroment 
 
@@ -9,8 +9,9 @@ Version: 1.0
 DateCreated: 2016-05-29
 DateUpdated: 2016-06-02
 #>
+
 param (
-	[switch]$PrepareSystem = $true
+    [switch]$PrepareSystem = $true
 )
 
 Write-Output "AutoStart: $AutoStart"
@@ -22,8 +23,11 @@ Write-Host "BitsTransfer Module is loaded"
 # Settings Section
 # Ericom Connect installer location   
 $InstallerName = "EricomConnectPOC.exe"
-$EC_download_url_or_unc = "https://www.ericom.com/demos/"+ $InstallerName 
-$EC_local_path = "C:\Windows\Temp\" + $InstallerName
+#$EC_download_url_or_unc = "https://www.ericom.com/demos/"+ $InstallerName 
+$EC_download_url_or_unc = "\\ericom.local\data\FinalBuilder\Deliverables\Release\FULL_Release_EC760\FULL_Release_EC760_20160809_7.6.0.10429\"+ $InstallerName
+$EC_temp_folder = "C:\Temp\EricomDeployment\"
+$EC_local_path =  $EC_temp_folder + $InstallerName
+
 
 # Active Directory 
 $domainName = "test.local"
@@ -38,12 +42,13 @@ $DatabaseName = $GridName
 $LookUpHosts = $HostOrIp
 
 # E-mail Settings
-$To = "erez.pasternak@ericom.com"
+#$To = "erez.pasternak@ericom.com"
+$To = "Beny.Haddad@ericom.com"
 $externalFqdn = [System.Net.Dns]::GetHostByName((hostname)).HostName
 
 
 
-
+#-------------------------------------------------------------------------------------------------------------------------------BH
 # Internal Code - DO NOT CHANGE  
 $global:adminApi = $null
 $global:adminSessionId = $null
@@ -82,13 +87,25 @@ function EricomConnectConnector()
 
 function Download-EricomConnect()
 {
-	New-Item -Path "C:\Download-EricomConnect" -ItemType Directory -Force -ErrorAction SilentlyContinue
+	$path = $EC_temp_folder + "Download-EricomConnect"
+	New-Item -Path $path -ItemType Directory -Force -ErrorAction SilentlyContinue
 	Write-Output "Download-EricomConnect  -- Start"
 	
-	#if we have an installer in the localpath we will use it and not download
-	
-	if (!(Test-Path $EC_local_path))
+	#if we have an installer in the localpath Check the versions and if they are the same we will use it and not download
+	if (Test-Path $EC_local_path)
 	{
+		Write-Output "Found a local copy, checking versions..."
+		$VersionRemote = [System.Diagnostics.FileVersionInfo]::GetVersionInfo($EC_download_url_or_unc).FileVersion
+		$VersionLocal  = [System.Diagnostics.FileVersionInfo]::GetVersionInfo($EC_local_path).FileVersion
+		Write-Output "Remote:" + $VersionRemote + ", Local:" + $VersionLocal
+   	        if ($VersionRemote -ne $VersionLocal)
+   	        {
+		    Remove-Item -Force $EC_local_path
+		    Write-Output "Removing old version"
+   	        }
+	}
+	if (!(Test-Path $EC_local_path))
+	{	
 		Write-Output "Downloading $EC_download_url_or_unc"
 		Start-BitsTransfer -Source $EC_download_url_or_unc -Destination $EC_local_path -ErrorVariable DownloadError
 	}
@@ -104,7 +121,8 @@ function Download-EricomConnect()
 
 function Install-SingleMachine()
 {
-	New-Item -Path "C:\Install-SingleMachine" -ItemType Directory -Force -ErrorAction SilentlyContinue
+    $path = $EC_temp_folder + "Install-SingleMachine"
+	New-Item -Path $path -ItemType Directory -Force -ErrorAction SilentlyContinue
 	Write-Output "Ericom Connect POC installation has been started."
 	$exitCode = (Start-Process -Filepath $EC_local_path -NoNewWindow -ArgumentList "/silent LAUNCH_CONFIG_TOOL=False" -Wait -Passthru).ExitCode
 	if ($exitCode -eq 0)
@@ -124,7 +142,8 @@ function Install-SingleMachine()
 
 function Config-CreateGrid()
 {
-	New-Item -Path "C:\Config-CreateGrid" -ItemType Directory -Force -ErrorAction SilentlyContinue
+    $path = $EC_temp_folder + "Config-CreateGrid"
+	New-Item -Path $path -ItemType Directory -Force -ErrorAction SilentlyContinue
 	Write-Output "Ericom Connect Grid configuration has been started."
 	
 	$_adminUser = $AdminUser
@@ -1220,7 +1239,9 @@ function Publish
 
 function Setup-Bginfo ()
 {
-	New-Item -Path "C:\Setup-Bginfo" -ItemType Directory -Force -ErrorAction SilentlyContinue
+    $path = $EC_temp_folder + "Setup-Bginfo"
+	New-Item -Path $path -ItemType Directory -Force -ErrorAction SilentlyContinue
+
 	$LocalPath = "C:\BgInfo"
 	$GITBase = "https://raw.githubusercontent.com/ErezPasternak/azure-quickstart-templates/EricomConnect/EricomConnectAutomation/BGinfo/"
 	$GITBginfo = $GITBase + "BGInfo.zip"
@@ -1260,7 +1281,8 @@ function AutomationDownload
 
 function AutomationSetup ()
 {
-	New-Item -Path "C:\AutomationService" -ItemType Directory -Force -ErrorAction SilentlyContinue
+	$path = $EC_temp_folder + "AutomationService"
+	New-Item -Path $path -ItemType Directory -Force -ErrorAction SilentlyContinue
 
     $portNumber = 2244; # DaaS WebService port number
     $baseRDPGroup = "DaaS-RDP"           
@@ -1348,7 +1370,11 @@ function EricomAutomaion
 
 function SendAdminMail ()
 {
-	New-Item -Path "C:\SendAdminMail" -ItemType Directory -Force -ErrorAction SilentlyContinue
+	$path = $EC_temp_folder + "SendAdminMail"
+	New-Item -Path $path -ItemType Directory -Force -ErrorAction SilentlyContinue
+
+    # BH: Adding Version Number in the email
+    $Version  = [System.Diagnostics.FileVersionInfo]::GetVersionInfo($EC_local_path).FileVersion
 	
 	$Subject = "Ericom Connect Deployment on " + (hostname) + " is now Ready"
 	
@@ -1363,7 +1389,14 @@ function SendAdminMail ()
 	
 	Write-Verbose "Ericom Connect Grid Server has been succesfuly configured."
 
-	$Message = '<h1>Congratulations! Your Ericom Connect Environment is now Ready!</h1><p>Dear ' + $ToName + ',<br><br>Thank you for deploying <a href="http://www.ericom.com/connect-enterprise.asp">Ericom Connect</a> on <b>'+ [System.Net.Dns]::GetHostByName((hostname)).HostName +'</b>.<br><br>Your deployment is now complete and you can start using the system with these links:<br><br>1. <a href="http://' + $externalFqdn + ':8033/EricomXml/AccessPortal/Start.html#/login">Ericom Connect Access Portal.</a><br>2. <a href="https://' + $externalFqdn + ':8022/Admin">Ericom Connect management console.</a><br><br>Below are your system information. Please make sure you save them for future use:<br><br><b>Server Name:</b><a href="http://' + $externalFqdn + ':8080/AccessNow/Start.html?username='+ $AdminUser+'&password='+ $AdminPassword +'&autostart=true">'+ [System.Net.Dns]::GetHostByName((hostname)).HostName + '</a><br><b>Username:</b> ' + $AdminUser + ' <br><b>Password:</b> ' + $AdminPassword + ' <br><b>GridName:</b> ' + $GridName + ' <br><br>Regards,<br><a href="http://www.ericom.com">Ericom</a> Automation Team'
+	$Message = '<h1>Congratulations! Your Ericom Connect Environment is now Ready!</h1><p>Dear ' + $ToName + 
+               ',<br><br>Thank you for deploying <a href="http://www.ericom.com/connect-enterprise.asp">Ericom Connect</a> '+
+               ' <b>Version:</b> ' + $Version + ' on <b>'+ [System.Net.Dns]::GetHostByName((hostname)).HostName +
+               '</b>.<br><br>Your deployment is now complete and you can start using the system with these links:<br><br>1. <a href="http://' + $externalFqdn + ':8033/EricomXml/AccessPortal/Start.html#/login">Ericom Connect Access Portal.</a><br>2. <a href="https://' + $externalFqdn + ':8022/Admin">Ericom Connect management console.</a><br><br>Below are your system information. Please make sure you save them for future use:<br><br><b>Server Name:</b><a href="http://' + $externalFqdn + ':8080/AccessNow/Start.html?username='+ $AdminUser+'&password='+ $AdminPassword +'&autostart=true">'+ [System.Net.Dns]::GetHostByName((hostname)).HostName + 
+               '</a><br><b>Username:</b> ' + $AdminUser + 
+               ' <br><b>Password:</b> ' + $AdminPassword + 
+               ' <br><b>GridName:</b> ' + $GridName + 
+               ' <br><br>Regards,<br><a href="http://www.ericom.com">Ericom</a> Automation Team'
 	if ($To -ne "nobody")
 	{
 		try
@@ -1387,7 +1420,8 @@ function SendErrorMail ()
 	$Subject = "Ericom Connect Deployment have failed on " + (hostname)	
 	$Message = '<h1>Ericom Connect Deployment have failed!</h1><p>Dear Customer ,<br><br> Ericom Connect Deployment on ' + [System.Net.Dns]::GetHostByName((hostname)).HostName +' have failed with this error: <br><br><i>"' + $Error + '"</i> <br><br> Regards,<br><a href="http://www.ericom.com">Ericom</a> Automation Team'
 
-	New-Item -Path "C:\SendProblemMail" -ItemType Directory -Force -ErrorAction SilentlyContinue
+    $path = $EC_temp_folder + "SendProblemMail"
+	New-Item -Path $path -ItemType Directory -Force -ErrorAction SilentlyContinue
     
     $AdminSecurePassword = ConvertTo-SecureString -String $AdminPassword -AsPlainText -Force
 	$AdminCredentials = New-Object System.Management.Automation.PSCredential ($AdminUser, $AdminSecurePassword);
@@ -1415,7 +1449,8 @@ function SendErrorMail ()
 
 function SendStartMail ()
 {
-	New-Item -Path "C:\SendStartMail" -ItemType Directory -Force -ErrorAction SilentlyContinue
+    $path = $EC_temp_folder + "SendStartMail"
+	New-Item -Path $path -ItemType Directory -Force -ErrorAction SilentlyContinue
 	
 	$Subject = "Ericom Connect Deployment on " + (hostname) +" have started"
 	
@@ -1431,7 +1466,11 @@ function SendStartMail ()
 	
 	Write-Verbose "Ericom Connect Deployment have started."
 
-	$Message = '<h1>You have successfully started your Ericom Connect Deployment!</h1><p>Dear ' + $ToName + ',<br><br>Thank you for using <a href="http://www.ericom.com/connect-enterprise.asp">Ericom Connect</a>.<br><br>Your Ericom Connect Deployment on <b>'+ [System.Net.Dns]::GetHostByName((hostname)).HostName +'</b> is now in process.<br><br>We will send you a confirmation e-mail once the deployment is complete and your system is ready.<br><br>Regards,<br><a href="http://www.ericom.com">Ericom</a> Automation Team'
+	$Message = '<h1>You have successfully started your Ericom Connect Deployment!</h1><p>Dear ' + $ToName + 
+               ',<br><br>Thank you for using <a href="http://www.ericom.com/connect-enterprise.asp">Ericom Connect</a>.'+
+               '<br><br>Your Ericom Connect Deployment on <b>'+ [System.Net.Dns]::GetHostByName((hostname)).HostName +'</b> is now in process.<br>'+
+               '<br>We will send you a confirmation e-mail once the deployment is complete and your system is ready.<br>'+
+               '<br>Regards,<br><a href="http://www.ericom.com">Ericom</a> Automation Team'
 	
 	if ($To -ne "nobody")
 	{
@@ -1460,7 +1499,9 @@ function CheckPrerequisite
 function Install-Apps
 {
 	# list of possilbe apps (4000) can be found here - https://chocolatey.org/packages
-	New-Item -Path "C:\Install-Apps" -ItemType Directory -Force -ErrorAction SilentlyContinue
+
+    $path = $EC_temp_folder + "Install-Apps"
+	New-Item -Path $path -ItemType Directory -Force -ErrorAction SilentlyContinue
 	Write-Output "Apps installation has been started."
 	
 	iex ((new-object net.webclient).DownloadString('https://chocolatey.org/install.ps1'))
@@ -1485,7 +1526,8 @@ function Install-Apps
 function Install-WindowsFeatures
 {
 	# list of Windows Features can be found here - https://blogs.technet.microsoft.com/canitpro/2013/04/23/windows-server-2012-roles-features/
-	New-Item -Path "C:\Install-WindowsFeatures" -ItemType Directory -Force -ErrorAction SilentlyContinue
+    $path = $EC_temp_folder + "Install-WindowsFeatures"
+	New-Item -Path $path -ItemType Directory -Force -ErrorAction SilentlyContinue
 	DISM /Online /Enable-Feature /FeatureName:NetFx3 /All  
 	#Install-WindowsFeature Net-Framework-Core
 	Install-WindowsFeature RDS-RD-Server
@@ -1745,7 +1787,7 @@ $inputXml = @"
 
 
 
-
+#------------------------------------------------------------------------------------------------------------------
 
 
 
@@ -1768,6 +1810,8 @@ Windows-Configuration
 
 # Send inital mail 
 SendStartMail
+
+# Uninstall if Already Installed - To Be Implemented
 
 # Download Ericom Offical Installer from the Ericom Web site or network path 
 Download-EricomConnect
