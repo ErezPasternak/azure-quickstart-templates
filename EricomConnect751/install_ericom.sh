@@ -26,9 +26,21 @@ time sudo apt-get -y install xfce4 xfce4-goodies
 
 echo xfce4-session >~/.xsession
 
+#install new dependencies (for Printing)
+time sudo apt-get install cups
+time sudo apt-get install cups-filters
+time sudo apt-get install cups-daemon
+time sudo apt-get install socat
+
+# install x11rdp
+#if [ ! -f x11rdp_0.9.0+ericom+32-32_amd64.deb ]
+#then
+#   time dpkg -i x11rdp_0.9.0+ericom+32-32_amd64.deb
+#fi
+
 # get xrdp and set the launch variable in startwm.sh
 #time sudo apt-get -y install xrdp
-if [ ! -f x11rdp_0.9.0-2_amd64.deb ]
+if [ ! -f x11rdp_0.9.0-32_amd64.deb ]
 then
     wget http://tswc.ericom.com:501/erez/xrdp0902/xrdp-0.9.0-2-audio.tar.gz
     time sudo tar xvf xrdp-0.9.0-2-audio.tar.gz
