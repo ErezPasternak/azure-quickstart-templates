@@ -42,7 +42,7 @@ time sudo apt-get install socat
 # install x11rdp
 if [ ! -f x11rdpPackage ]
 then
-   wget $x11rdpPackageFTP
+   wget  --no-check-certificate $x11rdpPackageFTP
    time sudo dpkg -i $x11rdpPackage
 fi
 
@@ -50,13 +50,13 @@ fi
 #time sudo apt-get -y install xrdp
 if [ ! -f xrdpPackageFTP ]
 then
-    wget xrdpPackageFTP
+    wget  --no-check-certificate $xrdpPackageFTP
     time sudo dpkg -i $xrdpPackage
 fi
 
 if [ ! -f RemoteAgentPackage ]
 then
-    wget RemoteAgentPackageFTP
+    wget  --no-check-certificate $RemoteAgentPackageFTP
     time sudo dpkg -i $RemoteAgentPackage
 fi
 time sudo service xrdp restart
