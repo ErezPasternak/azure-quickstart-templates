@@ -15,6 +15,13 @@ TenantInfo=$5
 RemoteAgentAddress=$6
 StartupApp=$7
 
+RemoteAgentPackageFTP=https://download.ericom.com/public/file/v1MenAP95UuK70L0emqpCQ/ericom-connect-remote-host_x64.deb
+xrdpPackageFTP=https://download.ericom.com/public/file/69mOgYm04EOZjGfU4AVDnA/ericom-xrdp.deb
+x11rdpPackageFTP=https://download.ericom.com/public/file/NDTFEzvKyECVU2e33g_Ylw/x11rdp_0.9.0%2Bericom%2B32-32_amd64.deb
+RemoteAgentPackage=ericom-connect-remote-host_x64.deb
+xrdpPackage=ericom-xrdp.deb
+x11rdpPackage=x11rdp_0.9.0+ericom+32-32_amd64
+
 # Update System #BH
 time sudo apt-get -y update
 
@@ -33,20 +40,25 @@ time sudo apt-get install cups-daemon
 time sudo apt-get install socat
 
 # install x11rdp
-#if [ ! -f x11rdp_0.9.0+ericom+32-32_amd64.deb ]
-#then
-#   time dpkg -i x11rdp_0.9.0+ericom+32-32_amd64.deb
-#fi
+if [ ! -f x11rdpPackage ]
+then
+   wget $x11rdpPackageFTP
+   time sudo dpkg -i $x11rdpPackage
+fi
 
 # get xrdp and set the launch variable in startwm.sh
 #time sudo apt-get -y install xrdp
-if [ ! -f x11rdp_0.9.0-32_amd64.deb ]
+if [ ! -f xrdpPackageFTP ]
 then
-    wget http://tswc.ericom.com:501/erez/xrdp0902/xrdp-0.9.0-2-audio.tar.gz
-    time sudo tar xvf xrdp-0.9.0-2-audio.tar.gz
-    time sudo ./xrdp-audio/install-xrdp-audio.sh
+    wget xrdpPackageFTP
+    time sudo dpkg -i $xrdpPackage
 fi
 
+if [ ! -f RemoteAgentPackage ]
+then
+    wget RemoteAgentPackageFTP
+    time sudo dpkg -i $RemoteAgentPackage
+fi
 time sudo service xrdp restart
 
 # we will install the app and set to be un startup
