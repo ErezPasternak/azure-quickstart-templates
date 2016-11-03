@@ -54,11 +54,6 @@ then
     time sudo dpkg -i $xrdpPackage
 fi
 
-if [ ! -f RemoteAgentPackage ]
-then
-    wget  --no-check-certificate $RemoteAgentPackageFTP
-    time sudo dpkg -i $RemoteAgentPackage
-fi
 time sudo service xrdp restart
 
 # we will install the app and set to be un startup
@@ -109,12 +104,12 @@ time sudo domainjoin-cli join $DOMAIN $DOMAIN_ADMIN $DOMAIN_PWD
 time sudo lw-update-dns
 
 #download Ericom AccessServer and Remote Agent
-if [ ! -f ericom-connect-remote-host_x64.deb.zip ]
+if [ ! -f RemoteAgentPackage ]
 then
-    wget http://tswc.ericom.com:501/erez/751/ericom-connect-remote-host_x64.deb.zip    
+    wget  --no-check-certificate $RemoteAgentPackageFTP
+    time sudo dpkg -i $RemoteAgentPackage
 fi
 
-time sudo unzip ericom-connect-remote-host_x64.deb.zip
 time sudo su 
 
 #install Ericom Connect RemoteAgent an AccessServer
